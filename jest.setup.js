@@ -23,12 +23,18 @@ jest.mock('next/router', () => ({
   },
 }))
 
-// Setup MSW
-import { setupServer } from 'msw/node'
-import { rest } from 'msw'
+// Mock yahoo-finance2 at the module level to avoid import issues
+jest.mock('yahoo-finance2', () => ({
+  __esModule: true,
+  default: {
+    historical: jest.fn(),
+  },
+}))
 
-const server = setupServer()
-
-beforeAll(() => server.listen())
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
+// Mock console methods to avoid noise in tests
+global.console = {
+  ...console,
+  log: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+}
