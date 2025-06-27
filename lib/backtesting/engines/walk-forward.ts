@@ -153,17 +153,17 @@ export class WalkForwardEngine {
             dataPoints: validationData.length
           },
           optimizedParameters: optimizationResult.parameters,
-          inSampleReturn: optimizationResult.performance.totalReturn,
+          inSampleReturn: optimizationResult.metrics.totalReturn,
           outOfSampleReturn: validationResult.performance.totalReturn,
-          inSampleSharpe: optimizationResult.performance.sharpeRatio,
+          inSampleSharpe: optimizationResult.metrics.sharpeRatio,
           outOfSampleSharpe: validationResult.performance.sharpeRatio,
-          inSampleMaxDrawdown: optimizationResult.performance.maxDrawdown,
+          inSampleMaxDrawdown: optimizationResult.metrics.maxDrawdown,
           outOfSampleMaxDrawdown: validationResult.performance.maxDrawdown,
           validationTrades: validationResult.trades,
           validationPositions: validationResult.positions,
           validationReturns: validationResult.returns,
           parameterRobustness: this.calculateParameterRobustness(optimizationResult),
-          overfit: this.detectOverfitting(optimizationResult.performance, validationResult.performance)
+          overfit: this.detectOverfitting(optimizationResult.metrics, validationResult.performance)
         };
         
         results.push(walkForwardPeriod);

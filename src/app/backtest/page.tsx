@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, TrendingUp, TrendingDown, BarChart3, Settings, Play, StopCircle, Loader2, ArrowLeft, Calendar, DollarSign, Zap, Target, Brain, Activity } from 'lucide-react';
 import Link from 'next/link';
+import { useTheme } from '../../contexts/ThemeContext';
+import ThemeToggle from '../../components/ThemeToggle';
 
 // Types for the backtesting interface
 interface BacktestConfig {
@@ -94,6 +96,7 @@ const REBALANCE_FREQUENCIES = [
 ];
 
 export default function BacktestPage() {
+  const { theme } = useTheme();
   // State management
   const [activeTab, setActiveTab] = useState<'builder' | 'config' | 'results'>('builder');
   const [strategy, setStrategy] = useState<StrategyDefinition>({
@@ -225,31 +228,32 @@ export default function BacktestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
+    <div className="min-h-screen bg-theme-bg text-theme-text trading-background-subtle">
       {/* Header */}
-      <header className="border-b border-gray-800/50 bg-[#1A1A1A]/80 backdrop-blur-sm">
+      <header className="border-b border-theme-border bg-theme-card/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/" className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+              <Link href="/" className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors">
                 <ArrowLeft className="w-6 h-6" />
               </Link>
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-lg flex items-center justify-center">
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Backtesting Laboratory</h1>
-                <p className="text-gray-400 text-sm">Advanced Strategy Testing & Analysis</p>
+                <h1 className="text-2xl font-bold text-theme-text">Backtesting Laboratory</h1>
+                <p className="text-theme-text-muted text-sm">Advanced Strategy Testing & Analysis</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-2">
+              <div className="bg-theme-warning-bg border border-theme-warning-border rounded-lg px-4 py-2">
                 <div className="flex items-center space-x-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-400" />
-                  <span className="text-amber-400 text-sm font-medium">Educational Use Only</span>
+                  <AlertTriangle className="w-4 h-4 text-theme-warning" />
+                  <span className="text-theme-warning text-sm font-medium">Educational Use Only</span>
                 </div>
               </div>
+              <ThemeToggle />
             </div>
           </div>
         </div>
@@ -259,13 +263,13 @@ export default function BacktestPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Navigation Tabs */}
         <div className="mb-8">
-          <div className="flex space-x-1 bg-[#1A1A1A] p-1 rounded-xl border border-gray-800">
+          <div className="flex space-x-1 bg-theme-card p-1 rounded-xl border border-theme-border">
             <button
               onClick={() => setActiveTab('builder')}
               className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === 'builder'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-theme-primary text-white'
+                  : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
               }`}
             >
               <Brain className="w-4 h-4" />
@@ -275,8 +279,8 @@ export default function BacktestPage() {
               onClick={() => setActiveTab('config')}
               className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === 'config'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-theme-primary text-white'
+                  : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
               }`}
             >
               <Settings className="w-4 h-4" />
@@ -286,8 +290,8 @@ export default function BacktestPage() {
               onClick={() => setActiveTab('results')}
               className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === 'results'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-theme-primary text-white'
+                  : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
               }`}
             >
               <Activity className="w-4 h-4" />
@@ -297,12 +301,12 @@ export default function BacktestPage() {
         </div>
 
         {/* Educational Warning Banner */}
-        <div className="mb-8 bg-gradient-to-r from-amber-500/10 to-red-500/10 border border-amber-500/20 rounded-xl p-6">
+        <div className="mb-8 bg-gradient-to-r from-theme-warning-bg to-theme-danger-bg border border-theme-warning-border rounded-xl p-6">
           <div className="flex items-start space-x-4">
-            <AlertTriangle className="w-8 h-8 text-amber-400 flex-shrink-0 mt-1" />
+            <AlertTriangle className="w-8 h-8 text-theme-warning flex-shrink-0 mt-1" />
             <div>
-              <h3 className="text-xl font-bold text-amber-400 mb-3">Important Educational Notice</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
+              <h3 className="text-xl font-bold text-theme-warning mb-3">Important Educational Notice</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-theme-text-secondary">
                 <div>
                   <p className="mb-2">• <strong>Educational purposes only:</strong> This backtesting system is designed for learning and research.</p>
                   <p className="mb-2">• <strong>Past performance warning:</strong> Historical results do not guarantee future performance.</p>
@@ -322,54 +326,54 @@ export default function BacktestPage() {
         {activeTab === 'builder' && (
           <div className="space-y-8">
             {/* Strategy Overview */}
-            <div className="bg-[#1A1A1A] border border-gray-800 rounded-xl p-6">
-              <h2 className="text-xl font-bold text-white mb-6">Strategy Overview</h2>
+            <div className="bg-theme-card border border-theme-border rounded-xl p-6">
+              <h2 className="text-xl font-bold text-theme-text mb-6">Strategy Overview</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Strategy Name</label>
+                  <label className="block text-sm font-medium text-theme-text-secondary mb-2">Strategy Name</label>
                   <input
                     type="text"
                     value={strategy.name}
                     onChange={(e) => setStrategy(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-3 bg-[#2A2A2A] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-theme-card-secondary border border-theme-border rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-theme-text-secondary mb-2">Description</label>
                   <input
                     type="text"
                     value={strategy.description}
                     onChange={(e) => setStrategy(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-4 py-3 bg-[#2A2A2A] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-theme-card-secondary border border-theme-border rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary"
                   />
                 </div>
               </div>
             </div>
 
             {/* Signal Selection */}
-            <div className="bg-[#1A1A1A] border border-gray-800 rounded-xl p-6">
-              <h2 className="text-xl font-bold text-white mb-6">Signal Selection</h2>
-              <p className="text-gray-400 mb-6">Choose which Gayed signals to include in your strategy:</p>
+            <div className="bg-theme-card border border-theme-border rounded-xl p-6">
+              <h2 className="text-xl font-bold text-theme-text mb-6">Signal Selection</h2>
+              <p className="text-theme-text-muted mb-6">Choose which Gayed signals to include in your strategy:</p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {SIGNAL_TYPES.map((signal) => (
                   <div
                     key={signal.id}
                     onClick={() => handleSignalTypeToggle(signal.id)}
-                    className={`p-4 border rounded-xl cursor-pointer transition-all ${
+                    className={`p-4 border rounded-xl cursor-pointer transition-all hover:shadow-md ${
                       strategy.signalTypes.includes(signal.id)
-                        ? 'border-purple-500 bg-purple-500/10'
-                        : 'border-gray-700 hover:border-gray-600'
+                        ? 'border-theme-primary bg-theme-primary-bg'
+                        : 'border-theme-border hover:border-theme-border-hover'
                     }`}
                   >
                     <div className="flex items-center space-x-3 mb-3">
                       <div className={`w-4 h-4 rounded-full border-2 ${
                         strategy.signalTypes.includes(signal.id)
-                          ? 'bg-purple-500 border-purple-500'
-                          : 'border-gray-600'
+                          ? 'bg-theme-primary border-theme-primary'
+                          : 'border-theme-text-muted'
                       }`} />
-                      <h3 className="font-semibold text-white">{signal.name}</h3>
+                      <h3 className="font-semibold text-theme-text">{signal.name}</h3>
                     </div>
-                    <p className="text-sm text-gray-400">{signal.description}</p>
+                    <p className="text-sm text-theme-text-muted">{signal.description}</p>
                   </div>
                 ))}
               </div>
@@ -377,8 +381,8 @@ export default function BacktestPage() {
 
             {/* Position Sizing & Rebalancing */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-[#1A1A1A] border border-gray-800 rounded-xl p-6">
-                <h2 className="text-xl font-bold text-white mb-6">Position Sizing</h2>
+              <div className="bg-theme-card border border-theme-border rounded-xl p-6">
+                <h2 className="text-xl font-bold text-theme-text mb-6">Position Sizing</h2>
                 <div className="space-y-4">
                   {POSITION_SIZING_METHODS.map((method) => (
                     <div
@@ -386,26 +390,26 @@ export default function BacktestPage() {
                       onClick={() => setStrategy(prev => ({ ...prev, positionSizing: method.id }))}
                       className={`p-4 border rounded-lg cursor-pointer transition-all ${
                         strategy.positionSizing === method.id
-                          ? 'border-purple-500 bg-purple-500/10'
-                          : 'border-gray-700 hover:border-gray-600'
+                          ? 'border-theme-primary bg-theme-primary-bg'
+                          : 'border-theme-border hover:border-theme-border-hover'
                       }`}
                     >
                       <div className="flex items-center space-x-3 mb-2">
                         <div className={`w-4 h-4 rounded-full border-2 ${
                           strategy.positionSizing === method.id
-                            ? 'bg-purple-500 border-purple-500'
-                            : 'border-gray-600'
+                            ? 'bg-theme-primary border-theme-primary'
+                            : 'border-theme-text-muted'
                         }`} />
-                        <h3 className="font-semibold text-white">{method.name}</h3>
+                        <h3 className="font-semibold text-theme-text">{method.name}</h3>
                       </div>
-                      <p className="text-sm text-gray-400">{method.description}</p>
+                      <p className="text-sm text-theme-text-muted">{method.description}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-[#1A1A1A] border border-gray-800 rounded-xl p-6">
-                <h2 className="text-xl font-bold text-white mb-6">Rebalancing Frequency</h2>
+              <div className="bg-theme-card border border-theme-border rounded-xl p-6">
+                <h2 className="text-xl font-bold text-theme-text mb-6">Rebalancing Frequency</h2>
                 <div className="space-y-4">
                   {REBALANCE_FREQUENCIES.map((freq) => (
                     <div
@@ -437,18 +441,18 @@ export default function BacktestPage() {
         {activeTab === 'config' && (
           <div className="space-y-8">
             {/* Date Range & Capital */}
-            <div className="bg-[#1A1A1A] border border-gray-800 rounded-xl p-6">
-              <h2 className="text-xl font-bold text-white mb-6">Backtest Parameters</h2>
+            <div className="bg-theme-card border border-theme-border rounded-xl p-6">
+              <h2 className="text-xl font-bold text-theme-text mb-6">Backtest Parameters</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
+                  <label className="block text-sm font-medium text-theme-text-secondary mb-2">Start Date</label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="date"
                       value={config.startDate}
                       onChange={(e) => setConfig(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-3 bg-[#2A2A2A] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full pl-10 pr-4 py-3 bg-theme-card-secondary border border-theme-border rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary"
                     />
                   </div>
                 </div>
@@ -460,7 +464,7 @@ export default function BacktestPage() {
                       type="date"
                       value={config.endDate}
                       onChange={(e) => setConfig(prev => ({ ...prev, endDate: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-3 bg-[#2A2A2A] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full pl-10 pr-4 py-3 bg-theme-card-secondary border border-theme-border rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary"
                     />
                   </div>
                 </div>
@@ -472,7 +476,7 @@ export default function BacktestPage() {
                       type="number"
                       value={config.initialCapital}
                       onChange={(e) => setConfig(prev => ({ ...prev, initialCapital: Number(e.target.value) }))}
-                      className="w-full pl-10 pr-4 py-3 bg-[#2A2A2A] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full pl-10 pr-4 py-3 bg-theme-card-secondary border border-theme-border rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary"
                     />
                   </div>
                 </div>
@@ -487,7 +491,7 @@ export default function BacktestPage() {
                       max="1"
                       value={config.maxPositionSize}
                       onChange={(e) => setConfig(prev => ({ ...prev, maxPositionSize: Number(e.target.value) }))}
-                      className="w-full pl-10 pr-4 py-3 bg-[#2A2A2A] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full pl-10 pr-4 py-3 bg-theme-card-secondary border border-theme-border rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary"
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Decimal (0.25 = 25%)</p>
@@ -695,38 +699,38 @@ export default function BacktestPage() {
         )}
 
         {/* Run Backtest Button */}
-        <div className="sticky bottom-6 bg-[#1A1A1A] border border-gray-800 rounded-xl p-6">
+        <div className="sticky bottom-6 bg-theme-card border border-theme-border rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {error && (
-                <div className="flex items-center space-x-2 text-red-400">
+                <div className="flex items-center space-x-2 text-theme-danger">
                   <AlertTriangle className="w-5 h-5" />
                   <span className="text-sm">{error}</span>
                 </div>
               )}
               {isRunning && (
                 <div className="flex items-center space-x-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
-                  <span className="text-sm text-gray-300">Running backtest...</span>
-                  <div className="w-32 bg-gray-800 rounded-full h-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-theme-primary" />
+                  <span className="text-sm text-theme-text-secondary">Running backtest...</span>
+                  <div className="w-32 bg-theme-bg-secondary rounded-full h-2">
                     <div 
-                      className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                      className="bg-theme-primary h-2 rounded-full transition-all duration-300"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <span className="text-sm text-gray-400">{progress}%</span>
+                  <span className="text-sm text-theme-text-muted">{progress}%</span>
                 </div>
               )}
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-theme-text-muted">
                 {strategy.signalTypes.length} signal{strategy.signalTypes.length !== 1 ? 's' : ''} • {config.engines.length} engine{config.engines.length !== 1 ? 's' : ''}
               </div>
               <button
                 onClick={runBacktest}
                 disabled={isRunning || strategy.signalTypes.length === 0 || config.engines.length === 0}
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center space-x-2"
+                className="px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover disabled:bg-theme-text-muted disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center space-x-2"
               >
                 {isRunning ? (
                   <>
