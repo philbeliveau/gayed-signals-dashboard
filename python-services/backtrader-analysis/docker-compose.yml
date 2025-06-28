@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  gayed-backtrader-analysis:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - LOG_LEVEL=INFO
+      - MAX_ANALYSIS_TIME=600
+      - INITIAL_CAPITAL=100000
+    volumes:
+      - ./logs:/app/logs
+      - ./static/charts:/app/static/charts
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    
+  # Optional: Add Redis for caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    
+  # Optional: Add nginx for load balancing
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - gayed-backtrader-analysis
+    restart: unless-stopped
+
+networks:
+  default:
+    name: gayed-signals-network

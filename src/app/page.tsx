@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, BarChart3, Activity } from 'lucide-react';
+import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, BarChart3, Activity, LineChart } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -402,12 +402,18 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
   const [showETFModal, setShowETFModal] = useState(false);
+  const [loadingMode, setLoadingMode] = useState<'fast' | 'full' | null>(null);
 
-  const fetchSignals = useCallback(async () => {
+  const fetchSignals = useCallback(async (fast = true) => {
     try {
       if (!loading) setRefreshing(true);
       setError(null);
-      const response = await fetch('/api/signals');
+      setLoadingMode(fast ? 'fast' : 'full');
+      
+      // Use fast mode by default for quicker page loads
+      const apiUrl = fast ? '/api/signals?fast=true' : '/api/signals';
+      const startTime = Date.now();
+      const response = await fetch(apiUrl);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -422,12 +428,23 @@ export default function Dashboard() {
       setSignals(data.signals || []);
       setConsensus(data.consensus);
       setLastUpdated(new Date());
+      
+      const loadTime = Date.now() - startTime;
+      
+      // Show performance info
+      if (data.cached) {
+        console.log(`📦 Using cached signal data (${loadTime}ms)`);
+      } else {
+        console.log(`⚡ ${fast ? 'Fast' : 'Full'} signals loaded in ${loadTime}ms`);
+      }
+      
     } catch (error) {
       console.error('Failed to fetch signals:', error);
       setError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMode(null);
     }
   }, [loading]);
 
@@ -752,30 +769,63 @@ export default function Dashboard() {
               
               <ThemeToggle />
               
-              <button
-                onClick={fetchSignals}
-                disabled={refreshing}
-                className="p-3 bg-theme-card-secondary border border-theme-border rounded-lg text-theme-text-secondary hover:text-theme-text hover:bg-theme-card-hover hover:border-theme-border-hover transition-all duration-200 disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => fetchSignals(true)}
+                  disabled={refreshing}
+                  className="p-3 bg-theme-card-secondary border border-theme-border rounded-lg text-theme-text-secondary hover:text-theme-text hover:bg-theme-card-hover hover:border-theme-border-hover transition-all duration-200 disabled:opacity-50"
+                  title="Quick refresh (essential signals)"
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshing && loadingMode === 'fast' ? 'animate-spin' : ''}`} />
+                </button>
+                
+                <button
+                  onClick={() => fetchSignals(false)}
+                  disabled={refreshing}
+                  className="px-3 py-2 bg-theme-primary/10 border border-theme-primary/20 rounded-lg text-theme-primary text-sm hover:bg-theme-primary/20 transition-all duration-200 disabled:opacity-50 relative"
+                  title="Full refresh (all 5 signals)"
+                >
+                  {refreshing && loadingMode === 'full' ? (
+                    <div className="flex items-center space-x-2">
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      <span>Loading...</span>
+                    </div>
+                  ) : (
+                    'All Signals'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
         <div className="max-w-7xl mx-auto px-6 pb-4">
-          <div className="flex space-x-1 bg-theme-bg p-1 rounded-xl border border-theme-border">
-            <div className="flex items-center space-x-2 px-4 py-3 rounded-lg bg-theme-primary text-white">
+          <div className="flex space-x-1 bg-theme-bg p-1 rounded-xl border border-theme-border overflow-x-auto">
+            <div className="flex items-center space-x-2 px-4 py-3 rounded-lg bg-theme-primary text-white whitespace-nowrap">
               <Activity className="w-4 h-4" />
               <span>Live Signals</span>
             </div>
             <Link 
+              href="/strategies" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
+            >
+              <span className="text-lg">📊</span>
+              <span>Strategy Dashboard</span>
+            </Link>
+            <Link 
               href="/backtest" 
-              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors"
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
             >
               <BarChart3 className="w-4 h-4" />
               <span>Backtesting Lab</span>
+            </Link>
+            <Link 
+              href="/backtrader" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
+            >
+              <LineChart className="w-4 h-4" />
+              <span>Backtrader Analysis</span>
             </Link>
           </div>
         </div>

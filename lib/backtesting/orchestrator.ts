@@ -39,7 +39,7 @@ import { StatisticalTester } from './metrics/statistical-tests';
  */
 export class BacktestOrchestrator {
   private saflaValidator: SAFLAValidator;
-  private engines: Map<BacktestEngineType, unknown>;
+  private engines: Map<BacktestEngineType, any>;
   private performanceCalculator: PerformanceCalculator;
   private riskCalculator: RiskCalculator;
   private statisticalTester: StatisticalTester;
@@ -49,19 +49,18 @@ export class BacktestOrchestrator {
     private claudeFlowMemory?: unknown, // Claude-Flow memory interface
     private customSaflaConfig?: unknown
   ) {
-    this.saflaValidator = SAFLAValidator.getInstance(customSaflaConfig);
+    this.saflaValidator = SAFLAValidator.getInstance(customSaflaConfig as any);
     this.performanceCalculator = new PerformanceCalculator();
     this.riskCalculator = new RiskCalculator();
     this.statisticalTester = new StatisticalTester();
     
     // Initialize backtesting engines
-    this.engines = new Map([
-      ['walk_forward', new WalkForwardEngine()],
-      ['monte_carlo', new MonteCarloEngine()],
-      ['cross_validation', new CrossValidationEngine()],
-      ['bootstrap', new BootstrapEngine()],
-      ['synthetic_data', new SyntheticDataEngine()]
-    ]);
+    this.engines = new Map();
+    this.engines.set('walk_forward', new WalkForwardEngine());
+    this.engines.set('monte_carlo', new MonteCarloEngine());
+    this.engines.set('cross_validation', new CrossValidationEngine());
+    this.engines.set('bootstrap', new BootstrapEngine());
+    this.engines.set('synthetic_data', new SyntheticDataEngine());
   }
 
   /**
@@ -861,7 +860,7 @@ export class BacktestOrchestrator {
         warningCount: result.warnings.length
       };
       
-      await this.claudeFlowMemory.store(memoryKey, summary);
+      await (this.claudeFlowMemory as any)?.store?.(memoryKey, summary);
       console.log(`💾 Stored backtest result in memory: ${memoryKey}`);
       
     } catch (error) {
@@ -1041,9 +1040,9 @@ export class BacktestOrchestrator {
     if (spyData.length < 21) return [];
     
     const regimes = [];
-    let currentRegime = 'sideways' as const;
+    let currentRegime: string = 'sideways';
     let regimeStart = spyData[0].date;
-    let regimeData = [];
+    let regimeData: any[] = [];
     
     for (let i = 20; i < spyData.length; i++) {
       const recentData = spyData.slice(i - 20, i);

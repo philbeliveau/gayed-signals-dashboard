@@ -34,6 +34,32 @@ export class SignalOrchestrator {
   }
 
   /**
+   * Calculate essential signals for fast mode (Utilities/SPY + S&P 500 MA)
+   * @param marketData Record of symbol -> MarketData[] mappings
+   * @returns Array of essential signals for quick market assessment
+   */
+  public static calculateFastSignals(
+    marketData: Record<string, MarketData[]>
+  ): (Signal | null)[] {
+    const signals: (Signal | null)[] = [];
+    
+    try {
+      // 1. Utilities/SPY Signal (most important for market regime)
+      const utilitiesSignal = this.calculateUtilitiesSpySignal(marketData);
+      signals.push(utilitiesSignal);
+
+      // 2. S&P 500 Moving Average Signal (trend following)
+      const sp500MASignal = this.calculateSP500MASignal(marketData);
+      signals.push(sp500MASignal);
+
+    } catch (error) {
+      console.error('Error calculating fast signals:', error);
+    }
+
+    return signals;
+  }
+
+  /**
    * Calculate all 5 Gayed signals from market data
    * @param marketData Record of symbol -> MarketData[] mappings
    * @returns Array of calculated signals (may contain nulls for failed calculations)

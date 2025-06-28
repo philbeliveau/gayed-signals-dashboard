@@ -2,10 +2,74 @@ import { NextRequest, NextResponse } from 'next/server';
 import { EnhancedMarketClient } from '../../../../lib/data/enhanced-market-client';
 import { SignalOrchestrator } from '../../../../lib/signals';
 
+// Simple in-memory cache for faster signal responses
+interface CacheEntry {
+  data: any;
+  timestamp: number;
+  ttl: number; // Time to live in milliseconds
+}
+
+const signalCache = new Map<string, CacheEntry>();
+const CACHE_TTL = 60000; // 1 minute cache for live signals
+const FAST_CACHE_TTL = 300000; // 5 minutes for less frequent updates
+
+// Cleanup old cache entries
+function cleanupCache() {
+  const now = Date.now();
+  for (const [key, entry] of signalCache.entries()) {
+    if (now > entry.timestamp + entry.ttl) {
+      signalCache.delete(key);
+    }
+  }
+}
+
+// Get cached data or null if expired
+function getCachedData(key: string): any | null {
+  const entry = signalCache.get(key);
+  if (!entry) return null;
+  
+  const now = Date.now();
+  if (now > entry.timestamp + entry.ttl) {
+    signalCache.delete(key);
+    return null;
+  }
+  
+  return entry.data;
+}
+
+// Set cache data
+function setCachedData(key: string, data: any, ttl: number = CACHE_TTL) {
+  signalCache.set(key, {
+    data,
+    timestamp: Date.now(),
+    ttl
+  });
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    console.log('🔄 Fetching market data for all Gayed signals...');
+    // Clean up expired cache entries
+    cleanupCache();
+    
+    // Check for fast mode parameter
+    const url = new URL(request.url);
+    const fastMode = url.searchParams.get('fast') === 'true';
+    
+    const cacheKey = fastMode ? 'fast_signals' : 'live_signals';
+    
+    // Check cache first
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      console.log(`🚀 Returning cached signals (${fastMode ? 'fast' : 'full'} mode)`);
+      return NextResponse.json({
+        ...cachedData,
+        cached: true,
+        cacheTime: new Date().toISOString()
+      });
+    }
+    
+    console.log(`🔄 Fetching ${fastMode ? 'fast' : 'live'} market data for Gayed signals...`);
     
     // Initialize enhanced market client with your API keys
     const marketClient = new EnhancedMarketClient({
@@ -22,46 +86,72 @@ export async function GET(_request: NextRequest) {
       }
     });
     
-    // Get all required symbols for comprehensive signal analysis
-    const symbols = SignalOrchestrator.getRequiredSymbols();
+    // Get symbols - fewer for fast mode
+    const allSymbols = SignalOrchestrator.getRequiredSymbols();
+    const symbols = fastMode ? ['SPY', 'XLU'] : allSymbols; // Fast mode: only essentials
+    
     console.log(`📊 Fetching data for symbols: ${symbols.join(', ')}`);
     
     const marketData = await marketClient.fetchMarketData(symbols);
     
-    // Validate market data completeness
-    const validationResult = SignalOrchestrator.validateMarketData(marketData);
-    if (!validationResult.isValid) {
-      console.warn('⚠️ Market data validation warnings:', validationResult.warnings);
-      // Continue with available data, but log warnings
+    // Quick validation for fast mode
+    if (fastMode) {
+      // Simple check - just ensure we have SPY data
+      if (!marketData['SPY'] || marketData['SPY'].length === 0) {
+        throw new Error('Missing essential SPY data');
+      }
+    } else {
+      // Full validation for normal mode
+      const validationResult = SignalOrchestrator.validateMarketData(marketData);
+      if (!validationResult.isValid) {
+        console.warn('⚠️ Market data validation warnings:', validationResult.warnings);
+      }
     }
 
-    // Calculate all 5 Gayed signals
-    console.log('🧮 Calculating all Gayed signals...');
-    const signals = SignalOrchestrator.calculateAllSignals(marketData);
+    // Calculate signals - fewer for fast mode
+    console.log('🧮 Calculating Gayed signals...');
+    let signals;
+    
+    if (fastMode) {
+      // Fast mode: Calculate only essential signals
+      signals = SignalOrchestrator.calculateFastSignals(marketData);
+    } else {
+      // Full mode: Calculate all signals
+      signals = SignalOrchestrator.calculateAllSignals(marketData);
+    }
 
     if (signals.length === 0) {
       return NextResponse.json({ 
         error: 'Unable to calculate any signals - insufficient market data',
-        details: 'Please check market data availability and try again'
+        details: 'Please check market data availability and try again',
+        fastMode
       }, { status: 500 });
     }
 
-    // Generate comprehensive consensus from all available signals
+    // Generate consensus from available signals
     const consensus = SignalOrchestrator.calculateConsensusSignal(signals);
     
     console.log(`✅ Successfully calculated ${signals.length} signals with ${consensus.consensus} consensus (${(consensus.confidence * 100).toFixed(1)}% confidence)`);
 
-    return NextResponse.json({ 
+    const responseData = { 
       signals, 
       consensus,
       metadata: {
         timestamp: new Date().toISOString(),
         symbolCount: symbols.length,
         signalCount: signals.length,
-        dataValidation: validationResult,
-        dataSource: 'real_market_data'
+        dataSource: 'real_market_data',
+        fastMode,
+        processingTimeMs: Date.now()
       }
-    });
+    };
+    
+    // Cache the result
+    const cacheTtl = fastMode ? FAST_CACHE_TTL : CACHE_TTL;
+    setCachedData(cacheKey, responseData, cacheTtl);
+    
+    return NextResponse.json(responseData);
+    
   } catch (error) {
     console.error('❌ Error calculating Gayed signals:', error);
     return NextResponse.json({ 

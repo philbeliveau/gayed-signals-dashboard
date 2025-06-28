@@ -79,7 +79,7 @@ export class PerformanceCalculator {
       sharpeRatio: riskAdjustedMetrics.sharpeRatio,
       sortinoRatio: riskAdjustedMetrics.sortinoRatio,
       calmarRatio: riskAdjustedMetrics.calmarRatio,
-      informationRatio: benchmarkMetrics.informationRatio,
+      informationRatio: (benchmarkMetrics as any).informationRatio || 0,
       
       // Drawdown metrics
       maxDrawdown: drawdownMetrics.maxDrawdown,
@@ -102,9 +102,9 @@ export class PerformanceCalculator {
       consecutiveLosses: tradingMetrics.consecutiveLosses,
       
       // Benchmark comparison
-      alpha: benchmarkMetrics.alpha,
-      beta: benchmarkMetrics.beta,
-      trackingError: benchmarkMetrics.trackingError,
+      alpha: (benchmarkMetrics as any).alpha || 0,
+      beta: (benchmarkMetrics as any).beta || 0,
+      trackingError: (benchmarkMetrics as any).trackingError || 0,
       
       // Time-based analysis
       monthlyReturns: timeBasedMetrics.monthlyReturns,
