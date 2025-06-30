@@ -380,7 +380,68 @@ body {
   color: var(--theme-danger);
 }
 
-/* Chart Theme Colors */
+/* Enhanced Chart Theme Integration */
+.chart-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  background: var(--theme-card);
+  border-radius: 0.75rem;
+}
+
+.chart-container .recharts-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.chart-container .recharts-surface {
+  overflow: visible;
+}
+
+/* Force theme colors in Recharts SVG elements */
+.chart-container .recharts-cartesian-grid line {
+  stroke: var(--theme-border) !important;
+  opacity: 0.3;
+}
+
+.chart-container .recharts-cartesian-grid-horizontal line,
+.chart-container .recharts-cartesian-grid-vertical line {
+  stroke: var(--theme-grid) !important;
+  opacity: 0.5;
+}
+
+.chart-container .recharts-xAxis .recharts-cartesian-axis-tick-value,
+.chart-container .recharts-yAxis .recharts-cartesian-axis-tick-value {
+  fill: var(--theme-text-muted) !important;
+  font-size: 12px;
+}
+
+.chart-container .recharts-xAxis .recharts-cartesian-axis-line,
+.chart-container .recharts-yAxis .recharts-cartesian-axis-line {
+  stroke: var(--theme-border) !important;
+}
+
+.chart-container .recharts-tooltip-wrapper {
+  z-index: 1000 !important;
+}
+
+.chart-container .recharts-tooltip-cursor {
+  stroke: var(--theme-primary) !important;
+  opacity: 0.3;
+}
+
+.chart-container .recharts-reference-line line {
+  stroke: var(--theme-text-light) !important;
+  stroke-dasharray: 5,5;
+  opacity: 0.7;
+}
+
+.chart-container .recharts-reference-dot circle {
+  stroke: var(--theme-card) !important;
+  stroke-width: 2;
+}
+
+/* Legacy support for existing classes */
 .chart-grid-color { stroke: var(--theme-border) !important; }
 .chart-axis-color { stroke: var(--theme-text-muted) !important; }
 .chart-text-color { fill: var(--theme-text-muted) !important; }

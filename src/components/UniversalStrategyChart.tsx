@@ -867,13 +867,27 @@ export default function UniversalStrategyChart({ config }: Props) {
                 {backtestData.signalTimeline && backtestData.signalTimeline.length > 0 && (() => {
                   const signalZones = [];
                   
+                  // Debug: Check date formats
+                  const chartDataSample = backtestData.chartData.slice(0, 3).map(d => d.date);
+                  const signalDateSample = backtestData.signalTimeline.slice(0, 3).map(s => s.date);
+                  console.log(`🔍 DEBUGGING: Chart data dates:`, chartDataSample);
+                  console.log(`🔍 DEBUGGING: Signal timeline dates:`, signalDateSample);
+                  
                   for (let i = 0; i < backtestData.signalTimeline.length - 1; i++) {
                     const currentSignal = backtestData.signalTimeline[i];
                     const nextSignal = backtestData.signalTimeline[i + 1];
                     
+                    // Ensure dates are in consistent format
+                    const startDate = currentSignal.date.includes('T') 
+                      ? currentSignal.date.split('T')[0] 
+                      : currentSignal.date;
+                    const endDate = nextSignal.date.includes('T') 
+                      ? nextSignal.date.split('T')[0] 
+                      : nextSignal.date;
+                    
                     signalZones.push({
-                      start: currentSignal.date,
-                      end: nextSignal.date,
+                      start: startDate,
+                      end: endDate,
                       signal: currentSignal.signal,
                       key: `zone-${i}`
                     });
@@ -883,13 +897,22 @@ export default function UniversalStrategyChart({ config }: Props) {
                   const lastSignal = backtestData.signalTimeline[backtestData.signalTimeline.length - 1];
                   const lastDate = backtestData.chartData[backtestData.chartData.length - 1]?.date;
                   if (lastSignal && lastDate) {
+                    const startDate = lastSignal.date.includes('T') 
+                      ? lastSignal.date.split('T')[0] 
+                      : lastSignal.date;
+                    const endDate = lastDate.includes('T') 
+                      ? lastDate.split('T')[0] 
+                      : lastDate;
+                      
                     signalZones.push({
-                      start: lastSignal.date,
-                      end: lastDate,
+                      start: startDate,
+                      end: endDate,
                       signal: lastSignal.signal,
                       key: `zone-last`
                     });
                   }
+                  
+                  console.log(`🔍 DEBUGGING: Generated ${signalZones.length} signal zones:`, signalZones);
                   
                   return signalZones.map((zone) => (
                     <ReferenceArea
@@ -897,7 +920,7 @@ export default function UniversalStrategyChart({ config }: Props) {
                       x1={zone.start}
                       x2={zone.end}
                       fill={zone.signal === 'Risk-On' ? '#10B981' : '#EF4444'}
-                      fillOpacity={0.1}
+                      fillOpacity={0.15}
                       stroke="none"
                     />
                   ));
@@ -923,47 +946,65 @@ export default function UniversalStrategyChart({ config }: Props) {
                 })}
                 
                 {/* Simplified Buy/Sell markers as reference lines */}
-                {backtestData.trades && backtestData.trades.slice(0, 10).map((trade, index) => (
-                  <ReferenceLine 
-                    key={`trade-${index}`}
-                    x={trade.date} 
-                    stroke={trade.action === 'BUY' ? 'var(--theme-success)' : 'var(--theme-danger)'}
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    label={{
-                      value: `${trade.action} ${trade.symbol}`,
-                      position: trade.action === 'BUY' ? 'bottom' : 'top',
-                      style: { 
-                        fontSize: '10px', 
-                        fill: trade.action === 'BUY' ? 'var(--theme-success)' : 'var(--theme-danger)',
-                        fontWeight: 'bold'
-                      }
-                    }}
-                  />
-                ))}
+                {backtestData.trades && backtestData.trades.slice(0, 10).map((trade, index) => {
+                  // Ensure consistent date format
+                  const tradeDate = trade.date.includes('T') 
+                    ? trade.date.split('T')[0] 
+                    : trade.date;
+                  
+                  console.log(`🔍 DEBUGGING: Rendering trade marker ${index} at date ${tradeDate} for ${trade.action} ${trade.symbol}`);
+                  
+                  return (
+                    <ReferenceLine 
+                      key={`trade-${index}`}
+                      x={tradeDate} 
+                      stroke={trade.action === 'BUY' ? '#10B981' : '#EF4444'}
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      label={{
+                        value: `${trade.action} ${trade.symbol}`,
+                        position: trade.action === 'BUY' ? 'bottom' : 'top',
+                        style: { 
+                          fontSize: '10px', 
+                          fill: trade.action === 'BUY' ? '#10B981' : '#EF4444',
+                          fontWeight: 'bold'
+                        }
+                      }}
+                    />
+                  );
+                })}
                 
                 {/* Signal flip markers */}
-                {backtestData.signalTimeline.map((signal, index) => (
-                  <ReferenceLine 
-                    key={`signal-${index}`}
-                    x={signal.date} 
-                    stroke={signal.signal === 'Risk-On' ? 'var(--theme-success)' : 'var(--theme-danger)'}
-                    strokeWidth={3}
-                    strokeDasharray="0"
-                    label={{
-                      value: `${signal.signal}`,
-                      position: signal.signal === 'Risk-On' ? 'bottom' : 'top',
-                      style: { 
-                        fontSize: '12px', 
-                        fontWeight: 'bold',
-                        fill: signal.signal === 'Risk-On' ? 'var(--theme-success)' : 'var(--theme-danger)',
-                        background: 'var(--theme-card)',
-                        padding: '2px 4px',
-                        borderRadius: '3px'
-                      }
-                    }}
-                  />
-                ))}
+                {backtestData.signalTimeline.map((signal, index) => {
+                  // Ensure consistent date format
+                  const signalDate = signal.date.includes('T') 
+                    ? signal.date.split('T')[0] 
+                    : signal.date;
+                  
+                  console.log(`🔍 DEBUGGING: Rendering signal marker ${index} at date ${signalDate} for ${signal.signal}`);
+                  
+                  return (
+                    <ReferenceLine 
+                      key={`signal-${index}`}
+                      x={signalDate} 
+                      stroke={signal.signal === 'Risk-On' ? '#10B981' : '#EF4444'}
+                      strokeWidth={3}
+                      strokeDasharray="0"
+                      label={{
+                        value: `${signal.signal}`,
+                        position: signal.signal === 'Risk-On' ? 'bottom' : 'top',
+                        style: { 
+                          fontSize: '12px', 
+                          fontWeight: 'bold',
+                          fill: signal.signal === 'Risk-On' ? '#10B981' : '#EF4444',
+                          background: '#ffffff',
+                          padding: '2px 4px',
+                          borderRadius: '3px'
+                        }
+                      }}
+                    />
+                  );
+                })}
                 </ComposedChart>
               )}
               </ResponsiveContainer>

@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   description: "Advanced market regime analysis dashboard based on Michael Gayed's research signals. Professional trading tools for risk-on/risk-off market assessment.",
   keywords: "trading, market signals, risk management, market regime, financial analysis, investment research",
   authors: [{ name: "Gayed Signal Dashboard" }],
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
     { media: "(prefers-color-scheme: dark)", color: "#0A0A0A" }

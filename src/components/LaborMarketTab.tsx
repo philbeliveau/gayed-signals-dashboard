@@ -17,7 +17,9 @@ import {
   FileText
 } from 'lucide-react';
 import NoSSRWrapper from './NoSSRWrapper';
+import ChartWrapper from './charts/ChartWrapper';
 import { formatDate, formatTooltipDate } from '../utils/dateFormatting';
+import { useChartColors } from '../utils/chartTheme';
 
 // Dynamically import Recharts components to prevent SSR issues
 const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false });
@@ -170,6 +172,15 @@ export default function LaborMarketTab() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'3m' | '6m' | '12m' | '24m'>('12m');
+  const [activeView, setActiveView] = useState<'claims' | 'employment' | 'correlation'>('claims');
+  const [isClient, setIsClient] = useState(false);
+  
+  // Get theme colors for charts
+  const chartColors = useChartColors();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     fetchLaborData();
@@ -180,22 +191,50 @@ export default function LaborMarketTab() {
       if (forceRefresh) setRefreshing(true);
       setError(null);
 
-      // NOTE: This component is designed for real data integration
-      console.warn('Labor Market Tab: This component requires real data integration with DOL API, BLS API, FRED API, etc.');
+      console.log(`👥 Fetching labor data for period: ${selectedPeriod}`);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the actual API endpoint
+      const response = await fetch(`/api/labor?period=${selectedPeriod}&fast=false`);
       
-      // Generate realistic labor market data for demonstration
-      const mockData = generateMockLaborData();
-      const mockAlerts = generateMockAlerts(mockData);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch labor data: ${response.status} ${response.statusText}`);
+      }
       
-      setLaborData(mockData);
-      setAlerts(mockAlerts);
+      const data = await response.json();
+      console.log('👥 Successfully fetched labor data:', data.laborData?.length, 'points');
+      
+      // Transform API data to component format
+      const transformedData: LaborDataPoint[] = (data.laborData || []).map((item: any) => ({
+        date: item.date,
+        initialClaims: item.initialClaims || 0,
+        continuedClaims: item.continuedClaims || 0,
+        claims4Week: item.claims4Week || 0,
+        unemploymentRate: item.unemploymentRate || 0,
+        nonfarmPayrolls: item.nonfarmPayrolls || 0,
+        laborParticipation: item.laborParticipation || 0,
+        jobOpenings: item.jobOpenings || 0,
+        weeklyChangeInitial: item.weeklyChangeInitial || 0,
+        weeklyChangeContinued: item.weeklyChangeContinued || 0,
+        monthlyChangePayrolls: item.monthlyChangePayrolls || 0
+      }));
+      
+      // Transform alerts
+      const transformedAlerts: LaborAlert[] = data.alerts?.map((alert: any) => ({
+        id: alert.id || Date.now().toString(),
+        type: alert.type || 'claims_spike',
+        severity: alert.severity || 'warning',
+        message: alert.message || 'Labor market alert',
+        timestamp: alert.timestamp || new Date().toISOString()
+      })) || [];
+      
+      console.log('👥 Processed', transformedData.length, 'labor data points for charts');
+      
+      setLaborData(transformedData);
+      setAlerts(transformedAlerts);
       setLastUpdated(new Date());
 
     } catch (error) {
-      console.error('Error fetching labor data:', error);
+      console.error('❌ Error fetching labor data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load labor market data');
     } finally {
       setLoading(false);
@@ -394,8 +433,8 @@ export default function LaborMarketTab() {
         <div className="bg-theme-card border border-theme-border rounded-lg p-3 shadow-lg">
           <p className="text-theme-text font-medium mb-2">{formatTooltipDate(label)}</p>
           <div className="space-y-1 text-sm">
-            <p className="text-theme-primary">Initial Claims: {data.initialClaims.toLocaleString()}</p>
-            <p className="text-theme-secondary">Continued Claims: {(data.continuedClaims / 1000000).toFixed(2)}M</p>
+            <p style={{ color: chartColors.primary }}>Initial Claims: {data.initialClaims.toLocaleString()}</p>
+            <p style={{ color: chartColors.secondary }}>Continued Claims: {(data.continuedClaims / 1000000).toFixed(2)}M</p>
             <p className="text-theme-text-secondary">Unemployment: {data.unemploymentRate}%</p>
           </div>
         </div>
@@ -579,95 +618,99 @@ export default function LaborMarketTab() {
       </div>
 
       {/* Claims Trend Chart */}
-      <div className="bg-theme-card border border-theme-border rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-theme-text">Jobless Claims Trends</h3>
+      <ChartWrapper
+        height={400}
+        loading={loading}
+        error={error}
+        title="Jobless Claims Trends"
+        description="Initial claims, continued claims, and unemployment rate tracking"
+      >
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-theme-primary rounded-full"></div>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: chartColors.primary }}></div>
               <span className="text-sm text-theme-text-muted">Initial Claims</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-theme-secondary rounded-full"></div>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: chartColors.secondary }}></div>
               <span className="text-sm text-theme-text-muted">Continued Claims</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: chartColors.warning }}></div>
+              <span className="text-sm text-theme-text-muted">Unemployment Rate</span>
             </div>
           </div>
         </div>
 
-        <div className="h-96">
-          <NoSSRWrapper fallback={
-            <div className="flex items-center justify-center h-full bg-theme-bg-secondary rounded animate-pulse">
-              <span className="text-theme-text-muted">Loading chart...</span>
-            </div>
-          }>
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={laborData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" className="chart-grid-color" opacity={0.3} />
-                <XAxis 
-                  dataKey="date" 
-                  className="chart-axis-color chart-text-color"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => formatDate(value, 'chart')}
-                />
-                <YAxis 
-                  yAxisId="claims"
-                  className="chart-axis-color chart-text-color"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `${(value / 1000)}K`}
-                />
-                <YAxis 
-                  yAxisId="rate"
-                  orientation="right"
-                  className="chart-axis-color chart-text-color"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `${value}%`}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Line 
-                  yAxisId="claims"
-                  type="monotone" 
-                  dataKey="initialClaims" 
-                  stroke="var(--theme-primary)" 
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4, stroke: 'var(--theme-primary)', strokeWidth: 2, fill: 'var(--theme-primary)' }}
-                />
-                <Line 
-                  yAxisId="claims"
-                  type="monotone" 
-                  dataKey="continuedClaims" 
-                  stroke="var(--theme-secondary)" 
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4, stroke: 'var(--theme-secondary)', strokeWidth: 2, fill: 'var(--theme-secondary)' }}
-                />
-                <Line 
-                  yAxisId="rate"
-                  type="monotone" 
-                  dataKey="unemploymentRate" 
-                  stroke="var(--theme-warning)" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
-                />
-                {/* Reference line for concerning level of continued claims */}
-                <ReferenceLine 
-                  yAxisId="claims"
-                  y={1800000} 
-                  stroke="var(--theme-danger)" 
-                  strokeDasharray="3 3" 
-                  label="High Risk Level"
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </NoSSRWrapper>
-        </div>
+        {laborData.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <span className="text-theme-text-muted">No labor market data available</span>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={laborData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="date" 
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => formatDate(value, 'chart')}
+              />
+              <YAxis 
+                yAxisId="claims"
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => `${(value / 1000)}K`}
+              />
+              <YAxis 
+                yAxisId="rate"
+                orientation="right"
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => `${value}%`}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line 
+                yAxisId="claims"
+                type="monotone" 
+                dataKey="initialClaims" 
+                stroke={chartColors.primary}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4, stroke: chartColors.primary, strokeWidth: 2, fill: chartColors.primary }}
+              />
+              <Line 
+                yAxisId="claims"
+                type="monotone" 
+                dataKey="continuedClaims" 
+                stroke={chartColors.secondary}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4, stroke: chartColors.secondary, strokeWidth: 2, fill: chartColors.secondary }}
+              />
+              <Line 
+                yAxisId="rate"
+                type="monotone" 
+                dataKey="unemploymentRate" 
+                stroke={chartColors.warning}
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={false}
+              />
+              {/* Reference line for concerning level of continued claims */}
+              <ReferenceLine 
+                yAxisId="claims"
+                y={1800000} 
+                stroke={chartColors.danger}
+                strokeDasharray="3 3" 
+                label={{ value: "High Risk Level", position: "right" }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        )}
 
         <div className="mt-4 text-xs text-theme-text-muted">
           Chart shows initial claims, continued claims, and unemployment rate trends. 
           Data updates weekly from Department of Labor (DOL) and Bureau of Labor Statistics (BLS).
         </div>
-      </div>
+      </ChartWrapper>
 
       {/* Employment Metrics & Historical Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

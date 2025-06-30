@@ -137,7 +137,7 @@ export class YahooFinanceClient {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export async function fetchMarketData(symbols: string[], _period: string = '2y'): Promise<Record<string, MarketData[]>> {
   const client = new YahooFinanceClient();
   return client.fetchMarketData(symbols);

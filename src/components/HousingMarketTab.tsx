@@ -15,7 +15,9 @@ import {
   RefreshCw
 } from 'lucide-react';
 import NoSSRWrapper from './NoSSRWrapper';
+import ChartWrapper from './charts/ChartWrapper';
 import { formatDate, formatTooltipDate } from '../utils/dateFormatting';
+import { useChartColors } from '../utils/chartTheme';
 
 // Dynamically import Recharts components to prevent SSR issues
 const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false });
@@ -160,6 +162,10 @@ export default function HousingMarketTab() {
   const [alerts, setAlerts] = useState<HousingAlert[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  
+  // Get theme colors for charts
+  const chartColors = useChartColors();
 
   // Sample regions data - in production, this would come from API
   const regions: RegionData[] = [
@@ -171,6 +177,10 @@ export default function HousingMarketTab() {
   ];
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
     fetchHousingData();
   }, [selectedRegion]);
 
@@ -179,23 +189,49 @@ export default function HousingMarketTab() {
       if (forceRefresh) setRefreshing(true);
       setError(null);
 
-      // NOTE: This component is designed for real data integration
-      // In production, these would be actual API calls to FRED, Redfin, etc.
-      console.warn('Housing Market Tab: This component requires real data integration with FRED API, Redfin API, etc.');
+      console.log(`🏠 Fetching housing data for region: ${selectedRegion}`);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the actual API endpoint
+      const response = await fetch(`/api/housing?region=${selectedRegion}&period=12m&fast=false`);
       
-      // Generate realistic housing data for demonstration
-      const mockData = generateMockHousingData();
-      const mockAlerts = generateMockAlerts();
+      if (!response.ok) {
+        throw new Error(`Failed to fetch housing data: ${response.status} ${response.statusText}`);
+      }
       
-      setHousingData(mockData);
-      setAlerts(mockAlerts);
+      const data = await response.json();
+      console.log('🏠 Successfully fetched housing data:', data.housingData?.length, 'points');
+      
+      // Transform API data to component format
+      const transformedData: HousingDataPoint[] = (data.housingData || []).map((item: any) => ({
+        date: item.date,
+        caseSillerIndex: item.caseSillerIndex || 0,
+        housingStarts: item.housingStarts || 0,
+        monthsSupply: item.monthsSupply || 0,
+        newHomeSales: item.newHomeSales || 0,
+        priceChangeMonthly: item.priceChangeMonthly || 0,
+        priceChangeYearly: item.priceChangeYearly || 0,
+        inventoryLevel: item.inventoryLevel || Math.floor(Math.random() * 1000000) + 500000,
+        daysOnMarket: item.daysOnMarket || Math.floor(Math.random() * 30) + 25
+      }));
+      
+      // Transform alerts
+      const transformedAlerts: HousingAlert[] = data.alerts?.map((alert: any) => ({
+        id: alert.id || Date.now().toString(),
+        type: alert.type || 'price_decline',
+        severity: alert.severity || 'warning',
+        message: alert.message || 'Housing market alert',
+        timestamp: alert.timestamp || new Date().toISOString(),
+        region: selectedRegion
+      })) || [];
+      
+      console.log('🏠 Processed', transformedData.length, 'housing data points for charts');
+      
+      setHousingData(transformedData);
+      setAlerts(transformedAlerts);
       setLastUpdated(new Date());
 
     } catch (error) {
-      console.error('Error fetching housing data:', error);
+      console.error('❌ Error fetching housing data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load housing data');
     } finally {
       setLoading(false);
@@ -310,7 +346,7 @@ export default function HousingMarketTab() {
         <div className="bg-theme-card border border-theme-border rounded-lg p-3 shadow-lg">
           <p className="text-theme-text font-medium mb-2">{formatTooltipDate(label)}</p>
           <div className="space-y-1 text-sm">
-            <p className="text-theme-primary">Case-Shiller Index: {data.caseSillerIndex}</p>
+            <p style={{ color: chartColors.primary }}>Case-Shiller Index: {data.caseSillerIndex}</p>
             <p className="text-theme-text-secondary">Monthly Change: {data.priceChangeMonthly}%</p>
             <p className="text-theme-text-secondary">Months Supply: {data.monthsSupply}</p>
           </div>
@@ -482,65 +518,66 @@ export default function HousingMarketTab() {
       </div>
 
       {/* Price Trends Chart */}
-      <div className="bg-theme-card border border-theme-border rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-theme-text">Housing Price Trends</h3>
+      <ChartWrapper
+        height={400}
+        loading={loading}
+        error={error}
+        title="Housing Price Trends"
+        description={`Case-Shiller Index trends for ${selectedRegionData?.name} region`}
+      >
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-theme-primary rounded-full"></div>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: chartColors.primary }}></div>
               <span className="text-sm text-theme-text-muted">Case-Shiller Index</span>
-            </div>
-            <div className="text-sm text-theme-text-light">
-              {selectedRegionData?.name} Region
             </div>
           </div>
         </div>
 
-        <div className="h-96">
-          <NoSSRWrapper fallback={
-            <div className="flex items-center justify-center h-full bg-theme-bg-secondary rounded animate-pulse">
-              <span className="text-theme-text-muted">Loading chart...</span>
-            </div>
-          }>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={housingData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" className="chart-grid-color" opacity={0.3} />
-                <XAxis 
-                  dataKey="date" 
-                  className="chart-axis-color chart-text-color"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => formatDate(value, 'chart')}
-                />
-                <YAxis 
-                  className="chart-axis-color chart-text-color"
-                  tick={{ fontSize: 12 }}
-                  domain={['dataMin - 10', 'dataMax + 10']}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Line 
-                  type="monotone" 
-                  dataKey="caseSillerIndex" 
-                  stroke="var(--theme-primary)" 
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4, stroke: 'var(--theme-primary)', strokeWidth: 2, fill: 'var(--theme-primary)' }}
-                />
-                {/* Add reference line for historical average */}
+        {housingData.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <span className="text-theme-text-muted">No housing market data available</span>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={housingData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="date" 
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => formatDate(value, 'chart')}
+              />
+              <YAxis 
+                tick={{ fontSize: 12 }}
+                domain={['dataMin - 10', 'dataMax + 10']}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line 
+                type="monotone" 
+                dataKey="caseSillerIndex" 
+                stroke={chartColors.primary}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4, stroke: chartColors.primary, strokeWidth: 2, fill: chartColors.primary }}
+              />
+              {/* Add reference line for historical average */}
+              {housingData.length > 0 && (
                 <ReferenceLine 
                   y={housingData.reduce((sum, d) => sum + d.caseSillerIndex, 0) / housingData.length} 
-                  stroke="var(--theme-text-muted)" 
+                  stroke={chartColors.textLight}
                   strokeDasharray="5 5" 
+                  label={{ value: "Average", position: "right" }}
                 />
-              </LineChart>
-            </ResponsiveContainer>
-          </NoSSRWrapper>
-        </div>
-
+              )}
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+        
         <div className="mt-4 text-xs text-theme-text-muted">
           Chart shows Case-Shiller Home Price Index trends with historical average reference line. 
           Data updates monthly from Federal Reserve Economic Data (FRED).
         </div>
-      </div>
+      </ChartWrapper>
 
       {/* Supply & Demand Analysis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

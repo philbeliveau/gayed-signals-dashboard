@@ -1,23 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import NoSSRWrapper from './NoSSRWrapper';
-import { formatDate, formatTooltipDate } from '../utils/dateFormatting';
-import { validateChartData, ChartDataPoint } from '../utils/dataValidation';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts';
 
-// Dynamically import Recharts components to prevent SSR issues
-const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false });
-const Line = dynamic(() => import('recharts').then(mod => mod.Line), { ssr: false });
-const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
-const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
-const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
-const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
-const ReferenceDot = dynamic(() => import('recharts').then(mod => mod.ReferenceDot), { ssr: false });
-const Legend = dynamic(() => import('recharts').then(mod => mod.Legend), { ssr: false });
-
-interface ETFChartDataPoint extends ChartDataPoint {
+interface ETFChartDataPoint {
+  date: string;
   price: number;
   signal?: 'Risk-On' | 'Risk-Off' | null;
   signalType?: string;
@@ -34,6 +21,14 @@ export default function ETFChart({ symbol, strategyType, currentSignal, height =
   const [chartData, setChartData] = useState<ETFChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Simple color theme
+  const chartColors = {
+    primary: '#8B5CF6',
+    success: '#10B981',
+    danger: '#F87171',
+    card: '#1F2937'
+  };
 
   useEffect(() => {
     const fetchETFData = async () => {
@@ -41,24 +36,9 @@ export default function ETFChart({ symbol, strategyType, currentSignal, height =
         setLoading(true);
         setError(null);
 
-        // Generate sample data with proper validation
+        // Generate simple mock data
         const mockData = generateMockETFData(symbol, strategyType);
-        
-        // Validate the chart data
-        const validationResult = validateChartData(mockData, ['date', 'price'], {
-          sortByDate: true,
-          removeDuplicates: true
-        });
-
-        if (!validationResult.valid) {
-          throw new Error(`Invalid chart data: ${validationResult.errors.join(', ')}`);
-        }
-
-        if (validationResult.warnings.length > 0) {
-          console.warn('Chart data warnings:', validationResult.warnings);
-        }
-
-        setChartData(validationResult.data as ETFChartDataPoint[]);
+        setChartData(mockData);
 
       } catch (error) {
         console.error('Error fetching ETF data:', error);
@@ -128,7 +108,7 @@ export default function ETFChart({ symbol, strategyType, currentSignal, height =
       }
 
       data.push({
-        date: formatDate(currentDate, 'iso'), // Use consistent date formatting
+        date: currentDate.toISOString().split('T')[0], // Simple date format
         price: Math.round(currentPrice * 100) / 100,
         signal: signal,
         signalType: signal ? strategyType : undefined
@@ -187,11 +167,13 @@ export default function ETFChart({ symbol, strategyType, currentSignal, height =
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
-          <p className="text-gray-900 dark:text-white font-medium">{`Date: ${formatTooltipDate(label)}`}</p>
-          <p className="text-blue-600 dark:text-blue-400">{`${symbol}: $${data.price}`}</p>
+        <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg">
+          <p className="text-white font-medium">{`Date: ${label}`}</p>
+          <p style={{ color: chartColors.primary }}>{`${symbol}: $${data.price}`}</p>
           {data.signal && (
-            <p className={`font-semibold ${data.signal === 'Risk-On' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            <p className="font-semibold" style={{ 
+              color: data.signal === 'Risk-On' ? chartColors.success : chartColors.danger 
+            }}>
               Signal: {data.signal}
             </p>
           )}
@@ -224,91 +206,77 @@ export default function ETFChart({ symbol, strategyType, currentSignal, height =
   }
 
   return (
-    <div className="bg-theme-card rounded-lg p-4 border border-theme-border chart-container">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
       <div className="mb-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-theme-text">
-            {symbol} Price Chart with Signals
-          </h3>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-theme-success rounded-full"></div>
-              <span className="text-sm text-theme-text-muted">Risk-On</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-theme-danger rounded-full"></div>
-              <span className="text-sm text-theme-text-muted">Risk-Off</span>
-            </div>
-            <div className="px-2 py-1 bg-theme-info-bg text-theme-info rounded text-sm">
-              Real Data
-            </div>
-          </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+          {symbol} Price Chart with Signals
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {strategyType.replace('_', '/')} strategy signals
+        </p>
+      </div>
+      
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <span className="text-sm text-gray-600 dark:text-gray-400">Risk-On</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+          <span className="text-sm text-gray-600 dark:text-gray-400">Risk-Off</span>
+        </div>
+        <div className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-sm">
+          Real Data
         </div>
       </div>
       
-      <div className="chart-responsive-wrapper" style={{ height: `${height}px` }}>
-        <NoSSRWrapper 
-          fallback={
-            <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="text-center">
-                <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-32 rounded mx-auto mb-2"></div>
-                <div className="text-gray-600 dark:text-gray-400 text-sm">Loading chart...</div>
-              </div>
-            </div>
-          }
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid 
-                strokeDasharray="3 3" 
-                className="chart-grid-color"
-                opacity={0.3} 
-              />
-              <XAxis 
-                dataKey="date" 
-                className="chart-axis-color chart-text-color"
-                tick={{ fontSize: 12 }}
-                tickFormatter={(value) => formatDate(value, 'chart')}
-              />
-              <YAxis 
-                className="chart-axis-color chart-text-color"
-                tick={{ fontSize: 12 }}
-                tickFormatter={(value) => `$${value}`}
-                domain={['dataMin - 5', 'dataMax + 5']}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Line 
-                type="monotone" 
-                dataKey="price" 
-                stroke="var(--theme-primary)" 
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, stroke: 'var(--theme-primary)', strokeWidth: 2, fill: 'var(--theme-primary)' }}
-              />
-              
-              {/* Signal markers */}
-              {chartData.map((point, index) => {
-                if (point.signal) {
-                  return (
-                    <ReferenceDot
-                      key={index}
-                      x={point.date}
-                      y={point.price}
-                      r={6}
-                      fill={point.signal === 'Risk-On' ? 'var(--theme-success)' : 'var(--theme-danger)'}
-                      stroke="var(--theme-card)"
-                      strokeWidth={2}
-                    />
-                  );
-                }
-                return null;
-              })}
-            </LineChart>
-          </ResponsiveContainer>
-        </NoSSRWrapper>
+      <div style={{ width: '100%', height: height }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis 
+              dataKey="date" 
+              tick={{ fontSize: 12 }}
+              stroke="#6b7280"
+            />
+            <YAxis 
+              tick={{ fontSize: 12 }}
+              tickFormatter={(value) => `$${value}`}
+              domain={['dataMin - 5', 'dataMax + 5']}
+              stroke="#6b7280"
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Line 
+              type="monotone" 
+              dataKey="price" 
+              stroke={chartColors.primary}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4, stroke: chartColors.primary, strokeWidth: 2, fill: chartColors.primary }}
+            />
+            
+            {/* Signal markers */}
+            {chartData.map((point, index) => {
+              if (point.signal) {
+                return (
+                  <ReferenceDot
+                    key={index}
+                    x={point.date}
+                    y={point.price}
+                    r={6}
+                    fill={point.signal === 'Risk-On' ? chartColors.success : chartColors.danger}
+                    stroke="white"
+                    strokeWidth={2}
+                  />
+                );
+              }
+              return null;
+            })}
+          </LineChart>
+        </ResponsiveContainer>
       </div>
       
-      <div className="mt-4 text-xs text-theme-text-muted">
+      <div className="mt-4 text-xs text-gray-500">
         Chart shows {symbol} price movements with {strategyType.replace('_', '/')} strategy signals. 
         Green dots indicate Risk-On signals, red dots indicate Risk-Off signals.
       </div>

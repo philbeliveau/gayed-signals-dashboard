@@ -46,7 +46,7 @@ function setCachedData(key: string, data: any, ttl: number = CACHE_TTL) {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export async function GET(request: NextRequest) {
   try {
     // Clean up expired cache entries
