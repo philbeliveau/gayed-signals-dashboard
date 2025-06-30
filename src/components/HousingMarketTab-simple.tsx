@@ -216,7 +216,7 @@ export default function HousingMarketTab() {
                   {alert.message}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {new Date(alert.timestamp).toLocaleString()}
+                  {alert.timestamp ? new Date(alert.timestamp).toLocaleString() : 'Unknown time'}
                 </div>
               </div>
             </div>
