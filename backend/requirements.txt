@@ -32,6 +32,7 @@ pydub==0.25.1
 # HTTP requests
 requests==2.31.0
 httpx==0.25.2
+aiohttp==3.9.1
 
 # Utilities
 python-dotenv==1.0.0

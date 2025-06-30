@@ -21,7 +21,7 @@ import logging
 from core.config import settings
 from core.database import engine, create_db_and_tables
 from core.security import get_current_user
-from api.routes import videos, folders, prompts
+from api.routes import videos, folders, prompts, economic_data
 from models.database import Base
 
 # Configure logging
@@ -71,6 +71,13 @@ app.include_router(
     prompts.router,
     prefix="/api/v1/prompts",
     tags=["prompts"],
+    dependencies=[Depends(get_current_user)]
+)
+
+app.include_router(
+    economic_data.router,
+    prefix="/api/v1/economic",
+    tags=["economic-data"],
     dependencies=[Depends(get_current_user)]
 )
 

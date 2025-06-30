@@ -16,7 +16,8 @@ celery_app = Celery(
     include=[
         "backend.tasks.video_tasks",
         "backend.tasks.transcription_tasks",
-        "backend.tasks.summarization_tasks"
+        "backend.tasks.summarization_tasks",
+        "backend.tasks.economic_tasks"
     ]
 )
 
@@ -36,6 +37,7 @@ celery_app.conf.update(
         "backend.tasks.summarization_tasks.*": {"queue": "summarization"},
         "backend.tasks.maintenance_tasks.*": {"queue": "maintenance"},
         "backend.tasks.cache_tasks.*": {"queue": "cache_operations"},
+        "backend.tasks.economic_tasks.*": {"queue": "economic_data"},
     },
     
     # Queue priority settings
@@ -98,6 +100,36 @@ celery_app.conf.update(
             'schedule': 21600.0,  # Every 6 hours
             'options': {'queue': 'maintenance', 'priority': 1}
         },
+        # Economic data tasks
+        'update-housing-market-data': {
+            'task': 'backend.tasks.economic_tasks.update_housing_market_data',
+            'schedule': 3600.0,  # Every hour
+            'args': [1],  # 1 day back
+            'options': {'queue': 'economic_data', 'priority': 7}
+        },
+        'update-labor-market-data': {
+            'task': 'backend.tasks.economic_tasks.update_labor_market_data', 
+            'schedule': 3600.0,  # Every hour
+            'args': [1],  # 1 day back
+            'options': {'queue': 'economic_data', 'priority': 7}
+        },
+        'daily-complete-economic-update': {
+            'task': 'backend.tasks.economic_tasks.update_all_economic_data',
+            'schedule': 86400.0,  # Daily at midnight
+            'args': [7],  # 7 days back for comprehensive update
+            'options': {'queue': 'economic_data', 'priority': 8}
+        },
+        'validate-economic-data': {
+            'task': 'backend.tasks.economic_tasks.validate_economic_data',
+            'schedule': 43200.0,  # Every 12 hours
+            'options': {'queue': 'economic_data', 'priority': 4}
+        },
+        'cleanup-old-economic-data': {
+            'task': 'backend.tasks.economic_tasks.cleanup_old_economic_data',
+            'schedule': 604800.0,  # Weekly
+            'args': [730],  # Keep 2 years of data
+            'options': {'queue': 'economic_data', 'priority': 2}
+        },
     },
     
     # Enhanced monitoring and logging
@@ -141,6 +173,10 @@ celery_app.conf.update(
         'backend.tasks.maintenance_tasks.*': {
             'rate_limit': '30/m',  # Max 30 maintenance tasks per minute
             'priority': 3
+        },
+        'backend.tasks.economic_tasks.*': {
+            'rate_limit': '60/h',  # Max 60 economic data tasks per hour (respects FRED API limits)
+            'priority': 7
         }
     },
 )
@@ -203,6 +239,11 @@ QUEUE_CONFIGS = {
         'max_concurrency': 2,
         'max_memory_mb': 512,
         'priority': TASK_PRIORITIES['LOW']
+    },
+    'economic_data': {
+        'max_concurrency': 3,
+        'max_memory_mb': 256,
+        'priority': TASK_PRIORITIES['HIGH']
     }
 }
 

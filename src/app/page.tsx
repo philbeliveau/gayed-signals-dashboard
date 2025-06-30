@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, BarChart3, Activity, LineChart, Video } from 'lucide-react';
+import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, BarChart3, Activity, LineChart, Video, Users, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -831,14 +831,14 @@ export default function Dashboard() {
               href="/housing" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
             >
-              <span className="text-lg">🏠</span>
+              <Home className="w-4 h-4" />
               <span>Housing Market</span>
             </Link>
             <Link 
               href="/labor" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
             >
-              <span className="text-lg">👥</span>
+              <Users className="w-4 h-4" />
               <span>Labor Market</span>
             </Link>
             <Link 

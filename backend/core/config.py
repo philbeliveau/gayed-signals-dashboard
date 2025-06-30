@@ -82,6 +82,11 @@ class Settings(BaseSettings):
         default=None,
         env="ANTHROPIC_API_KEY"
     )
+    FRED_API_KEY: Optional[str] = Field(
+        default=None,
+        env="FRED_API_KEY",
+        description="Federal Reserve Economic Data (FRED) API key"
+    )
     
     # YouTube processing settings
     MAX_VIDEO_DURATION_MINUTES: int = Field(

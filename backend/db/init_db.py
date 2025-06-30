@@ -13,6 +13,7 @@ from core.database import Base, engine
 from models.database import (
     User, Video, Transcript, Summary, 
     Folder, PromptTemplate, ProcessingJob,
+    EconomicSeries, EconomicDataPoint,
     create_search_indexes
 )
 
@@ -337,6 +338,75 @@ Format this as a professional meeting summary that could be shared with stakehol
         raise
 
 
+async def create_initial_economic_series():
+    """Create initial economic series definitions."""
+    try:
+        async with engine.begin() as conn:
+            # Define initial economic series
+            initial_series = [
+                {
+                    'series_id': 'ICSA',
+                    'name': 'Initial Claims',
+                    'description': 'Initial Claims for Unemployment Insurance',
+                    'category': 'labor_market',
+                    'frequency': 'weekly',
+                    'units': 'Number',
+                    'seasonal_adjustment': True
+                },
+                {
+                    'series_id': 'CCSA',
+                    'name': 'Continued Claims',
+                    'description': 'Continued Claims for Unemployment Insurance (Insured Unemployment)',
+                    'category': 'labor_market',
+                    'frequency': 'weekly',
+                    'units': 'Number',
+                    'seasonal_adjustment': True
+                },
+                {
+                    'series_id': 'UNRATE',
+                    'name': 'Unemployment Rate',
+                    'description': 'Civilian Unemployment Rate',
+                    'category': 'labor_market',
+                    'frequency': 'monthly',
+                    'units': 'Percent',
+                    'seasonal_adjustment': True
+                },
+                {
+                    'series_id': 'CSUSHPINSA',
+                    'name': 'Case-Shiller National Home Price Index',
+                    'description': 'S&P CoreLogic Case-Shiller U.S. National Home Price Index',
+                    'category': 'housing',
+                    'frequency': 'monthly',
+                    'units': 'Index Jan 2000=100',
+                    'seasonal_adjustment': False
+                }
+            ]
+            
+            for series in initial_series:
+                await conn.execute(text("""
+                    INSERT INTO economic_series (
+                        id, series_id, name, description, category, frequency, 
+                        units, seasonal_adjustment, created_at, updated_at
+                    ) VALUES (
+                        gen_random_uuid(), :series_id, :name, :description, :category, 
+                        :frequency, :units, :seasonal_adjustment, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                    ) ON CONFLICT (series_id) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        description = EXCLUDED.description,
+                        category = EXCLUDED.category,
+                        frequency = EXCLUDED.frequency,
+                        units = EXCLUDED.units,
+                        seasonal_adjustment = EXCLUDED.seasonal_adjustment,
+                        updated_at = CURRENT_TIMESTAMP
+                """), series)
+            
+            logger.info("Created initial economic series definitions")
+            
+    except Exception as e:
+        logger.error(f"Error creating initial economic series: {e}")
+        raise
+
+
 async def init_database():
     """Initialize the complete database setup."""
     try:
@@ -367,6 +437,9 @@ async def init_database():
         
         # Step 8: Create default prompt templates
         await create_default_prompt_templates()
+        
+        # Step 9: Create initial economic series
+        await create_initial_economic_series()
         
         logger.info("Database initialization completed successfully!")
         

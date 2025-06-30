@@ -4,7 +4,7 @@ import { Home, Activity, BarChart3, LineChart, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../../components/ThemeToggle';
-import HousingMarketTab from '../../components/HousingMarketTab-simple';
+import HousingMarketTab from '../../components/HousingMarketTab';
 
 export default function HousingMarketPage() {
   const { theme } = useTheme();
@@ -83,7 +83,7 @@ export default function HousingMarketPage() {
       </header>
 
       {/* Housing Market Tab Content */}
-      <main className="max-w-7xl mx-auto">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <HousingMarketTab />
       </main>
     </div>

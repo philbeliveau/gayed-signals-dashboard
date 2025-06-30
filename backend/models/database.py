@@ -4,7 +4,7 @@ SQLAlchemy database models for YouTube video insights application.
 
 from sqlalchemy import (
     Column, String, Text, Integer, DateTime, Boolean, 
-    ForeignKey, JSON, UniqueConstraint, Index
+    ForeignKey, JSON, UniqueConstraint, Index, Date, Float, Enum
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -264,6 +264,63 @@ class ProcessingJob(Base):
     )
 
 
+class EconomicSeries(Base):
+    """Model for economic data series metadata."""
+    
+    __tablename__ = "economic_series"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    series_id = Column(String(50), unique=True, nullable=False, index=True)  # FRED series ID (e.g., 'ICSA', 'CSUSHPINSA')
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    category = Column(String(100), nullable=False)  # 'labor_market' or 'housing'
+    frequency = Column(String(20), nullable=False)  # 'weekly', 'monthly', 'quarterly'
+    units = Column(String(100))
+    seasonal_adjustment = Column(Boolean, default=False)
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    data_points = relationship("EconomicDataPoint", back_populates="series", cascade="all, delete-orphan")
+    
+    # Constraints and indexes
+    __table_args__ = (
+        Index("idx_economic_series_category", "category"),
+        Index("idx_economic_series_frequency", "frequency"),
+        Index("idx_economic_series_category_frequency", "category", "frequency"),
+    )
+
+
+class EconomicDataPoint(Base):
+    """Model for individual economic data observations."""
+    
+    __tablename__ = "economic_data_points"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    series_id = Column(UUID(as_uuid=True), ForeignKey("economic_series.id", ondelete="CASCADE"), nullable=False)
+    observation_date = Column(DateTime(timezone=True), nullable=False)
+    value = Column(String(50))  # Store as string to handle FRED's '.' for missing values
+    numeric_value = Column(Integer)  # Parsed numeric value for calculations
+    is_preliminary = Column(Boolean, default=False)
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    
+    # Relationships
+    series = relationship("EconomicSeries", back_populates="data_points")
+    
+    # Constraints and indexes
+    __table_args__ = (
+        UniqueConstraint("series_id", "observation_date", name="unique_series_observation"),
+        Index("idx_economic_data_series_date", "series_id", "observation_date"),
+        Index("idx_economic_data_observation_date", "observation_date"),
+        Index("idx_economic_data_numeric_value", "numeric_value"),
+        Index("idx_economic_data_series_date_desc", "series_id", "observation_date", postgresql_descending=["observation_date"]),
+    )
+
+
 # Create search indexes for full-text search
 def create_search_indexes():
     """
@@ -328,5 +385,21 @@ def create_search_indexes():
         # Composite indexes for common queries
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_videos_user_folder_status ON videos(user_id, folder_id, status, created_at DESC);",
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_videos_channel_published ON videos(channel_name, published_at DESC) WHERE published_at IS NOT NULL;",
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_summaries_user_mode_created ON summaries(video_id, mode, created_at DESC);"
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_summaries_user_mode_created ON summaries(video_id, mode, created_at DESC);",
+        
+        # Economic data performance indexes
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_series_category ON economic_series(category);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_series_frequency ON economic_series(frequency);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_series_category_frequency ON economic_series(category, frequency);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_series_series_id ON economic_series(series_id);",
+        
+        # Economic data points performance indexes
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_data_series_date ON economic_data_points(series_id, observation_date DESC);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_data_observation_date ON economic_data_points(observation_date DESC);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_data_numeric_value ON economic_data_points(numeric_value) WHERE numeric_value IS NOT NULL;",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_data_series_recent ON economic_data_points(series_id, observation_date DESC) WHERE observation_date >= CURRENT_DATE - INTERVAL '5 years';",
+        
+        # Economic data composite indexes for common queries
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_data_series_value_date ON economic_data_points(series_id, numeric_value, observation_date DESC) WHERE numeric_value IS NOT NULL;",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_series_latest_data ON economic_data_points(series_id, observation_date DESC, created_at DESC);"
     ]

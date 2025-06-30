@@ -79,7 +79,8 @@ async def create_db_and_tables():
         # Import all models to ensure they're registered
         from models.database import (
             User, Video, Transcript, Summary, 
-            Folder, PromptTemplate, ProcessingJob, create_search_indexes
+            Folder, PromptTemplate, ProcessingJob,
+            EconomicSeries, EconomicDataPoint, create_search_indexes
         )
         
         async with engine.begin() as conn:
