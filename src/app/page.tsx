@@ -827,6 +827,20 @@ export default function Dashboard() {
               <LineChart className="w-4 h-4" />
               <span>Backtrader Analysis</span>
             </Link>
+            <Link 
+              href="/housing" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
+            >
+              <span className="text-lg">🏠</span>
+              <span>Housing Market</span>
+            </Link>
+            <Link 
+              href="/labor" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
+            >
+              <span className="text-lg">👥</span>
+              <span>Labor Market</span>
+            </Link>
           </div>
         </div>
       </header>

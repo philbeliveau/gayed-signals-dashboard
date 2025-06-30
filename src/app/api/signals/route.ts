@@ -163,6 +163,79 @@ export async function GET(request: NextRequest) {
 }
 
 /**
+ * POST handler for historical data requests
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { symbol, startDate, endDate, requestHistorical } = body;
+    
+    if (!requestHistorical) {
+      return NextResponse.json({ 
+        error: 'This endpoint requires requestHistorical=true' 
+      }, { status: 400 });
+    }
+    
+    if (!symbol || !startDate || !endDate) {
+      return NextResponse.json({ 
+        error: 'Missing required parameters: symbol, startDate, endDate' 
+      }, { status: 400 });
+    }
+    
+    console.log(`📈 Fetching historical data for ${symbol} from ${startDate} to ${endDate}`);
+    
+    // Initialize enhanced market client
+    const marketClient = new EnhancedMarketClient({
+      tiingo: {
+        apiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
+        rateLimit: 500
+      },
+      alphaVantage: {
+        apiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
+        rateLimit: 12000
+      },
+      yahoo: {
+        rateLimit: 100
+      }
+    });
+    
+    // Fetch historical data for the specific symbol
+    const historicalData = await marketClient.fetchHistoricalData(symbol, startDate, endDate);
+    
+    if (!historicalData || historicalData.length === 0) {
+      return NextResponse.json({ 
+        error: `No historical data available for ${symbol}`,
+        symbol,
+        startDate,
+        endDate
+      }, { status: 404 });
+    }
+    
+    console.log(`✅ Retrieved ${historicalData.length} historical data points for ${symbol}`);
+    
+    return NextResponse.json({
+      symbol,
+      startDate,
+      endDate,
+      historicalData,
+      metadata: {
+        timestamp: new Date().toISOString(),
+        dataPoints: historicalData.length,
+        dataSource: 'real_market_data'
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching historical data:', error);
+    return NextResponse.json({ 
+      error: 'Failed to fetch historical data',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
+  }
+}
+
+/**
  * OPTIONS handler for CORS support
  */
 export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
@@ -170,7 +243,7 @@ export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
       'Access-Control-Max-Age': '86400'
     }

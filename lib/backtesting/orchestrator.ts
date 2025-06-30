@@ -1040,7 +1040,7 @@ export class BacktestOrchestrator {
     if (spyData.length < 21) return [];
     
     const regimes = [];
-    let currentRegime: string = 'sideways';
+    let currentRegime: 'bull' | 'bear' | 'sideways' = 'sideways';
     let regimeStart = spyData[0].date;
     let regimeData: any[] = [];
     

@@ -55,28 +55,45 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<UserPreferences>({
     strategies: {}
   });
+  const [mounted, setMounted] = useState(false);
 
-  // Load preferences from localStorage on mount
+  // Load preferences from localStorage on mount (client-side only)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setPreferences(parsed);
+    setMounted(true);
+    
+    const loadPreferences = () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          // Validate parsed data structure
+          if (parsed && typeof parsed === 'object' && parsed.strategies) {
+            setPreferences(parsed);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load user preferences:', error);
+        // Reset to default state on error
+        setPreferences({ strategies: {} });
       }
-    } catch (error) {
-      console.error('Failed to load user preferences:', error);
-    }
+    };
+
+    loadPreferences();
   }, []);
 
-  // Save preferences to localStorage whenever they change
+  // Save preferences to localStorage whenever they change (client-side only)
   useEffect(() => {
+    // Only save if mounted (client-side) and not the initial empty state
+    if (!mounted || Object.keys(preferences.strategies).length === 0) {
+      return;
+    }
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
     } catch (error) {
       console.error('Failed to save user preferences:', error);
     }
-  }, [preferences]);
+  }, [preferences, mounted]);
 
   const updateETFSelection = (strategyType: string, etfSymbol: string, selected: boolean) => {
     setPreferences(prev => {

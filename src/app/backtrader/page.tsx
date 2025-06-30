@@ -26,8 +26,23 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import ThemeToggle from '../../components/ThemeToggle';
-import InteractiveLumberGoldChart from '../../components/InteractiveLumberGoldChart';
+import { ETF_RECOMMENDATIONS, getETFRecommendations, getStrategyConfig } from '../../../lib/etf-recommendations';
+import dynamic from 'next/dynamic';
+
+// Dynamic import for chart component to avoid SSR issues
+const UniversalStrategyChart = dynamic(() => import('../../components/UniversalStrategyChart'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-96 flex items-center justify-center bg-theme-card-secondary border border-theme-border rounded-lg">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary mx-auto mb-4"></div>
+        <p className="text-theme-text">Loading Chart Component...</p>
+      </div>
+    </div>
+  )
+});
 
 // Types for Backtrader Analysis
 interface BacktraderConfig {
@@ -36,6 +51,7 @@ interface BacktraderConfig {
   initialCash: number;
   commission: number;
   symbols: string[];
+  allocations: Record<string, number>; // ETF symbol -> allocation percentage
   signals: string[];
   timeframe: string;
   chartStyle: string;
@@ -93,19 +109,33 @@ interface BacktraderResult {
   executionTime: number;
 }
 
-// Available symbols for analysis
-const AVAILABLE_SYMBOLS = [
-  { symbol: 'SPY', name: 'SPDR S&P 500 ETF', category: 'Market Index' },
-  { symbol: 'XLU', name: 'Utilities Select Sector SPDR', category: 'Sector ETF' },
-  { symbol: 'WOOD', name: 'iShares Global Timber & Forestry ETF', category: 'Commodity ETF' },
-  { symbol: 'GLD', name: 'SPDR Gold Shares', category: 'Precious Metals' },
-  { symbol: 'TLT', name: 'iShares 20+ Year Treasury Bond ETF', category: 'Treasury' },
-  { symbol: 'QQQ', name: 'Invesco QQQ Trust', category: 'Technology' },
-  { symbol: 'IWM', name: 'iShares Russell 2000 ETF', category: 'Small Cap' },
-  { symbol: 'VXX', name: 'iPath Series B S&P 500 VIX Short-Term Futures ETN', category: 'Volatility' },
-  { symbol: 'DBA', name: 'Invesco DB Agriculture Fund', category: 'Agriculture' },
-  { symbol: 'USO', name: 'United States Oil Fund', category: 'Energy' }
-];
+// Get all available ETFs organized by strategy
+const getAllStrategyETFs = () => {
+  const strategyETFs: Record<string, Array<{symbol: string, name: string, category: string, type: 'Risk-On' | 'Risk-Off', strategy: string}>> = {};
+  
+  Object.entries(ETF_RECOMMENDATIONS).forEach(([strategyId, strategyData]) => {
+    const strategyName = getStrategyConfig(strategyId)?.strategyName || strategyId;
+    
+    strategyETFs[strategyName] = [
+      ...strategyData.riskOnETFs.map(etf => ({
+        symbol: etf.symbol,
+        name: etf.name,
+        category: etf.category,
+        type: 'Risk-On' as const,
+        strategy: strategyId
+      })),
+      ...strategyData.riskOffETFs.map(etf => ({
+        symbol: etf.symbol,
+        name: etf.name,
+        category: etf.category,
+        type: 'Risk-Off' as const,
+        strategy: strategyId
+      }))
+    ];
+  });
+  
+  return strategyETFs;
+};
 
 // Available Gayed signals
 const GAYED_SIGNALS = [
@@ -202,6 +232,32 @@ const SIGNAL_EXPLANATIONS: Record<string, SignalExplanation> = {
 
 export default function BacktraderPage() {
   const { theme } = useTheme();
+  const { preferences, getSelectedETFs } = useUserPreferences();
+  
+  // Get all user's selected ETFs across all strategies
+  const getAllUserSelectedETFs = () => {
+    const allSelectedETFs: Array<{symbol: string, allocation: number, strategy: string}> = [];
+    
+    Object.keys(preferences.strategies).forEach(strategyType => {
+      const selectedETFs = getSelectedETFs(strategyType);
+      selectedETFs.forEach(etf => {
+        allSelectedETFs.push({
+          symbol: etf.symbol,
+          allocation: etf.allocation,
+          strategy: strategyType
+        });
+      });
+    });
+    
+    return allSelectedETFs;
+  };
+
+  const userSelectedETFs = getAllUserSelectedETFs();
+  const userSymbols = userSelectedETFs.map(etf => etf.symbol);
+  const userAllocations = userSelectedETFs.reduce((acc, etf) => {
+    acc[etf.symbol] = etf.allocation;
+    return acc;
+  }, {} as Record<string, number>);
   
   // State management
   const [config, setConfig] = useState<BacktraderConfig>({
@@ -209,7 +265,8 @@ export default function BacktraderPage() {
     endDate: '2023-12-31',
     initialCash: 100000,
     commission: 0.001,
-    symbols: ['SPY', 'XLU'],
+    symbols: userSymbols.length > 0 ? userSymbols : ['SPY', 'XLU'],
+    allocations: userAllocations,
     signals: ['utilities_spy'],
     timeframe: '1D',
     chartStyle: 'candlestick',
@@ -218,11 +275,29 @@ export default function BacktraderPage() {
     showDrawdown: false
   });
 
+  // Update config when user preferences change
+  useEffect(() => {
+    const currentUserETFs = getAllUserSelectedETFs();
+    const currentSymbols = currentUserETFs.map(etf => etf.symbol);
+    const currentAllocations = currentUserETFs.reduce((acc, etf) => {
+      acc[etf.symbol] = etf.allocation;
+      return acc;
+    }, {} as Record<string, number>);
+
+    if (currentSymbols.length > 0) {
+      setConfig(prev => ({
+        ...prev,
+        symbols: currentSymbols,
+        allocations: currentAllocations
+      }));
+    }
+  }, [preferences]);
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<BacktraderResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'config' | 'charts' | 'performance' | 'correlations' | 'signals'>('config');
+  const [activeTab, setActiveTab] = useState<'config' | 'charts' | 'performance' | 'correlations' | 'signals'>('charts');
   const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
 
   // Handlers
@@ -499,35 +574,102 @@ export default function BacktraderPage() {
               </div>
             </div>
 
-            {/* Symbol Selection */}
+            {/* All Available ETFs by Strategy */}
             <div className="bg-theme-card border border-theme-border rounded-xl p-6">
-              <h2 className="text-xl font-bold text-theme-text mb-6">Symbol Selection</h2>
-              <p className="text-theme-text-muted mb-6">Choose which symbols to analyze with the selected signals:</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {AVAILABLE_SYMBOLS.map((item) => (
-                  <div
-                    key={item.symbol}
-                    onClick={() => handleSymbolToggle(item.symbol)}
-                    className={`p-4 border rounded-xl cursor-pointer transition-all hover:shadow-md ${
-                      config.symbols.includes(item.symbol)
-                        ? 'border-theme-primary bg-theme-primary-bg'
-                        : 'border-theme-border hover:border-theme-border-hover'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className={`w-4 h-4 rounded-full border-2 ${
-                        config.symbols.includes(item.symbol)
-                          ? 'bg-theme-primary border-theme-primary'
-                          : 'border-theme-text-muted'
-                      }`} />
-                      <div>
-                        <h3 className="font-semibold text-theme-text">{item.symbol}</h3>
-                        <p className="text-xs text-theme-info">{item.category}</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-theme-text-muted">{item.name}</p>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-theme-text">ETF & Index Selection</h2>
+                <div className="flex items-center space-x-3">
+                  {userSelectedETFs.length > 0 && (
+                    <Link 
+                      href="/strategies"
+                      className="px-3 py-1 text-sm bg-theme-success hover:bg-theme-success-hover text-white rounded-lg transition-colors"
+                    >
+                      View Portfolio ({userSelectedETFs.length})
+                    </Link>
+                  )}
+                  <span className="text-sm text-theme-text-muted">
+                    {config.symbols.length} selected
+                  </span>
+                </div>
+              </div>
+              
+              <p className="text-theme-text-muted mb-6">
+                Choose any combination of ETFs and indices for backtesting. ETFs are organized by their associated Gayed signals:
+              </p>
+              
+              {Object.entries(getAllStrategyETFs()).map(([strategyName, etfs]) => (
+                <div key={strategyName} className="mb-8 last:mb-0">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-3 h-3 bg-theme-primary rounded-full"></div>
+                    <h3 className="text-lg font-semibold text-theme-text">{strategyName}</h3>
+                    <span className="text-sm text-theme-text-muted">({etfs.length} ETFs)</span>
                   </div>
-                ))}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    {etfs.map((etf) => {
+                      const isSelected = config.symbols.includes(etf.symbol);
+                      const userAllocation = config.allocations[etf.symbol] || 0;
+                      
+                      return (
+                        <div
+                          key={etf.symbol}
+                          onClick={() => handleSymbolToggle(etf.symbol)}
+                          className={`p-4 border rounded-xl cursor-pointer transition-all hover:shadow-md ${
+                            isSelected
+                              ? 'border-theme-primary bg-theme-primary-bg'
+                              : 'border-theme-border hover:border-theme-border-hover'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <div className={`w-4 h-4 rounded-full border-2 ${
+                                isSelected
+                                  ? 'bg-theme-primary border-theme-primary'
+                                  : 'border-theme-text-muted'
+                              }`} />
+                              <div>
+                                <h4 className="font-semibold text-theme-text">{etf.symbol}</h4>
+                                <div className="flex items-center space-x-2">
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                    etf.type === 'Risk-On' 
+                                      ? 'bg-theme-success-bg text-theme-success' 
+                                      : 'bg-theme-danger-bg text-theme-danger'
+                                  }`}>
+                                    {etf.type}
+                                  </span>
+                                  <span className="text-xs text-theme-info">{etf.category}</span>
+                                </div>
+                              </div>
+                            </div>
+                            {userAllocation > 0 && (
+                              <div className="text-right">
+                                <div className="text-sm font-bold text-theme-primary">{userAllocation}%</div>
+                                <div className="text-xs text-theme-text-muted">Portfolio</div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <p className="text-sm text-theme-text-muted">{etf.name}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              
+              <div className="mt-6 p-4 bg-theme-info-bg border border-theme-info-border rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <Info className="w-5 h-5 text-theme-info flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-theme-text-secondary">
+                    <p className="font-medium text-theme-info mb-1">Selection Guide</p>
+                    <div className="space-y-1">
+                      <p>• <strong>Risk-On ETFs:</strong> Perform well when the signal indicates growth/risk appetite</p>
+                      <p>• <strong>Risk-Off ETFs:</strong> Perform well when the signal indicates caution/defensive positioning</p>
+                      <p>• <strong>Portfolio %:</strong> Shows your allocation from Strategy Dashboard (if any)</p>
+                      <p>• Select any combination across strategies for comprehensive backtesting</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -629,8 +771,23 @@ export default function BacktraderPage() {
 
         {activeTab === 'charts' && (
           <div className="space-y-8">
-            {/* Interactive Real Lumber/Gold Backtesting Chart */}
-            <InteractiveLumberGoldChart config={config} />
+            {/* Universal Multi-Strategy Backtesting Chart */}
+            {config.symbols.length > 0 && config.signals.length > 0 ? (
+              <UniversalStrategyChart config={config} />
+            ) : (
+              <div className="bg-theme-card border border-theme-border rounded-xl p-8 text-center">
+                <div className="text-theme-text-muted mb-4">
+                  <div className="text-4xl mb-4">📊</div>
+                  <h3 className="text-lg font-semibold text-theme-text mb-2">Ready for Analysis</h3>
+                  <p className="text-theme-text-muted">
+                    Select ETFs and signals above to generate comprehensive backtesting charts with real market data.
+                  </p>
+                  <p className="text-sm text-theme-text-light mt-2">
+                    Choose any combination of ETFs across all 5 Gayed strategies for multi-strategy analysis.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -945,6 +1102,11 @@ export default function BacktraderPage() {
             <div className="flex items-center space-x-4">
               <div className="text-sm text-theme-text-muted">
                 {config.symbols.length} symbol{config.symbols.length !== 1 ? 's' : ''} • {config.signals.length} signal{config.signals.length !== 1 ? 's' : ''}
+                {Object.keys(config.allocations).length > 0 && (
+                  <span className="ml-2 px-2 py-1 bg-theme-primary-bg text-theme-primary rounded text-xs">
+                    Portfolio Allocations
+                  </span>
+                )}
               </div>
               {results && (
                 <button

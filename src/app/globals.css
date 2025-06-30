@@ -335,3 +335,52 @@ body {
   outline: 2px solid var(--theme-accent);
   outline-offset: 2px;
 }
+
+/* Chart Container Styles */
+.chart-container {
+  position: relative;
+  z-index: 10;
+  min-height: 300px;
+  width: 100%;
+}
+
+.chart-responsive-wrapper {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  width: 100%;
+}
+
+/* Chart-specific element exclusions from global transitions */
+.chart-container *,
+.recharts-wrapper *,
+.recharts-surface * {
+  transition: none !important;
+}
+
+/* Chart Loading States */
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: var(--theme-card);
+  border: 1px solid var(--theme-border);
+  border-radius: 0.75rem;
+}
+
+.chart-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: var(--theme-danger-bg);
+  border: 1px solid var(--theme-danger-border);
+  border-radius: 0.75rem;
+  color: var(--theme-danger);
+}
+
+/* Chart Theme Colors */
+.chart-grid-color { stroke: var(--theme-border) !important; }
+.chart-axis-color { stroke: var(--theme-text-muted) !important; }
+.chart-text-color { fill: var(--theme-text-muted) !important; }

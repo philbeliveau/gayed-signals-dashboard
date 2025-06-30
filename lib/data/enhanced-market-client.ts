@@ -420,18 +420,18 @@ export class EnhancedMarketClient {
         switch (source) {
           case 'tiingo':
             if (!this.config.tiingoApiKey) continue;
-            await this.delay(this.config.rateLimits.tiingo);
+            await this.delay(this.config.rateLimits?.tiingo || 1000);
             data = await this.fetchFromTiingo(symbol);
             break;
             
           case 'alpha_vantage':
             if (!this.config.alphaVantageApiKey) continue;
-            await this.delay(this.config.rateLimits.alphaVantage);
+            await this.delay(this.config.rateLimits?.alphaVantage || 1000);
             data = await this.fetchFromAlphaVantage(symbol);
             break;
             
           case 'yahoo_finance':
-            await this.delay(this.config.rateLimits.yahooFinance);
+            await this.delay(this.config.rateLimits?.yahooFinance || 500);
             data = await this.fetchFromYahooFinance(symbol);
             break;
             
@@ -550,6 +550,161 @@ export class EnhancedMarketClient {
     const isValid = warnings.length === 0 || warnings.every(warning => warning.includes('suspicious'));
     logDataValidation(symbol, isValid, warnings);
     return isValid;
+  }
+
+  /**
+   * Fetch historical data for a single symbol with specific date range
+   */
+  public async fetchHistoricalData(symbol: string, startDate: string, endDate: string): Promise<MarketData[]> {
+    logger.info(`Fetching historical data for ${symbol} from ${startDate} to ${endDate}`, {
+      operation: 'historical_fetch_start',
+      symbol,
+      startDate,
+      endDate
+    });
+
+    try {
+      // Calculate how much data we need
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const requestedRangeYears = (end.getTime() - start.getTime()) / (365 * 24 * 60 * 60 * 1000);
+      
+      // If requesting data older than 2 years, we need to fetch with extended range
+      const now = new Date();
+      const twoYearsAgo = new Date(now.getTime() - (2 * 365 * 24 * 60 * 60 * 1000));
+      
+      let fullData: MarketData[];
+      
+      if (start < twoYearsAgo || requestedRangeYears > 2) {
+        // Need extended historical data - call data sources with specific date range
+        console.log(`🔍 DEBUGGING: Requesting extended historical data for ${symbol} from ${startDate} to ${endDate}`);
+        fullData = await this.fetchExtendedHistoricalData(symbol, startDate, endDate);
+      } else {
+        // Standard 2-year data is sufficient
+        fullData = await this.fetchSingleSymbol(symbol);
+      }
+      
+      // Filter data by exact date range
+      const filteredData = fullData.filter(dataPoint => {
+        const pointDate = new Date(dataPoint.date);
+        return pointDate >= start && pointDate <= end;
+      });
+      
+      logger.info(`Historical data filtered for ${symbol}`, {
+        operation: 'historical_fetch_complete',
+        symbol,
+        totalDataPoints: fullData.length,
+        filteredDataPoints: filteredData.length,
+        startDate,
+        endDate,
+        requestedRangeYears: requestedRangeYears.toFixed(2)
+      });
+      
+      console.log(`🔍 DEBUGGING: ${symbol} final data: ${filteredData.length} points from ${filteredData[0]?.date} to ${filteredData[filteredData.length - 1]?.date}`);
+      
+      return filteredData;
+      
+    } catch (error) {
+      logger.error(`Failed to fetch historical data for ${symbol}`, {
+        symbol,
+        startDate,
+        endDate,
+        operation: 'historical_fetch_failed'
+      }, error instanceof Error ? error : new Error('Unknown error'));
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch extended historical data with custom date range
+   */
+  private async fetchExtendedHistoricalData(symbol: string, startDate: string, endDate: string): Promise<MarketData[]> {
+    const errors: Error[] = [];
+    
+    // Try Yahoo Finance first for extended historical data
+    try {
+      console.log(`🔍 DEBUGGING: Trying Yahoo Finance for ${symbol} extended data ${startDate} to ${endDate}`);
+      return await this.fetchFromYahooFinanceWithDateRange(symbol, startDate, endDate);
+    } catch (error) {
+      errors.push(error instanceof Error ? error : new Error('Yahoo Finance failed'));
+      logger.warn(`Yahoo Finance failed for ${symbol} extended data`, { symbol, error });
+    }
+
+    // Try Alpha Vantage as fallback (limited historical range)
+    try {
+      console.log(`🔍 DEBUGGING: Trying Alpha Vantage for ${symbol} (may be limited)`);
+      return await this.fetchFromAlphaVantage(symbol);
+    } catch (error) {
+      errors.push(error instanceof Error ? error : new Error('Alpha Vantage failed'));
+      logger.warn(`Alpha Vantage failed for ${symbol}`, { symbol, error });
+    }
+
+    // Try Tiingo as final fallback
+    try {
+      console.log(`🔍 DEBUGGING: Trying Tiingo for ${symbol} extended data`);
+      return await this.fetchFromTiingo(symbol);
+    } catch (error) {
+      errors.push(error instanceof Error ? error : new Error('Tiingo failed'));
+      logger.warn(`Tiingo failed for ${symbol}`, { symbol, error });
+    }
+
+    // All sources failed
+    throw new Error(`All data sources failed for ${symbol}: ${errors.map(e => e.message).join(', ')}`);
+  }
+
+  /**
+   * Fetch from Yahoo Finance with custom date range
+   */
+  private async fetchFromYahooFinanceWithDateRange(symbol: string, startDate: string, endDate: string): Promise<MarketData[]> {
+    this.stats.yahooFinance.totalRequests++;
+    const startTime = Date.now();
+
+    try {
+      const mappedSymbol = this.getSymbolForSource(symbol, 'yahoo_finance');
+      
+      logger.info(`Fetching ${symbol} from Yahoo Finance with custom range`, { 
+        symbol, 
+        dataSource: 'yahoo_finance', 
+        operation: 'fetch_start',
+        startDate,
+        endDate
+      });
+      
+      const historical = await yahooFinance.historical(mappedSymbol, {
+        period1: new Date(startDate),
+        period2: new Date(endDate),
+        interval: '1d'
+      });
+
+      if (!Array.isArray(historical) || historical.length === 0) {
+        throw new Error('No data returned from Yahoo Finance');
+      }
+
+      const marketData: MarketData[] = historical
+        .filter(data => data && typeof data.close === 'number' && data.close > 0 && isFinite(data.close))
+        .map(data => ({
+          date: data.date.toISOString().split('T')[0],
+          symbol: symbol, // Use original symbol
+          close: data.close,
+          volume: data.volume
+        }));
+
+      const duration = Date.now() - startTime;
+      this.stats.yahooFinance.successfulRequests++;
+      this.stats.yahooFinance.lastRequestTime = new Date();
+      
+      logMarketDataFetch(symbol, 'yahoo_finance', true, duration, marketData.length);
+      console.log(`🔍 DEBUGGING: Yahoo Finance returned ${marketData.length} data points for ${symbol}`);
+      return marketData;
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      this.stats.yahooFinance.failedRequests++;
+      this.stats.yahooFinance.lastFailureReason = error instanceof Error ? error.message : 'Unknown error';
+      
+      logMarketDataFetch(symbol, 'yahoo_finance', false, duration, 0, error instanceof Error ? error : new Error('Unknown error'));
+      throw error;
+    }
   }
 
   /**

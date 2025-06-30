@@ -25,36 +25,61 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+  // Initialize with a default theme that matches the expected server render
   const [theme, setTheme] = useState<Theme>('dark');
   const [mounted, setMounted] = useState(false);
 
+  // First useEffect: Mark as mounted and load saved preferences
   useEffect(() => {
     setMounted(true);
     
-    // Check if there's a saved theme preference
-    const savedTheme = localStorage.getItem('gayed-dashboard-theme') as Theme;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else {
-      // Default to system preference
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setTheme(systemPrefersDark ? 'dark' : 'light');
-    }
+    // Function to safely access browser APIs
+    const loadThemePreference = () => {
+      try {
+        // Check if there's a saved theme preference
+        const savedTheme = localStorage.getItem('gayed-dashboard-theme') as Theme;
+        if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+          setTheme(savedTheme);
+          return;
+        }
+        
+        // Default to system preference if no saved preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          setTheme('dark');
+        } else {
+          setTheme('light');
+        }
+      } catch (error) {
+        // Fallback to dark theme if any errors occur
+        console.warn('Error loading theme preference:', error);
+        setTheme('dark');
+      }
+    };
+
+    loadThemePreference();
   }, []);
 
+  // Second useEffect: Apply theme changes to DOM (only after mounted)
   useEffect(() => {
-    if (mounted) {
+    if (!mounted) return;
+
+    try {
+      // Save to localStorage
       localStorage.setItem('gayed-dashboard-theme', theme);
       
       // Update document class for global styling
-      document.documentElement.classList.remove('light', 'dark');
-      document.documentElement.classList.add(theme);
+      if (document.documentElement) {
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(theme);
+      }
       
       // Update meta theme-color for mobile browsers
       const metaThemeColor = document.querySelector('meta[name="theme-color"]');
       if (metaThemeColor) {
         metaThemeColor.setAttribute('content', theme === 'light' ? '#FFFFFF' : '#0A0A0A');
       }
+    } catch (error) {
+      console.warn('Error applying theme changes:', error);
     }
   }, [theme, mounted]);
 
@@ -68,14 +93,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     setTheme,
   };
 
-  // Prevent flash of unstyled content
-  if (!mounted) {
-    return null;
-  }
-
+  // During SSR and initial hydration, render with a stable theme
+  // This prevents hydration mismatches
   return (
     <ThemeContext.Provider value={value}>
-      {children}
+      <div suppressHydrationWarning={!mounted} style={{ display: 'contents' }}>
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 };

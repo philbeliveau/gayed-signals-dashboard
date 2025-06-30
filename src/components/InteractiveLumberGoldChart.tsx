@@ -285,113 +285,117 @@ export default function InteractiveLumberGoldChart({ config }: Props) {
       </div>
 
       {/* Interactive Charts */}
-      <div className="bg-theme-card border border-theme-border rounded-xl p-4" style={{ height: '500px' }}>
+      <div className="bg-theme-card border border-theme-border rounded-xl p-4 chart-container" style={{ height: '500px' }}>
         {activeTab === 'prices' && (
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#9CA3AF"
-                tick={{ fontSize: 12 }}
-                tickFormatter={formatDate}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-              />
-              <YAxis yAxisId="price" stroke="#9CA3AF" tick={{ fontSize: 12 }} />
-              <YAxis yAxisId="signals" orientation="right" stroke="#9CA3AF" tick={{ fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              
-              <Line 
-                yAxisId="price"
-                type="monotone" 
-                dataKey="lumberPrice" 
-                stroke="#3B82F6" 
-                strokeWidth={2}
-                name="WOOD (Lumber ETF)"
-                dot={false}
-              />
-              <Line 
-                yAxisId="price"
-                type="monotone" 
-                dataKey="goldPrice" 
-                stroke="#F59E0B" 
-                strokeWidth={2}
-                name="GLD (Gold ETF)"
-                dot={false}
-              />
-              
-              {/* Signal markers */}
-              {backtestData.trades.map((trade, index) => (
-                <ReferenceLine 
-                  key={index}
-                  x={trade.date} 
-                  stroke={trade.signal === 'Risk-On' ? '#10B981' : '#EF4444'}
-                  strokeDasharray="2 2"
-                  label={{
-                    value: `${trade.action} ${trade.symbol}`,
-                    position: 'top',
-                    style: { fontSize: '10px', fill: trade.signal === 'Risk-On' ? '#10B981' : '#EF4444' }
-                  }}
+          <div className="chart-responsive-wrapper h-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" className="chart-grid-color" />
+                <XAxis 
+                  dataKey="date" 
+                  className="chart-axis-color chart-text-color"
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={formatDate}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
                 />
-              ))}
-            </ComposedChart>
-          </ResponsiveContainer>
+                <YAxis yAxisId="price" className="chart-axis-color chart-text-color" tick={{ fontSize: 12 }} />
+                <YAxis yAxisId="signals" orientation="right" className="chart-axis-color chart-text-color" tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                
+                <Line 
+                  yAxisId="price"
+                  type="monotone" 
+                  dataKey="lumberPrice" 
+                  stroke="var(--theme-primary)" 
+                  strokeWidth={2}
+                  name="WOOD (Lumber ETF)"
+                  dot={false}
+                />
+                <Line 
+                  yAxisId="price"
+                  type="monotone" 
+                  dataKey="goldPrice" 
+                  stroke="var(--theme-warning)" 
+                  strokeWidth={2}
+                  name="GLD (Gold ETF)"
+                  dot={false}
+                />
+                
+                {/* Signal markers */}
+                {backtestData.trades.map((trade, index) => (
+                  <ReferenceLine 
+                    key={index}
+                    x={trade.date} 
+                    stroke={trade.signal === 'Risk-On' ? 'var(--theme-success)' : 'var(--theme-danger)'}
+                    strokeDasharray="2 2"
+                    label={{
+                      value: `${trade.action} ${trade.symbol}`,
+                      position: 'top',
+                      style: { fontSize: '10px', fill: trade.signal === 'Risk-On' ? 'var(--theme-success)' : 'var(--theme-danger)' }
+                    }}
+                  />
+                ))}
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
         )}
 
         {activeTab === 'ratio' && (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#9CA3AF"
-                tick={{ fontSize: 12 }}
-                tickFormatter={formatDate}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-              />
-              <YAxis stroke="#9CA3AF" tick={{ fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              
-              {/* Lumber/Gold ratio line */}
-              <Line 
-                type="monotone" 
-                dataKey="lumberGoldRatio" 
-                stroke="#8B5CF6" 
-                strokeWidth={3}
-                name="Lumber/Gold Ratio"
-                dot={false}
-              />
-              
-              {/* Reference line at 1.0 */}
-              <ReferenceLine 
-                y={1.0} 
-                stroke="#6B7280" 
-                strokeDasharray="5 5"
-                label={{ value: "Neutral (1.0)", position: "right" }}
-              />
-              
-              {/* Signal change markers */}
-              {backtestData.trades.map((trade, index) => (
-                <ReferenceLine 
-                  key={index}
-                  x={trade.date} 
-                  stroke={trade.signal === 'Risk-On' ? '#10B981' : '#EF4444'}
-                  strokeWidth={2}
-                  label={{
-                    value: `${trade.signal}`,
-                    position: trade.signal === 'Risk-On' ? 'bottom' : 'top',
-                    style: { fontSize: '10px', fill: trade.signal === 'Risk-On' ? '#10B981' : '#EF4444' }
-                  }}
+          <div className="chart-responsive-wrapper h-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" className="chart-grid-color" />
+                <XAxis 
+                  dataKey="date" 
+                  className="chart-axis-color chart-text-color"
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={formatDate}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
                 />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
+                <YAxis className="chart-axis-color chart-text-color" tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                
+                {/* Lumber/Gold ratio line */}
+                <Line 
+                  type="monotone" 
+                  dataKey="lumberGoldRatio" 
+                  stroke="var(--theme-accent)" 
+                  strokeWidth={3}
+                  name="Lumber/Gold Ratio"
+                  dot={false}
+                />
+                
+                {/* Reference line at 1.0 */}
+                <ReferenceLine 
+                  y={1.0} 
+                  stroke="var(--theme-text-muted)" 
+                  strokeDasharray="5 5"
+                  label={{ value: "Neutral (1.0)", position: "right" }}
+                />
+                
+                {/* Signal change markers */}
+                {backtestData.trades.map((trade, index) => (
+                  <ReferenceLine 
+                    key={index}
+                    x={trade.date} 
+                    stroke={trade.signal === 'Risk-On' ? 'var(--theme-success)' : 'var(--theme-danger)'}
+                    strokeWidth={2}
+                    label={{
+                      value: `${trade.signal}`,
+                      position: trade.signal === 'Risk-On' ? 'bottom' : 'top',
+                      style: { fontSize: '10px', fill: trade.signal === 'Risk-On' ? 'var(--theme-success)' : 'var(--theme-danger)' }
+                    }}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         )}
 
         {activeTab === 'performance' && (
