@@ -1,5 +1,7 @@
 # Feature PRD: YouTube Summary Tab
 
+**The task abruptly quit in the middle of the completion of it. I want you to look at all the files in the git, they were made to solve this task**
+
 ## 1 Context
 
 The existing trading signals dashboard needs enhanced knowledge management capabilities. Users currently analyze market signals but lack tools to extract insights from video content. YouTube contains valuable financial analysis, market commentary, and educational content that users need to process efficiently. Manual transcription and note-taking is time-consuming and prevents users from leveraging video-based market intelligence at scale.

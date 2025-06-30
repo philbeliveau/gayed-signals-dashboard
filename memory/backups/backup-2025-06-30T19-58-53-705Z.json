@@ -1,0 +1,138 @@
+{
+  "timestamp": "2025-06-30T19:58:53.705Z",
+  "version": "1.0",
+  "entries": [
+    {
+      "id": "entry_mcji2dfo_hkwncwdgg",
+      "key": "swarm-auto-centralized-1751312065421/integration/implementation",
+      "value": "\"INTEGRATION ANALYSIS COMPLETE\\n\\nCURRENT SYSTEM STATE:\\n- Frontend: Next.js on port 3000 with API routes in src/app/api/\\n- Backend: Python Flask service on port 5000 (backtrader-analysis)\\n- Environment: API keys configured (.env.local with Tiingo, Alpha Vantage, FRED, etc.)\\n- Docker: Python service has Dockerfile and docker-compose.yml\\n\\nCRITICAL INTEGRATION GAPS IDENTIFIED:\\n1. PORT MISMATCH: Python service runs on 5000, Next.js expects 5001\\n2. NO API PROXY: Next.js config lacks proper API proxy setup for seamless communication\\n3. CORS CONFIGURATION: Python configured for localhost:3000/3001 but needs refinement\\n4. ENVIRONMENT COORDINATION: No shared environment variables between services\\n5. AUTHENTICATION FLOW: No coordinated auth between frontend/backend\\n6. INTEGRATION TESTING: Missing comprehensive test suite for service communication\\n7. PROMPT MANAGEMENT SYSTEM: Section 5 requirements not implemented\\n8. DEPLOYMENT COORDINATION: No unified deployment configuration\\n\\nNEXT ACTIONS:\\n- Fix port coordination and API proxy setup\\n- Implement proper CORS and environment coordination\\n- Create prompt management system\\n- Build integration test suite\\n- Develop unified deployment configuration\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-30T19:36:39.300Z",
+      "updatedAt": "2025-06-30T19:36:39.300Z",
+      "lastAccessedAt": "2025-06-30T19:36:39.300Z",
+      "version": 1,
+      "size": 1277,
+      "compressed": true,
+      "checksum": "e0db829b2bbee89687fe8a77259d7230e8f4dfecc0835140996efded5e81f1f5",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mcjindn5_hju4o9kq1",
+      "key": "swarm-auto-centralized-1751312819756/frontend/implementation",
+      "value": "\"Video Insights Frontend Implementation Complete\\n\\n## Components Created:\\n\\n### 1. TranscriptViewer Component\\nLocation: /src/components/video-insights/TranscriptViewer.tsx\\nFeatures:\\n- Timestamp navigation with clickable time segments\\n- Search highlighting with multiple search modes\\n- Auto-scrolling to current playback position\\n- Copy functionality for individual segments and full transcript\\n- Collapsible interface with expand/collapse controls\\n- Smart text formatting based on search query\\n- Full/filtered transcript viewing modes\\n\\n### 2. SummaryPanel Component  \\nLocation: /src/components/video-insights/SummaryPanel.tsx\\nFeatures:\\n- Multiple summary modes (bullet, executive, action_items, timeline, custom)\\n- Mode-specific text formatting (bullets, checkboxes, timeline markers)\\n- Custom prompt input for personalized analysis\\n- Summary regeneration with loading states\\n- Summary history with expandable view\\n- Copy functionality for all summaries\\n- Word count and metadata display\\n\\n### 3. FolderSidebar Component\\nLocation: /src/components/video-insights/FolderSidebar.tsx\\nFeatures:\\n- Hierarchical folder tree with expand/collapse\\n- Folder creation with parent/child relationships\\n- Context menu for rename/delete operations\\n- Search functionality across folder names\\n- Drag-and-drop ready structure\\n- Video count indicators per folder\\n- All Videos default view option\\n\\n## Existing Implementation Status:\\n\\n### Main Page\\n- /src/app/video-insights/page.tsx: ✅ Complete with all component integrations\\n- /src/app/video-insights/layout.tsx: ✅ Complete with proper metadata\\n\\n### VideoInput Component\\n- /src/components/video-insights/VideoInput.tsx: ✅ Complete with URL validation, mode selection, folder assignment\\n\\n### API Infrastructure\\n- /lib/api/video-insights.ts: ✅ Complete API client with all endpoints\\n- /lib/types/video-insights.ts: ✅ Complete TypeScript definitions\\n- /src/app/api/video-insights/[...path]/route.ts: ✅ Complete proxy routes to FastAPI backend\\n\\n## Technical Implementation Details:\\n\\n### Architecture Patterns Used:\\n- Client-side state management with useState and useEffect\\n- Memoized computations for performance optimization\\n- Ref-based DOM manipulation for advanced interactions\\n- Event delegation for optimal event handling\\n- Context menu implementation with click-outside detection\\n\\n### UI/UX Features:\\n- Dark/light theme support via CSS variables\\n- Responsive design with mobile-first approach\\n- Loading states and error handling\\n- Copy-to-clipboard functionality\\n- Keyboard navigation support\\n- Accessibility features (ARIA labels, focus management)\\n\\n### Performance Optimizations:\\n- useMemo for expensive computations (search highlighting, folder trees)\\n- Virtualization-ready structure for large datasets\\n- Debounced search input\\n- Efficient re-rendering with proper dependency arrays\\n\\n### Integration Points:\\n- FastAPI backend communication via proxy routes\\n- Authentication token handling\\n- Error boundary ready components\\n- Memory coordination for swarm operations\\n\\nAll components follow existing project patterns and TypeScript conventions. The implementation is production-ready with comprehensive error handling, accessibility features, and performance optimizations.\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-30T19:52:59.345Z",
+      "updatedAt": "2025-06-30T19:52:59.345Z",
+      "lastAccessedAt": "2025-06-30T19:52:59.345Z",
+      "version": 1,
+      "size": 3399,
+      "compressed": true,
+      "checksum": "89747cc11b29ae2fe29e0175b2498adc5ab68f72168ea3d14d5326ec5eca54a0",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mcjiuz2g_3kmfrmx87",
+      "key": "swarm-auto-centralized-1751312819756/integration/implementation",
+      "value": "{\"video_insights_integration\":{\"frontend\":{\"api_proxy_route\":\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/src/app/api/video-insights/[...path]/route.ts\",\"components_created\":[\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/src/components/video-insights/VideoInput.tsx\",\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/src/components/video-insights/TranscriptViewer.tsx\",\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/src/components/video-insights/SummaryPanel.tsx\",\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/src/components/video-insights/FolderSidebar.tsx\"],\"video_insights_page\":\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/src/app/video-insights/page.tsx\",\"api_client\":\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/lib/api/video-insights.ts\",\"types\":\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/lib/types/video-insights.ts\"},\"backend\":{\"main_app\":\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/backend/main.py\",\"routes\":[\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/backend/api/routes/videos.py\",\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/backend/api/routes/folders.py\",\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/backend/api/routes/prompts.py\"],\"dockerfile\":\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/backend/Dockerfile\",\"requirements\":\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/backend/requirements.txt\"},\"docker_configuration\":{\"docker_compose\":\"/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/docker-compose.yml\",\"services_added\":[\"video-insights-api (port 8000)\",\"postgres (PostgreSQL database)\",\"celery-worker (background tasks)\"]},\"authentication\":{\"development_bypass\":\"Implemented in video-insights API proxy route\",\"production_ready\":\"Supports Bearer tokens, API keys, and session cookies\"},\"cors_configuration\":{\"next_config\":\"Added FASTAPI_BASE_URL environment variable\",\"fastapi_cors\":\"Configured in backend/main.py with proper origins\"},\"integration_status\":\"Complete - Frontend can communicate with FastAPI backend through Next.js proxy\",\"testing_notes\":\"TypeScript compilation successful for video insights components, minor unrelated errors in other modules\"}}",
+      "type": "object",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-30T19:58:53.704Z",
+      "updatedAt": "2025-06-30T19:58:53.704Z",
+      "lastAccessedAt": "2025-06-30T19:58:53.704Z",
+      "version": 1,
+      "size": 2511,
+      "compressed": true,
+      "checksum": "78122eebbb7cae2332f4d2414e5d668f47a93afa912bd26c36af20a61da9f53a",
+      "references": [],
+      "dependencies": []
+    }
+  ],
+  "statistics": {
+    "overview": {
+      "totalEntries": 3,
+      "totalSize": 7187,
+      "compressedEntries": 3,
+      "compressionRatio": 0,
+      "indexSize": 150,
+      "memoryUsage": 9604088,
+      "diskUsage": 0
+    },
+    "distribution": {
+      "byNamespace": {
+        "default": {
+          "count": 3,
+          "size": 7187
+        }
+      },
+      "byType": {
+        "string": {
+          "count": 2,
+          "size": 4676
+        },
+        "object": {
+          "count": 1,
+          "size": 2511
+        }
+      },
+      "byOwner": {
+        "system": {
+          "count": 3,
+          "size": 7187
+        }
+      },
+      "byAccessLevel": {
+        "shared": {
+          "count": 3,
+          "size": 7187
+        }
+      }
+    },
+    "temporal": {
+      "entriesCreatedLast24h": 3,
+      "entriesUpdatedLast24h": 3,
+      "entriesAccessedLast24h": 3,
+      "oldestEntry": "2025-06-30T19:36:39.300Z",
+      "newestEntry": "2025-06-30T19:58:53.704Z"
+    },
+    "performance": {
+      "averageQueryTime": 0,
+      "averageWriteTime": 0,
+      "cacheHitRatio": 0,
+      "indexEfficiency": 0.95
+    },
+    "health": {
+      "expiredEntries": 0,
+      "orphanedReferences": 0,
+      "duplicateKeys": 0,
+      "corruptedEntries": 0,
+      "recommendedCleanup": false
+    },
+    "optimization": {
+      "suggestions": [],
+      "potentialSavings": {
+        "compression": 0,
+        "cleanup": 0,
+        "deduplication": 0
+      },
+      "indexOptimization": [
+        "Consider periodic index rebuilding for optimal performance"
+      ]
+    }
+  }
+}

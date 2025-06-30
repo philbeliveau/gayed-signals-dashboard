@@ -60,7 +60,8 @@ interface BacktraderResult {
  */
 async function callBacktraderService(config: BacktraderConfig): Promise<BacktraderResult> {
   try {
-    const response = await fetch('http://localhost:5001/analyze', {
+    const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || 'http://localhost:5000';
+    const response = await fetch(`${pythonServiceUrl}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config),
