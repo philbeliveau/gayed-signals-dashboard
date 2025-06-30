@@ -236,7 +236,7 @@ async function executeLumberGoldBacktest(
       // Open new position
       portfolio.shares = portfolio.cash / targetPrice;
       portfolio.cash = 0;
-      currentPosition = targetSymbol;
+      currentPosition = targetSymbol as 'WOOD' | 'GLD';
       
       trades.push({
         date: current.date,

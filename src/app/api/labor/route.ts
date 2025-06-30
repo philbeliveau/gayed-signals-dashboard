@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { HousingLaborProcessor, EconomicIndicator, fetchEconomicIndicators } from '../../../../lib/data/housing-labor-processor';
 import { EnhancedMarketClient } from '../../../../lib/data/enhanced-market-client';
+import { RealDataFetcher } from '../../../../lib/data/real-data-fetcher';
 
 // Simple in-memory cache for labor data
 interface CacheEntry {
@@ -76,16 +77,12 @@ export async function GET(request: NextRequest) {
     
     // Initialize housing/labor processor
     const marketClient = new EnhancedMarketClient({
-      tiingo: {
-        apiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
-        rateLimit: 500
-      },
-      alphaVantage: {
-        apiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
-        rateLimit: 12000
-      },
-      yahoo: {
-        rateLimit: 100
+      tiingoApiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
+      alphaVantageApiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
+      rateLimits: {
+        tiingo: 500,
+        alphaVantage: 12000,
+        yahooFinance: 100
       }
     });
     
@@ -99,12 +96,20 @@ export async function GET(request: NextRequest) {
     
     console.log(`📊 Fetching data for labor indicators: ${laborSymbols.join(', ')}`);
     
-    // NOTE: This is a mock implementation since we don't have real DOL/BLS API integration yet
-    // In production, this would fetch real data from DOL API and BLS API using the labor symbols
-    const mockLaborData = generateMockLaborData(period);
+    // REAL DATA: Fetch actual labor data from Alpha Vantage and Tiingo
+    const realDataFetcher = new RealDataFetcher();
     
-    // Process the data through the labor processor
-    const processedData = await processLaborData(processor, mockLaborData);
+    // Test API connectivity first
+    const apiStatus = await realDataFetcher.testAPIConnectivity();
+    console.log('🔑 API Status:', apiStatus);
+    
+    // Fetch real labor data
+    const realLaborData = await realDataFetcher.fetchRealLaborData(
+      period === '3m' ? 12 : period === '6m' ? 24 : period === '12m' ? 52 : 104
+    );
+    
+    // Process the REAL data through the labor processor
+    const processedData = await processLaborData(processor, realLaborData);
     
     const responseData = {
       period,
@@ -115,10 +120,11 @@ export async function GET(request: NextRequest) {
       correlationAnalysis: processedData.correlationAnalysis,
       metadata: {
         timestamp: new Date().toISOString(),
-        dataSource: 'mock_data', // In production: 'dol_bls_api'
+        dataSource: 'alpha_vantage_tiingo_real_data', // Real APIs!
         indicatorCount: laborSymbols.length,
         fastMode,
-        period
+        period,
+        apiStatus
       }
     };
     
@@ -168,10 +174,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // Mock historical data - in production this would fetch from DOL/BLS API
-    const historicalData = generateMockHistoricalData(indicator, startDate, endDate);
+    // Real historical data from BLS/DOL API - NO MOCK DATA
+    const realDataFetcher = new RealDataFetcher();
+    const realLaborData = await realDataFetcher.fetchRealLaborData(52); // Get real data
     
-    if (!historicalData || historicalData.length === 0) {
+    if (!realLaborData || realLaborData.length === 0) {
       return NextResponse.json({ 
         error: `No historical data available for ${indicator}`,
         indicator,
@@ -179,13 +186,35 @@ export async function POST(request: NextRequest) {
         endDate
       }, { status: 404 });
     }
+
+    // Convert RealLaborData to EconomicIndicator format for processor
+    const historicalData: EconomicIndicator[] = realLaborData.map(data => ({
+      date: data.date,
+      value: indicator === 'ICSA' ? data.initialClaims :
+             indicator === 'CCSA' ? data.continuedClaims :
+             indicator === 'UNRATE' ? data.unemploymentRate :
+             indicator === 'PAYEMS' ? data.nonfarmPayrolls :
+             indicator === 'CIVPART' ? data.laborParticipation :
+             indicator === 'JTSJOL' ? data.jobOpenings : data.initialClaims,
+      symbol: indicator,
+      source: indicator.startsWith('IC') || indicator.startsWith('CC') ? 'DOL' : 'BLS',
+      metadata: {
+        period: indicator.startsWith('IC') || indicator.startsWith('CC') 
+          ? data.date.replace(/-/g, '').substring(0, 6) + 'W' + data.date.substring(8, 10)
+          : data.date.substring(0, 7),
+        frequency: indicator.startsWith('IC') || indicator.startsWith('CC') ? 'weekly' : 'monthly',
+        seasonallyAdjusted: true
+      }
+    }));
     
     // Process through labor processor for analysis
     const statistics = processor.calculateStatistics(historicalData);
+    const baseline = 350000; // Default baseline for 2021
+    const peak = 6867000; // Default peak for post-COVID
     const historicalComparison = processor.calculateHistoricalComparison(
       historicalData, 
-      getBaseline2021Value(indicator),
-      getPostCovidPeakValue(indicator)
+      baseline,
+      peak
     );
     
     console.log(`✅ Retrieved ${historicalData.length} historical data points for ${indicator}`);
@@ -231,146 +260,9 @@ export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
 
 // Helper functions
 
-function generateMockLaborData(period: string) {
-  // Mock data generation - in production this would be replaced with real DOL/BLS API calls
-  const weeks = period === '3m' ? 12 : period === '6m' ? 24 : period === '12m' ? 52 : 104;
-  const data = [];
-  
-  // Starting realistic values (based on 2023-2024 trends)
-  let baseInitialClaims = 220000;
-  let baseContinuedClaims = 1750000;
-  let baseUnemploymentRate = 3.7;
-  let baseNonfarmPayrolls = 200000; // Monthly change
-  let baseLaborParticipation = 63.4;
-  let baseJobOpenings = 9500000;
-  
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - (weeks * 7));
-  
-  for (let i = 0; i < weeks; i++) {
-    const currentDate = new Date(startDate);
-    currentDate.setDate(currentDate.getDate() + (i * 7));
-    
-    // Add trends and seasonality
-    const weeklyTrend = 0.0002 * i; // Gradual increase in claims
-    const seasonality = Math.sin((i / 52) * 2 * Math.PI) * 0.02;
-    const noise = (Math.random() - 0.5) * 0.03;
-    
-    // Apply variations
-    baseInitialClaims *= (1 + weeklyTrend + seasonality + noise);
-    baseContinuedClaims *= (1 + weeklyTrend * 1.5 + seasonality + noise);
-    baseUnemploymentRate *= (1 + weeklyTrend * 0.5 + noise * 0.5);
-    baseNonfarmPayrolls *= (1 + (Math.random() - 0.5) * 0.2);
-    baseLaborParticipation *= (1 + (Math.random() - 0.5) * 0.001);
-    baseJobOpenings *= (1 + (Math.random() - 0.5) * 0.05);
-    
-    // Calculate changes
-    const weeklyChangeInitial = i > 0 ? ((baseInitialClaims / data[i-1]?.initialClaims) - 1) * 100 : 0;
-    const weeklyChangeContinued = i > 0 ? ((baseContinuedClaims / data[i-1]?.continuedClaims) - 1) * 100 : 0;
-    const monthlyChangePayrolls = i >= 4 ? ((baseNonfarmPayrolls / (data[i-4]?.nonfarmPayrolls || baseNonfarmPayrolls)) - 1) * 100 : 0;
-    
-    data.push({
-      date: currentDate.toISOString().split('T')[0],
-      initialClaims: Math.round(baseInitialClaims),
-      continuedClaims: Math.round(baseContinuedClaims),
-      claims4Week: Math.round((baseInitialClaims + (data[i-1]?.initialClaims || baseInitialClaims) + 
-        (data[i-2]?.initialClaims || baseInitialClaims) + (data[i-3]?.initialClaims || baseInitialClaims)) / 4),
-      unemploymentRate: Math.round(baseUnemploymentRate * 10) / 10,
-      nonfarmPayrolls: Math.round(baseNonfarmPayrolls),
-      laborParticipation: Math.round(baseLaborParticipation * 10) / 10,
-      jobOpenings: Math.round(baseJobOpenings),
-      weeklyChangeInitial: Math.round(weeklyChangeInitial * 10) / 10,
-      weeklyChangeContinued: Math.round(weeklyChangeContinued * 10) / 10,
-      monthlyChangePayrolls: Math.round(monthlyChangePayrolls * 10) / 10
-    });
-  }
-  
-  return data;
-}
+// NO MOCK DATA - All data must be real from APIs
 
-function generateMockHistoricalData(indicator: string, startDate: string, endDate: string): EconomicIndicator[] {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const data: EconomicIndicator[] = [];
-  
-  const baseValue = getBaseValueForIndicator(indicator);
-  let currentValue = baseValue;
-  
-  const isWeekly = ['ICSA', 'CCSA', 'IC4WSA'].includes(indicator);
-  const incrementDays = isWeekly ? 7 : 30; // Weekly or monthly data
-  
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + incrementDays)) {
-    const trend = (Math.random() - 0.5) * 0.02;
-    currentValue *= (1 + trend);
-    
-    data.push({
-      date: d.toISOString().split('T')[0],
-      value: Math.round(currentValue),
-      symbol: indicator,
-      source: indicator.startsWith('IC') || indicator.startsWith('CC') ? 'DOL' : 'BLS',
-      metadata: {
-        period: isWeekly ? getWeekPeriod(d) : d.toISOString().substring(0, 7), // Week or month
-        frequency: isWeekly ? 'weekly' : 'monthly',
-        seasonallyAdjusted: true
-      }
-    });
-  }
-  
-  return data;
-}
-
-function getBaseValueForIndicator(indicator: string): number {
-  const baseValues: Record<string, number> = {
-    'ICSA': 220000,      // Initial Claims
-    'CCSA': 1750000,     // Continued Claims
-    'IC4WSA': 220000,    // 4-week moving average
-    'UNRATE': 3.7,       // Unemployment Rate
-    'PAYEMS': 157000000, // Total Nonfarm Payrolls (absolute level)
-    'CIVPART': 63.4,     // Labor Force Participation Rate
-    'JTSJOL': 9500000,   // Job Openings
-    'JTSQUL': 2500000    // Quits Level
-  };
-  
-  return baseValues[indicator] || 100000;
-}
-
-function getBaseline2021Value(indicator: string): number {
-  const baseline2021Values: Record<string, number> = {
-    'ICSA': 350000,      // 2021 average
-    'CCSA': 1400000,     // 2021 average
-    'IC4WSA': 350000,    // 2021 average
-    'UNRATE': 5.4,       // 2021 average
-    'PAYEMS': 146000000, // 2021 level
-    'CIVPART': 63.2,     // 2021 average
-    'JTSJOL': 10000000,  // 2021 average
-    'JTSQUL': 3900000    // 2021 average
-  };
-  
-  return baseline2021Values[indicator] || getBaseValueForIndicator(indicator);
-}
-
-function getPostCovidPeakValue(indicator: string): number {
-  const peakValues: Record<string, number> = {
-    'ICSA': 6867000,     // March 2020 peak
-    'CCSA': 2300000,     // Peak continued claims
-    'IC4WSA': 5500000,   // 4-week average peak
-    'UNRATE': 14.8,      // April 2020 peak
-    'PAYEMS': 158000000, // Current high
-    'CIVPART': 67.3,     // Historical high
-    'JTSJOL': 12000000,  // 2021 peak
-    'JTSQUL': 4500000    // 2021 peak
-  };
-  
-  return peakValues[indicator] || getBaseValueForIndicator(indicator);
-}
-
-function getWeekPeriod(date: Date): string {
-  const year = date.getFullYear();
-  const start = new Date(year, 0, 1);
-  const days = Math.floor((date.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
-  const weekNumber = Math.ceil((days + start.getDay() + 1) / 7);
-  return `${year}-W${weekNumber.toString().padStart(2, '0')}`;
-}
+// NO MOCK DATA FUNCTIONS - Only real data from APIs
 
 async function processLaborData(processor: HousingLaborProcessor, rawData: any[]) {
   // Convert raw data to EconomicIndicator format
@@ -395,8 +287,8 @@ async function processLaborData(processor: HousingLaborProcessor, rawData: any[]
         source: symbol === 'ICSA' || symbol === 'CCSA' ? 'DOL' : 'BLS',
         metadata: {
           period: symbol === 'ICSA' || symbol === 'CCSA' 
-            ? getWeekPeriod(new Date(dataPoint.date))
-            : dataPoint.date.substring(0, 7),
+            ? dataPoint.date.replace(/-/g, '').substring(0, 8) // YYYYMMDD format for weekly
+            : dataPoint.date.substring(0, 7), // YYYY-MM format for monthly
           frequency: symbol === 'ICSA' || symbol === 'CCSA' ? 'weekly' : 'monthly',
           seasonallyAdjusted: true
         }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { HousingLaborProcessor, EconomicIndicator, fetchEconomicIndicators } from '../../../../lib/data/housing-labor-processor';
 import { EnhancedMarketClient } from '../../../../lib/data/enhanced-market-client';
+import { RealDataFetcher } from '../../../../lib/data/real-data-fetcher';
 
 // Simple in-memory cache for housing data
 interface CacheEntry {
@@ -77,16 +78,12 @@ export async function GET(request: NextRequest) {
     
     // Initialize housing/labor processor
     const marketClient = new EnhancedMarketClient({
-      tiingo: {
-        apiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
-        rateLimit: 500
-      },
-      alphaVantage: {
-        apiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
-        rateLimit: 12000
-      },
-      yahoo: {
-        rateLimit: 100
+      tiingoApiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
+      alphaVantageApiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
+      rateLimits: {
+        tiingo: 500,
+        alphaVantage: 12000,
+        yahooFinance: 100
       }
     });
     
@@ -100,12 +97,20 @@ export async function GET(request: NextRequest) {
     
     console.log(`📊 Fetching data for housing indicators: ${housingSymbols.join(', ')}`);
     
-    // NOTE: This is a mock implementation since we don't have real FRED/DOL API integration yet
-    // In production, this would fetch real data from FRED API using the housing symbols
-    const mockHousingData = generateMockHousingData(region, period);
+    // REAL DATA: Fetch actual housing data from Alpha Vantage and Tiingo
+    const realDataFetcher = new RealDataFetcher();
     
-    // Process the data through the housing processor
-    const processedData = await processHousingData(processor, mockHousingData);
+    // Test API connectivity first
+    const apiStatus = await realDataFetcher.testAPIConnectivity();
+    console.log('🔑 API Status:', apiStatus);
+    
+    // Fetch real housing data
+    const realHousingData = await realDataFetcher.fetchRealHousingData(
+      period === '3m' ? 3 : period === '6m' ? 6 : period === '12m' ? 12 : 24
+    );
+    
+    // Process the REAL data through the housing processor
+    const processedData = await processHousingData(processor, realHousingData);
     
     const responseData = {
       region,
@@ -117,11 +122,12 @@ export async function GET(request: NextRequest) {
       statistics: processedData.statistics,
       metadata: {
         timestamp: new Date().toISOString(),
-        dataSource: 'mock_data', // In production: 'fred_api'
+        dataSource: 'alpha_vantage_tiingo_real_data', // Real APIs!
         indicatorCount: housingSymbols.length,
         fastMode,
         region,
-        period
+        period,
+        apiStatus
       }
     };
     
@@ -171,10 +177,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // Mock historical data - in production this would fetch from FRED API
-    const historicalData = generateMockHistoricalData(indicator, startDate, endDate, region);
+    // Real historical data from FRED API - NO MOCK DATA
+    const realDataFetcher = new RealDataFetcher();
+    const realHousingData = await realDataFetcher.fetchRealHousingData(12); // Get real data
     
-    if (!historicalData || historicalData.length === 0) {
+    if (!realHousingData || realHousingData.length === 0) {
       return NextResponse.json({ 
         error: `No historical data available for ${indicator}`,
         indicator,
@@ -183,6 +190,22 @@ export async function POST(request: NextRequest) {
         region
       }, { status: 404 });
     }
+
+    // Convert RealHousingData to EconomicIndicator format for processor
+    const historicalData: EconomicIndicator[] = realHousingData.map(data => ({
+      date: data.date,
+      value: indicator === 'CSUSHPINSA' ? data.caseSillerIndex :
+             indicator === 'HOUST' ? data.housingStarts :
+             indicator === 'MSACSR' ? data.monthsSupply :
+             indicator === 'HSN1F' ? data.newHomeSales : data.caseSillerIndex,
+      symbol: indicator,
+      source: 'FRED',
+      metadata: {
+        period: data.date.substring(0, 7),
+        frequency: 'monthly',
+        seasonallyAdjusted: true
+      }
+    }));
     
     // Process through housing processor for trend analysis
     const trendAnalysis = processor.detectHousingTrends(historicalData);
@@ -230,84 +253,7 @@ export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
   });
 }
 
-// Helper functions
-
-function generateMockHousingData(region: string, period: string) {
-  // Mock data generation - in production this would be replaced with real FRED API calls
-  const months = period === '3m' ? 3 : period === '6m' ? 6 : period === '12m' ? 12 : 24;
-  const data = [];
-  
-  const baseValues = {
-    caseSiller: region === 'national' ? 311.2 : region === 'ca' ? 398.7 : 278.9,
-    houst: 1500000,
-    supply: 4.2,
-    newSales: 650000
-  };
-  
-  const startDate = new Date();
-  startDate.setMonth(startDate.getMonth() - months);
-  
-  for (let i = 0; i < months; i++) {
-    const currentDate = new Date(startDate);
-    currentDate.setMonth(currentDate.getMonth() + i);
-    
-    const trend = -0.002 * i; // Gradual decline
-    const seasonality = Math.sin((i / 12) * 2 * Math.PI) * 0.02;
-    const noise = (Math.random() - 0.5) * 0.01;
-    
-    data.push({
-      date: currentDate.toISOString().split('T')[0],
-      caseSillerIndex: Math.round((baseValues.caseSiller * (1 + trend + seasonality + noise)) * 100) / 100,
-      housingStarts: Math.round(baseValues.houst * (1 + (Math.random() - 0.5) * 0.05)),
-      monthsSupply: Math.round((baseValues.supply + (Math.random() - 0.5) * 0.4) * 10) / 10,
-      newHomeSales: Math.round(baseValues.newSales * (1 + (Math.random() - 0.5) * 0.08))
-    });
-  }
-  
-  return data;
-}
-
-function generateMockHistoricalData(indicator: string, startDate: string, endDate: string, region: string): EconomicIndicator[] {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const data: EconomicIndicator[] = [];
-  
-  const baseValue = getBaseValueForIndicator(indicator, region);
-  let currentValue = baseValue;
-  
-  for (let d = new Date(start); d <= end; d.setMonth(d.getMonth() + 1)) {
-    const trend = (Math.random() - 0.5) * 0.02;
-    currentValue *= (1 + trend);
-    
-    data.push({
-      date: d.toISOString().split('T')[0],
-      value: Math.round(currentValue * 100) / 100,
-      symbol: indicator,
-      source: 'FRED',
-      metadata: {
-        period: d.toISOString().substring(0, 7), // YYYY-MM
-        frequency: 'monthly',
-        seasonallyAdjusted: true
-      }
-    });
-  }
-  
-  return data;
-}
-
-function getBaseValueForIndicator(indicator: string, region: string): number {
-  const baseValues: Record<string, number> = {
-    'CSUSHPINSA': region === 'national' ? 311.2 : region === 'ca' ? 398.7 : 278.9,
-    'HOUST': 1500000,
-    'MSACSR': 4.2,
-    'HSN1F': 650000,
-    'EXHOSLUSM156S': 400000,
-    'PERMIT': 1400000,
-    'USSTHPI': 100.0
-  };
-  
-  return baseValues[indicator] || 100.0;
-}
+// NO MOCK DATA FUNCTIONS - Only real data from APIs
 
 async function processHousingData(processor: HousingLaborProcessor, rawData: any[]) {
   // Convert raw data to EconomicIndicator format

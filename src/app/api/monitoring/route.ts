@@ -151,7 +151,12 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
         serviceStatus: serviceStatus
       },
       performance: {
-        requestStats: riskStats.requests,
+        requestStats: {
+          ...riskStats.requests,
+          averageResponseTime: riskStats.requests.responseTimes.length > 0 
+            ? riskStats.requests.responseTimes.reduce((a, b) => a + b, 0) / riskStats.requests.responseTimes.length 
+            : 0
+        },
         clientStats: clientStats
       },
       timestamp: new Date().toISOString(),

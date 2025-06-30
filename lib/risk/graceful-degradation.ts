@@ -75,7 +75,7 @@ export class GracefulDegradationManager {
 
     // Signal calculation fallback
     this.fallbackStrategies.set('signalCalculation', async () => {
-      return this.provideSimplifiedSignals();
+      return this.provideBasicSignals();
     });
 
     // Consensus fallback
@@ -681,6 +681,60 @@ export class GracefulDegradationManager {
    */
   getServiceStatus(): ServiceStatus {
     return { ...this.serviceStatus };
+  }
+
+  /**
+   * Provide basic signals when signal calculation service fails
+   */
+  private async provideBasicSignals(): Promise<Signal[]> {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Return basic neutral signals for all signal types
+    const basicSignals: Signal[] = [
+      {
+        date: today,
+        type: 'utilities_spy',
+        signal: 'Neutral',
+        strength: 'Weak',
+        confidence: 0.2,
+        rawValue: 0,
+        metadata: { fallback: 'basic_signals' }
+      },
+      {
+        date: today,
+        type: 'lumber_gold',
+        signal: 'Neutral',
+        strength: 'Weak',
+        confidence: 0.2,
+        rawValue: 0,
+        metadata: { fallback: 'basic_signals' }
+      },
+      {
+        date: today,
+        type: 'treasury_curve',
+        signal: 'Neutral',
+        strength: 'Weak',
+        confidence: 0.2,
+        rawValue: 0,
+        metadata: { fallback: 'basic_signals' }
+      }
+    ];
+
+    return basicSignals;
+  }
+
+  /**
+   * Provide basic consensus when consensus calculation fails
+   */
+  private async provideBasicConsensus(): Promise<ConsensusSignal> {
+    return {
+      date: new Date().toISOString().split('T')[0],
+      consensus: 'Mixed',
+      confidence: 0.3,
+      riskOnCount: 0,
+      riskOffCount: 0,
+      signals: []
+    };
   }
 }
 

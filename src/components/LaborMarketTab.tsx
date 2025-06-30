@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ComposedChart, Bar } from 'recharts';
 import { formatDate, formatTooltipDate } from '../utils/dateFormatting';
+import ChartWrapper from './charts/ChartWrapper';
 
 interface LaborDataPoint {
   date: string;
@@ -152,7 +153,7 @@ const DataCard: React.FC<{
 export default function LaborMarketTab() {
   const [laborData, setLaborData] = useState<LaborDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined);
   const [alerts, setAlerts] = useState<LaborAlert[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -182,7 +183,7 @@ export default function LaborMarketTab() {
   const fetchLaborData = async (forceRefresh = false) => {
     try {
       if (forceRefresh) setRefreshing(true);
-      setError(null);
+      setError(undefined);
 
       console.log(`👥 Fetching labor data for period: ${selectedPeriod}`);
       
@@ -703,7 +704,7 @@ export default function LaborMarketTab() {
           Chart shows initial claims, continued claims, and unemployment rate trends. 
           Data updates weekly from Department of Labor (DOL) and Bureau of Labor Statistics (BLS).
         </div>
-      </div>
+      </ChartWrapper>
 
       {/* Employment Metrics & Historical Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -18,13 +18,16 @@ export async function POST(request: NextRequest) {
     const backtestResult = await executeLumberGoldBacktest(sampleData, startDate, endDate);
     
     // Add demo notice
-    backtestResult.demo = {
-      notice: "DEMO MODE: Using realistic sample data structure",
-      realSystem: "Switch to /api/backtest-lumber-gold for real Yahoo Finance data",
-      dataSource: "Generated sample data with realistic correlations and volatility"
+    const demoResult = {
+      ...backtestResult,
+      demo: {
+        notice: "DEMO MODE: Using realistic sample data structure",
+        realSystem: "Switch to /api/backtest-lumber-gold for real Yahoo Finance data",
+        dataSource: "Generated sample data with realistic correlations and volatility"
+      }
     };
     
-    return NextResponse.json(backtestResult);
+    return NextResponse.json(demoResult);
     
   } catch (error) {
     return NextResponse.json(

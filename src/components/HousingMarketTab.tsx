@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  ReferenceLine 
+} from 'recharts';
 import { 
   Home, 
   TrendingUp, 
@@ -18,16 +27,6 @@ import NoSSRWrapper from './NoSSRWrapper';
 import ChartWrapper from './charts/ChartWrapper';
 import { formatDate, formatTooltipDate } from '../utils/dateFormatting';
 import { useChartColors } from '../utils/chartTheme';
-
-// Dynamically import Recharts components to prevent SSR issues
-const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false });
-const Line = dynamic(() => import('recharts').then(mod => mod.Line), { ssr: false });
-const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
-const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
-const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
-const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
-const ReferenceLine = dynamic(() => import('recharts').then(mod => mod.ReferenceLine), { ssr: false });
 
 interface HousingDataPoint {
   date: string;
@@ -157,7 +156,7 @@ const DataCard: React.FC<{
 export default function HousingMarketTab() {
   const [housingData, setHousingData] = useState<HousingDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined);
   const [selectedRegion, setSelectedRegion] = useState<string>('national');
   const [alerts, setAlerts] = useState<HousingAlert[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -187,7 +186,7 @@ export default function HousingMarketTab() {
   const fetchHousingData = async (forceRefresh = false) => {
     try {
       if (forceRefresh) setRefreshing(true);
-      setError(null);
+      setError(undefined);
 
       console.log(`🏠 Fetching housing data for region: ${selectedRegion}`);
       

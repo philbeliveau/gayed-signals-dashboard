@@ -567,13 +567,4 @@ export const AccessibilityMenu: React.FC = () => {
   );
 };
 
-// =============================================================================
-// EXPORTS
-// =============================================================================
-
-export {
-  useKeyboardNavigation,
-  useFocusManagement,
-  useScreenReader,
-  useAccessibilityPreferences
-};
+// Note: All exports are already declared inline above

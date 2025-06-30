@@ -1,18 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
 import ChartWrapper from './ChartWrapper';
 import { useChartColors } from '../../utils/chartTheme';
-
-// Dynamically import Recharts components
-const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false });
-const Line = dynamic(() => import('recharts').then(mod => mod.Line), { ssr: false });
-const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
-const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
-const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
-const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
 
 interface TestData {
   date: string;
@@ -33,7 +32,7 @@ interface TestData {
 export default function ChartTestDemo() {
   const [data, setData] = useState<TestData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined);
   const [testMode, setTestMode] = useState<'success' | 'loading' | 'error'>('loading');
   
   const chartColors = useChartColors();
@@ -57,7 +56,7 @@ export default function ChartTestDemo() {
         
         setData(sampleData);
         setLoading(false);
-        setError(null);
+        setError(undefined);
       } else if (testMode === 'error') {
         setLoading(false);
         setError('Test error: Unable to load chart data');
@@ -71,7 +70,7 @@ export default function ChartTestDemo() {
   const handleTestModeChange = (mode: 'success' | 'loading' | 'error') => {
     setTestMode(mode);
     setLoading(true);
-    setError(null);
+    setError(undefined);
     setData([]);
   };
 
