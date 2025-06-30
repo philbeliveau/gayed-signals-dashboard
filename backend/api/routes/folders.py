@@ -27,14 +27,14 @@ class FolderCreate(BaseModel):
     """Request model for creating a folder."""
     name: str = Field(..., min_length=1, max_length=255, description="Folder name")
     description: Optional[str] = Field(None, max_length=1000, description="Folder description")
-    color: str = Field(default="#3B82F6", regex="^#[0-9A-Fa-f]{6}$", description="Hex color code")
+    color: str = Field(default="#3B82F6", pattern="^#[0-9A-Fa-f]{6}$", description="Hex color code")
 
 
 class FolderUpdate(BaseModel):
     """Request model for updating a folder."""
     name: Optional[str] = Field(None, min_length=1, max_length=255, description="Folder name")
     description: Optional[str] = Field(None, max_length=1000, description="Folder description")
-    color: Optional[str] = Field(None, regex="^#[0-9A-Fa-f]{6}$", description="Hex color code")
+    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$", description="Hex color code")
 
 
 class FolderResponse(BaseModel):

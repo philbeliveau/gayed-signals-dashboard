@@ -28,7 +28,7 @@ cache_service = CacheService()
 class VideoProcessRequest(BaseModel):
     """Request model for video processing."""
     youtube_url: HttpUrl
-    summary_mode: str = Field(default="bullet", regex="^(bullet|executive|action_items|timeline|custom)$")
+    summary_mode: str = Field(default="bullet", pattern="^(bullet|executive|action_items|timeline|custom)$")
     user_prompt: Optional[str] = None
     folder_id: Optional[UUID] = None
 
@@ -36,7 +36,7 @@ class VideoProcessRequest(BaseModel):
 class PlaylistProcessRequest(BaseModel):
     """Request model for playlist processing."""
     playlist_url: HttpUrl
-    summary_mode: str = Field(default="bullet", regex="^(bullet|executive|action_items|timeline|custom)$")
+    summary_mode: str = Field(default="bullet", pattern="^(bullet|executive|action_items|timeline|custom)$")
     folder_id: Optional[UUID] = None
 
 

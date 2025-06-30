@@ -11,7 +11,7 @@ import redis.asyncio as redis
 from redis.asyncio import Redis
 from redis.exceptions import RedisError, ConnectionError
 
-from backend.core.config import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -702,8 +702,8 @@ class CacheService:
             dict: Warming results
         """
         try:
-            from backend.models.database import Video
-            from backend.core.database import async_session_maker
+            from models.database import Video
+            from core.database import async_session_maker
             
             warming_stats = {
                 'videos_warmed': 0,
@@ -784,8 +784,8 @@ class CacheService:
             dict: Warming results
         """
         try:
-            from backend.models.database import Video
-            from backend.core.database import async_session_maker
+            from models.database import Video
+            from core.database import async_session_maker
             from sqlalchemy import select, desc, func
             
             warming_stats = {

@@ -11,11 +11,13 @@ alembic==1.12.1
 # Pydantic for data validation
 pydantic==2.5.0
 pydantic-settings==2.1.0
+email-validator==2.1.0
 
 # Authentication and security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
+PyJWT==2.8.0
 
 # Background tasks
 celery==5.3.4

@@ -2,8 +2,9 @@
 Configuration settings for the YouTube Video Insights API.
 """
 
-from pydantic import BaseSettings, Field
-from typing import List, Optional
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings
+from typing import List, Optional, Union
 import os
 from urllib.parse import urlparse
 
@@ -68,10 +69,17 @@ class Settings(BaseSettings):
     )
     
     # CORS settings
-    ALLOWED_ORIGINS: List[str] = Field(
+    ALLOWED_ORIGINS: Union[List[str], str] = Field(
         default=["http://localhost:3000", "http://127.0.0.1:3000"],
         env="ALLOWED_ORIGINS"
     )
+    
+    @field_validator('ALLOWED_ORIGINS', 'CELERY_ACCEPT_CONTENT')
+    @classmethod
+    def parse_list_fields(cls, v):
+        if isinstance(v, str):
+            return [item.strip() for item in v.split(',')]
+        return v
     
     # API Keys
     OPENAI_API_KEY: Optional[str] = Field(
@@ -119,7 +127,7 @@ class Settings(BaseSettings):
         default="json",
         env="CELERY_TASK_SERIALIZER"
     )
-    CELERY_ACCEPT_CONTENT: List[str] = Field(
+    CELERY_ACCEPT_CONTENT: Union[List[str], str] = Field(
         default=["json"],
         env="CELERY_ACCEPT_CONTENT"
     )
@@ -157,7 +165,7 @@ class Settings(BaseSettings):
         default="json",
         env="CELERY_TASK_SERIALIZER"
     )
-    CELERY_ACCEPT_CONTENT: List[str] = Field(
+    CELERY_ACCEPT_CONTENT: Union[List[str], str] = Field(
         default=["json"],
         env="CELERY_ACCEPT_CONTENT"
     )

@@ -99,12 +99,40 @@ export async function GET(request: NextRequest) {
     
     console.log(`📊 Fetching data for labor indicators: ${laborSymbols.join(', ')}`);
     
-    // NOTE: This is a mock implementation since we don't have real DOL/BLS API integration yet
-    // In production, this would fetch real data from DOL API and BLS API using the labor symbols
-    const mockLaborData = generateMockLaborData(period);
+    // Call the Python backend FRED service for real labor market data
+    let laborMarketData;
+    try {
+      console.log('🔄 Calling Python FRED service for labor market data...');
+      const fredResponse = await fetch(`${process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'}/api/economic-data/labor-market?period=${period}&fast=${fastMode}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        // Add timeout for the request
+        signal: AbortSignal.timeout(30000) // 30 second timeout
+      });
+      
+      if (!fredResponse.ok) {
+        throw new Error(`FRED service responded with status: ${fredResponse.status}`);
+      }
+      
+      laborMarketData = await fredResponse.json();
+      console.log('✅ Successfully received labor market data from FRED service');
+    } catch (fredError) {
+      console.warn('⚠️ FRED service unavailable, falling back to mock data:', fredError);
+      // Fallback to mock data if FRED service is not available
+      laborMarketData = {
+        timeSeries: generateMockLaborData(period),
+        metadata: {
+          dataSource: 'mock_fallback',
+          reason: fredError instanceof Error ? fredError.message : 'FRED service unavailable'
+        }
+      };
+    }
     
     // Process the data through the labor processor
-    const processedData = await processLaborData(processor, mockLaborData);
+    const processedData = await processLaborData(processor, laborMarketData.timeSeries || laborMarketData);
     
     const responseData = {
       period,
@@ -115,10 +143,11 @@ export async function GET(request: NextRequest) {
       correlationAnalysis: processedData.correlationAnalysis,
       metadata: {
         timestamp: new Date().toISOString(),
-        dataSource: 'mock_data', // In production: 'dol_bls_api'
+        dataSource: laborMarketData?.metadata?.dataSource || 'fred_api',
         indicatorCount: laborSymbols.length,
         fastMode,
-        period
+        period,
+        fallbackReason: laborMarketData?.metadata?.reason
       }
     };
     
@@ -168,8 +197,30 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // Mock historical data - in production this would fetch from DOL/BLS API
-    const historicalData = generateMockHistoricalData(indicator, startDate, endDate);
+    // Call Python backend FRED service for historical labor data
+    let historicalData;
+    try {
+      console.log(`🔄 Calling Python FRED service for historical ${indicator} data...`);
+      const fredResponse = await fetch(`${process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'}/api/economic-data/series/${indicator}?start_date=${startDate}&end_date=${endDate}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(30000)
+      });
+      
+      if (!fredResponse.ok) {
+        throw new Error(`FRED service responded with status: ${fredResponse.status}`);
+      }
+      
+      const fredData = await fredResponse.json();
+      historicalData = fredData.observations || fredData.data || [];
+      console.log(`✅ Successfully received ${historicalData.length} historical data points from FRED`);
+    } catch (fredError) {
+      console.warn('⚠️ FRED service unavailable for historical data, falling back to mock:', fredError);
+      historicalData = generateMockHistoricalData(indicator, startDate, endDate);
+    }
     
     if (!historicalData || historicalData.length === 0) {
       return NextResponse.json({ 
@@ -200,7 +251,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         timestamp: new Date().toISOString(),
         dataPoints: historicalData.length,
-        dataSource: 'mock_data' // In production: 'dol_bls_api'
+        dataSource: historicalData === generateMockHistoricalData(indicator, startDate, endDate) ? 'mock_fallback' : 'fred_api'
       }
     });
     

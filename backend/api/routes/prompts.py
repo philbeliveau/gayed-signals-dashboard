@@ -29,7 +29,7 @@ class PromptTemplateCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255, description="Template name")
     description: Optional[str] = Field(None, max_length=1000, description="Template description")
     prompt_text: str = Field(..., min_length=10, max_length=5000, description="The prompt template text")
-    category: str = Field(default="custom", regex="^(financial|technical|meeting|educational|custom)$")
+    category: str = Field(default="custom", pattern="^(financial|technical|meeting|educational|custom)$")
     is_public: bool = Field(default=False, description="Whether this template can be used by other users")
     variables: List[str] = Field(default=[], description="List of variable names used in the template")
 
@@ -59,7 +59,7 @@ class PromptTemplateUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
     prompt_text: Optional[str] = Field(None, min_length=10, max_length=5000)
-    category: Optional[str] = Field(None, regex="^(financial|technical|meeting|educational|custom)$")
+    category: Optional[str] = Field(None, pattern="^(financial|technical|meeting|educational|custom)$")
     is_public: Optional[bool] = None
 
 

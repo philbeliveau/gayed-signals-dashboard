@@ -317,7 +317,7 @@ class EconomicDataPoint(Base):
         Index("idx_economic_data_series_date", "series_id", "observation_date"),
         Index("idx_economic_data_observation_date", "observation_date"),
         Index("idx_economic_data_numeric_value", "numeric_value"),
-        Index("idx_economic_data_series_date_desc", "series_id", "observation_date", postgresql_descending=["observation_date"]),
+        Index("idx_economic_data_series_date_desc", "series_id", "observation_date"),
     )
 
 
