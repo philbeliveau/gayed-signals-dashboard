@@ -107,12 +107,13 @@ export async function enhancedGETHandler(request: NextRequest): Promise<NextResp
         }
 
         // Calculate signals with graceful degradation
+        const orchestrator = new SignalOrchestrator();
         const signalCalculators = {
-          utilities_spy: (data: Record<string, import('../types').MarketData[]>) => SignalOrchestrator.calculateUtilitiesSpySignal(data),
-          lumber_gold: (data: Record<string, import('../types').MarketData[]>) => SignalOrchestrator.calculateLumberGoldSignal(data),
-          treasury_curve: (data: Record<string, import('../types').MarketData[]>) => SignalOrchestrator.calculateTreasuryCurveSignal(data),
-          sp500_ma: (data: Record<string, import('../types').MarketData[]>) => SignalOrchestrator.calculateSP500MASignal(data),
-          vix_defensive: (data: Record<string, import('../types').MarketData[]>) => SignalOrchestrator.calculateVixDefensiveSignal(data)
+          utilities_spy: (data: Record<string, import('../types').MarketData[]>) => orchestrator.calculateUtilitiesSpySignal(data),
+          lumber_gold: (data: Record<string, import('../types').MarketData[]>) => orchestrator.calculateLumberGoldSignal(data),
+          treasury_curve: (data: Record<string, import('../types').MarketData[]>) => orchestrator.calculateTreasuryCurveSignal(data),
+          sp500_ma: (data: Record<string, import('../types').MarketData[]>) => orchestrator.calculateSP500MASignal(data),
+          vix_defensive: (data: Record<string, import('../types').MarketData[]>) => orchestrator.calculateVixDefensiveSignal(data)
         };
 
         const signalsResult = await gracefulDegradationManager.calculateSignalsWithDegradation(

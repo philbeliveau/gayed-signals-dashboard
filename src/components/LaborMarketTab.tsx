@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { 
   Users, 
   TrendingUp, 
@@ -16,22 +15,8 @@ import {
   Briefcase,
   FileText
 } from 'lucide-react';
-import NoSSRWrapper from './NoSSRWrapper';
-import ChartWrapper from './charts/ChartWrapper';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ComposedChart, Bar } from 'recharts';
 import { formatDate, formatTooltipDate } from '../utils/dateFormatting';
-import { useChartColors } from '../utils/chartTheme';
-
-// Dynamically import Recharts components to prevent SSR issues
-const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false });
-const Line = dynamic(() => import('recharts').then(mod => mod.Line), { ssr: false });
-const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
-const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
-const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
-const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
-const ReferenceLine = dynamic(() => import('recharts').then(mod => mod.ReferenceLine), { ssr: false });
-const ComposedChart = dynamic(() => import('recharts').then(mod => mod.ComposedChart), { ssr: false });
-const Bar = dynamic(() => import('recharts').then(mod => mod.Bar), { ssr: false });
 
 interface LaborDataPoint {
   date: string;
@@ -175,8 +160,16 @@ export default function LaborMarketTab() {
   const [activeView, setActiveView] = useState<'claims' | 'employment' | 'correlation'>('claims');
   const [isClient, setIsClient] = useState(false);
   
-  // Get theme colors for charts
-  const chartColors = useChartColors();
+  // Simple color theme
+  const chartColors = {
+    primary: '#8B5CF6',
+    secondary: '#A78BFA',
+    success: '#10B981',
+    danger: '#F87171',
+    warning: '#FBBF24',
+    info: '#60A5FA',
+    textLight: '#6B7280'
+  };
 
   useEffect(() => {
     setIsClient(true);
@@ -430,12 +423,12 @@ export default function LaborMarketTab() {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-theme-card border border-theme-border rounded-lg p-3 shadow-lg">
-          <p className="text-theme-text font-medium mb-2">{formatTooltipDate(label)}</p>
+        <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg">
+          <p className="text-white font-medium mb-2">{label}</p>
           <div className="space-y-1 text-sm">
             <p style={{ color: chartColors.primary }}>Initial Claims: {data.initialClaims.toLocaleString()}</p>
             <p style={{ color: chartColors.secondary }}>Continued Claims: {(data.continuedClaims / 1000000).toFixed(2)}M</p>
-            <p className="text-theme-text-secondary">Unemployment: {data.unemploymentRate}%</p>
+            <p className="text-gray-300">Unemployment: {data.unemploymentRate}%</p>
           </div>
         </div>
       );
@@ -706,11 +699,11 @@ export default function LaborMarketTab() {
           </ResponsiveContainer>
         )}
 
-        <div className="mt-4 text-xs text-theme-text-muted">
+        <div className="mt-4 text-xs text-gray-500">
           Chart shows initial claims, continued claims, and unemployment rate trends. 
           Data updates weekly from Department of Labor (DOL) and Bureau of Labor Statistics (BLS).
         </div>
-      </ChartWrapper>
+      </div>
 
       {/* Employment Metrics & Historical Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

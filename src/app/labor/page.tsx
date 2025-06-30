@@ -4,7 +4,7 @@ import { Users, Activity, BarChart3, LineChart, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../../components/ThemeToggle';
-import LaborMarketTab from '../../components/LaborMarketTab';
+import LaborMarketTab from '../../components/LaborMarketTab-simple';
 
 export default function LaborMarketPage() {
   const { theme } = useTheme();

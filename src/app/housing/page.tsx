@@ -4,7 +4,7 @@ import { Home, Activity, BarChart3, LineChart, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../../components/ThemeToggle';
-import HousingMarketTab from '../../components/HousingMarketTab';
+import HousingMarketTab from '../../components/HousingMarketTab-simple';
 
 export default function HousingMarketPage() {
   const { theme } = useTheme();
