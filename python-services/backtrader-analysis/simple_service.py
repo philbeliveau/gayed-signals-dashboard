@@ -649,13 +649,148 @@ def serve_chart(chart_name):
         logger.error(f"Chart serving error: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/v1/economic/housing/summary', methods=['GET'])
+def housing_summary():
+    """Housing market data endpoint for FRED integration"""
+    try:
+        region = request.args.get('region', 'national')
+        period = request.args.get('period', '12m')
+        fast = request.args.get('fast', 'false').lower() == 'true'
+        
+        logger.info(f"Housing summary request: region={region}, period={period}, fast={fast}")
+        
+        # Generate mock housing data that matches expected format
+        import random
+        from datetime import datetime, timedelta
+        
+        # Generate dates for the period
+        end_date = datetime.now()
+        if period == '12m':
+            start_date = end_date - timedelta(days=365)
+            periods = 12
+        elif period == '6m':
+            start_date = end_date - timedelta(days=180)
+            periods = 6
+        else:
+            start_date = end_date - timedelta(days=90)
+            periods = 3
+            
+        dates = pd.date_range(start=start_date, end=end_date, periods=periods)
+        
+        # Mock housing indicators
+        housing_data = {
+            'timeSeries': {
+                'CSUSHPINSA': {  # Case-Shiller Home Price Index
+                    'data': [
+                        {
+                            'date': date.strftime('%Y-%m-%d'),
+                            'value': 300 + random.uniform(-20, 20) + i * 2,
+                            'indicator': 'Case-Shiller Home Price Index'
+                        }
+                        for i, date in enumerate(dates)
+                    ]
+                },
+                'HOUST': {  # Housing Starts
+                    'data': [
+                        {
+                            'date': date.strftime('%Y-%m-%d'),
+                            'value': 1400 + random.uniform(-200, 200),
+                            'indicator': 'Housing Starts'
+                        }
+                        for date in dates
+                    ]
+                }
+            },
+            'metadata': {
+                'region': region,
+                'period': period,
+                'dataSource': 'fred_mock',
+                'lastUpdated': datetime.now().isoformat(),
+                'indicators_count': 2 if fast else 7
+            }
+        }
+        
+        return jsonify(housing_data)
+        
+    except Exception as e:
+        logger.error(f"Housing summary error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/v1/economic/labor-market/summary', methods=['GET'])
+def labor_market_summary():
+    """Labor market data endpoint for FRED integration"""
+    try:
+        period = request.args.get('period', '12m')
+        fast = request.args.get('fast', 'false').lower() == 'true'
+        
+        logger.info(f"Labor market summary request: period={period}, fast={fast}")
+        
+        # Generate mock labor data that matches expected format
+        import random
+        from datetime import datetime, timedelta
+        
+        # Generate dates for the period
+        end_date = datetime.now()
+        if period == '12m':
+            start_date = end_date - timedelta(days=365)
+            periods = 52  # Weekly data
+        elif period == '6m':
+            start_date = end_date - timedelta(days=180)
+            periods = 26
+        else:
+            start_date = end_date - timedelta(days=90)
+            periods = 13
+            
+        dates = pd.date_range(start=start_date, end=end_date, periods=periods)
+        
+        # Mock labor indicators
+        labor_data = {
+            'timeSeries': {
+                'ICSA': {  # Initial Claims
+                    'data': [
+                        {
+                            'date': date.strftime('%Y-%m-%d'),
+                            'value': 250000 + random.uniform(-50000, 50000),
+                            'indicator': 'Initial Unemployment Claims'
+                        }
+                        for date in dates
+                    ]
+                },
+                'CCSA': {  # Continued Claims
+                    'data': [
+                        {
+                            'date': date.strftime('%Y-%m-%d'),
+                            'value': 1800000 + random.uniform(-200000, 200000),
+                            'indicator': 'Continued Unemployment Claims'
+                        }
+                        for date in dates
+                    ]
+                }
+            },
+            'metadata': {
+                'period': period,
+                'dataSource': 'fred_mock',
+                'lastUpdated': datetime.now().isoformat(),
+                'indicators_count': 2 if fast else 5
+            }
+        }
+        
+        return jsonify(labor_data)
+        
+    except Exception as e:
+        logger.error(f"Labor market summary error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     print("🚀 Starting Gayed Signals Backtrader Analysis Service")
     print("   📊 Chart generation: Enabled")
     print("   🔗 API endpoints:")
     print("      - GET  /health")
     print("      - POST /analyze")
+    print("      - POST /analyze/fast")
     print("      - GET  /charts/<chart_name>")
+    print("      - GET  /api/v1/economic/housing/summary")
+    print("      - GET  /api/v1/economic/labor-market/summary")
     print("   🌐 Running on: http://localhost:5001")
     print("   📁 Charts saved to:", CHART_DIR)
     print("\n   Press Ctrl+C to stop")

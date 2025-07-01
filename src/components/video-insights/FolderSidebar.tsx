@@ -40,6 +40,11 @@ export default function FolderSidebar({
     const folderMap = new Map();
     const rootFolders: any[] = [];
 
+    // Early return if folders is undefined or null
+    if (!folders || !Array.isArray(folders)) {
+      return rootFolders;
+    }
+
     // First pass: create folder objects
     folders.forEach(folder => {
       folderMap.set(folder.id, {
