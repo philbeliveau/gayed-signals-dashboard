@@ -5,9 +5,33 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// FastAPI backend configuration
-const FASTAPI_BASE_URL = process.env.FASTAPI_BASE_URL || 'http://localhost:8000';
+// FastAPI backend configuration with validation
+const FASTAPI_BASE_URL = process.env.FASTAPI_BASE_URL || 'http://localhost:8002';
 const API_TIMEOUT = parseInt(process.env.API_TIMEOUT || '60000'); // 60 seconds default
+
+// Validate backend service on startup
+let serviceValidated = false;
+async function validateBackendService() {
+  if (serviceValidated) return true;
+  
+  try {
+    const healthResponse = await fetch(`${FASTAPI_BASE_URL}/health`, { 
+      method: 'GET',
+      signal: AbortSignal.timeout(5000)
+    });
+    
+    if (healthResponse.ok) {
+      const health = await healthResponse.json();
+      console.log(`✅ Backend service validated: ${health.service || 'Video Insights API'}`);
+      serviceValidated = true;
+      return true;
+    }
+  } catch (error) {
+    console.error(`❌ Backend service validation failed for ${FASTAPI_BASE_URL}:`, error.message);
+    console.error(`💡 Check if FASTAPI_BASE_URL environment variable points to the correct service`);
+  }
+  return false;
+}
 
 /**
  * Helper function to get user authentication token

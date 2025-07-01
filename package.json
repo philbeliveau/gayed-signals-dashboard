@@ -9,7 +9,10 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "check-services": "node scripts/check-services.js",
+    "validate-config": "node scripts/validate-config.js",
+    "health-check": "npm run validate-config && npm run check-services"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",

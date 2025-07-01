@@ -244,3 +244,370 @@ Task("Backend Team", "Implement APIs according to Memory specifications");
 - **Enable parallel execution** with --parallel flags for maximum efficiency
 
 This configuration ensures optimal use of Claude Code's batch tools for swarm orchestration and parallel task execution with full Claude-Flow capabilities.
+
+# =================================================================
+# MCP SERVER INTEGRATIONS - COMPREHENSIVE GUIDE
+# =================================================================
+
+## Available MCP Servers
+
+### 1. **Trader MCP** - Financial Market Analysis
+**Purpose**: Technical analysis and trading tools for stocks and crypto
+**Installation**: ✅ Configured with uvx
+**API Key**: Uses TIINGO_API_KEY from your .env file
+
+**Key Tools**:
+- `analyze_stock(symbol)` - Analyze stock technical indicators
+- `analyze_crypto(symbol, provider, lookback_days)` - Crypto technical analysis
+- `relative_strength(symbol, benchmark)` - Calculate relative strength vs benchmark
+- `volume_profile(symbol, lookback_days)` - Analyze volume distribution
+- `detect_patterns(symbol)` - Identify chart patterns
+- `position_size(symbol, stop_price, risk_amount, account_size)` - Calculate position sizing
+- `suggest_stops(symbol)` - Suggest stop loss levels
+
+**Usage Examples**:
+```
+"Analyze NVDA stock with technical indicators"
+"Calculate relative strength of BTC vs SPY over 90 days"
+"Suggest position size for TSLA with $500 risk and $10,000 account"
+```
+
+### 2. **Serena MCP** - Semantic Code Analysis & Editing
+**Purpose**: Advanced coding agent toolkit with semantic retrieval
+**Installation**: ✅ Configured with uvx from GitHub
+**API Key**: None required
+
+**Key Features**:
+- Semantic code search and retrieval
+- Language server integration
+- Project-aware code analysis
+- Direct code editing capabilities
+- Context-aware code suggestions
+
+**Usage Examples**:
+```
+"Find all functions that handle user authentication"
+"Analyze the database connection patterns in this codebase"
+"Refactor the payment processing module for better error handling"
+```
+
+### 3. **Playwright MCP** - Web Automation
+**Purpose**: Browser automation and web testing
+**Installation**: ✅ Configured with npx
+**API Key**: None required
+
+**Key Tools**:
+- Page navigation and interaction
+- Screenshot capture
+- Form filling and submission
+- Element selection and manipulation
+- Network monitoring
+- Accessibility testing
+
+**Usage Examples**:
+```
+"Take a screenshot of the login page"
+"Fill out the registration form with test data"
+"Monitor network requests during checkout process"
+```
+
+### 4. **Tavily MCP** - AI-Powered Web Search
+**Purpose**: Advanced web search with AI content extraction
+**Installation**: ✅ Configured (requires API key)
+**API Key**: TAVILY_API_KEY (get from https://tavily.com)
+
+**Key Features**:
+- AI-optimized search results
+- Content extraction and summarization
+- Domain filtering capabilities
+- Real-time web data retrieval
+
+**Usage Examples**:
+```
+"Search for recent developments in React 19"
+"Find technical documentation for PostgreSQL indexing"
+"Research competitor pricing strategies"
+```
+
+### 5. **Zen MCP** - Multi-AI Orchestration
+**Purpose**: Coordinate multiple AI models and workflows
+**Installation**: ✅ Configured (requires API keys)
+**API Keys**: OPENAI_API_KEY (configured), OPENROUTER_API_KEY (needed)
+
+**Key Features**:
+- Multi-model coordination
+- Workflow continuation
+- AI team management
+- Cross-platform AI integration
+
+**Usage Examples**:
+```
+"Coordinate a code review using multiple AI perspectives"
+"Create a research report using different AI models"
+"Implement a feature with AI team collaboration"
+```
+
+### 6. **Browser-Tools MCP** - Advanced Browser Integration
+**Purpose**: Deep browser integration with debugging tools
+**Installation**: ✅ Configured (requires Chrome extension)
+**API Key**: None required
+
+**Key Features**:
+- Console monitoring
+- Performance profiling
+- Lighthouse audits
+- Network analysis
+- DevTools integration
+
+**Usage Examples**:
+```
+"Run a Lighthouse audit on the homepage"
+"Monitor console errors during user interaction"
+"Analyze network performance bottlenecks"
+```
+
+### 7. **Context7 MCP** - External Context Integration
+**Purpose**: External context and data integration
+**Installation**: ✅ HTTP-based integration
+**API Key**: None required
+
+**Key Features**:
+- External data source integration
+- Context-aware assistance
+- Real-time information retrieval
+
+## MCP Tool Selection & Planning Algorithm
+
+### Phase 1: Task Analysis & Tool Selection
+```javascript
+function selectMCPTools(task, context) {
+  const taskType = analyzeTaskType(task);
+  const selectedTools = [];
+  
+  // Code-related tasks
+  if (taskType.includes('code', 'development', 'refactor', 'debug')) {
+    selectedTools.push('serena'); // Semantic code analysis
+    if (taskType.includes('web', 'frontend', 'ui')) {
+      selectedTools.push('playwright'); // Web automation
+      selectedTools.push('browser-tools'); // Browser debugging
+    }
+  }
+  
+  // Research & Information Gathering
+  if (taskType.includes('research', 'search', 'information', 'analyze')) {
+    selectedTools.push('tavily'); // AI-powered search
+    selectedTools.push('context7'); // External context
+  }
+  
+  // Financial & Trading Analysis
+  if (taskType.includes('stock', 'crypto', 'trading', 'financial', 'market')) {
+    selectedTools.push('trader'); // Financial analysis
+  }
+  
+  // Complex Multi-AI Tasks
+  if (taskType.includes('complex', 'multi-step', 'coordination')) {
+    selectedTools.push('zen'); // Multi-AI orchestration
+  }
+  
+  return selectedTools;
+}
+```
+
+### Phase 2: Execution Order Algorithm
+```javascript
+function determineExecutionOrder(selectedTools, task) {
+  const phases = {
+    research: ['tavily', 'context7'],           // Information gathering first
+    analysis: ['serena', 'trader'],             // Code/financial analysis
+    implementation: ['serena', 'playwright'],   // Development work
+    testing: ['playwright', 'browser-tools'],   // Testing and validation
+    coordination: ['zen']                       // Multi-AI coordination
+  };
+  
+  // Determine execution sequence based on task requirements
+  let executionPlan = [];
+  
+  if (task.includes('research') || task.includes('information')) {
+    executionPlan = phases.research.concat(phases.analysis);
+  } else if (task.includes('implement') || task.includes('build')) {
+    executionPlan = phases.analysis.concat(phases.implementation);
+  } else if (task.includes('test') || task.includes('debug')) {
+    executionPlan = phases.analysis.concat(phases.testing);
+  }
+  
+  // Always end with coordination for complex tasks
+  if (selectedTools.length > 2) {
+    executionPlan.push('zen');
+  }
+  
+  return executionPlan;
+}
+```
+
+## Memory Integration Protocol
+
+### Memory Storage Strategy
+Always store results and plans in memory using this structure:
+
+```javascript
+// Planning Phase Memory
+Memory.store("mcp_session/planning", {
+  timestamp: new Date().toISOString(),
+  task: "Original user request",
+  selectedTools: ["tool1", "tool2", "tool3"],
+  executionPlan: ["phase1", "phase2", "phase3"],
+  reasoning: "Why these tools were selected",
+  expectedOutcome: "What we expect to achieve"
+});
+
+// Tool Execution Memory
+Memory.store("mcp_session/tool_results/[tool_name]", {
+  timestamp: new Date().toISOString(),
+  tool: "tool_name",
+  input: "What was requested from the tool",
+  output: "Tool response/results",
+  status: "success/failed/partial",
+  insights: "Key insights from tool usage",
+  nextSteps: "Recommended follow-up actions"
+});
+
+// Final Results Memory
+Memory.store("mcp_session/final_results", {
+  timestamp: new Date().toISOString(),
+  originalTask: "User's original request",
+  toolsUsed: ["tool1", "tool2"],
+  keyFindings: "Main insights and results",
+  deliverables: "Concrete outputs produced",
+  recommendations: "Future action recommendations",
+  sessionSummary: "Complete session overview"
+});
+```
+
+## Execution Workflow Protocol
+
+### Step 1: Initialize Session
+```javascript
+TodoWrite([
+  {
+    id: "mcp_session_init",
+    content: "Initialize MCP session and select appropriate tools",
+    status: "in_progress",
+    priority: "critical"
+  },
+  {
+    id: "tool_selection",
+    content: "Analyze task and select optimal MCP tools",
+    status: "pending",
+    priority: "high"
+  },
+  {
+    id: "execution_planning",
+    content: "Create detailed execution plan with tool sequence",
+    status: "pending",
+    priority: "high"
+  }
+]);
+```
+
+### Step 2: Tool Execution Pattern
+```javascript
+// For each selected tool, follow this pattern:
+async function executeMCPTool(toolName, request) {
+  // Update todo status
+  TodoWrite([{
+    id: `${toolName}_execution`,
+    content: `Execute ${toolName} for: ${request}`,
+    status: "in_progress",
+    priority: "high"
+  }]);
+  
+  // Store pre-execution plan
+  Memory.store(`mcp_session/pre_execution/${toolName}`, {
+    tool: toolName,
+    request: request,
+    expectedOutput: "What we expect to get",
+    timestamp: new Date().toISOString()
+  });
+  
+  // Execute tool (this would be the actual MCP tool call)
+  const result = await callMCPTool(toolName, request);
+  
+  // Store results
+  Memory.store(`mcp_session/results/${toolName}`, {
+    tool: toolName,
+    input: request,
+    output: result,
+    status: result.success ? "success" : "failed",
+    timestamp: new Date().toISOString(),
+    insights: extractInsights(result),
+    nextSteps: determineNextSteps(result)
+  });
+  
+  // Update todo completion
+  TodoWrite([{
+    id: `${toolName}_execution`,
+    content: `Execute ${toolName} for: ${request}`,
+    status: "completed",
+    priority: "high"
+  }]);
+  
+  return result;
+}
+```
+
+### Step 3: Coordination & Synthesis
+```javascript
+// After all tools have executed
+function synthesizeResults() {
+  // Retrieve all tool results from memory
+  const allResults = Memory.query("mcp_session/results/*");
+  
+  // Combine insights
+  const combinedInsights = allResults.map(r => r.insights).join("\n");
+  
+  // Create final synthesis
+  const synthesis = {
+    toolsUsed: allResults.map(r => r.tool),
+    keyFindings: combinedInsights,
+    recommendations: generateRecommendations(allResults),
+    completionStatus: "all_tools_executed"
+  };
+  
+  // Store final results
+  Memory.store("mcp_session/final_synthesis", synthesis);
+  
+  return synthesis;
+}
+```
+
+## Best Practices for MCP Usage
+
+### 1. Always Plan Before Executing
+- Analyze the task thoroughly
+- Select appropriate tools based on task requirements
+- Create execution sequence in TodoWrite
+- Store planning decisions in Memory
+
+### 2. Use Memory for Coordination
+- Store all tool inputs and outputs
+- Track session progress
+- Enable cross-tool information sharing
+- Maintain audit trail of decisions
+
+### 3. Handle Tool Dependencies
+- Some tools work better in sequence (Tavily → Serena)
+- Others can run in parallel (Browser-tools + Playwright)
+- Always check tool-specific requirements
+
+### 4. Error Handling & Fallbacks
+- If a tool fails, document in Memory
+- Have fallback strategies for critical tools
+- Continue with available tools when possible
+
+### 5. Results Synthesis
+- Combine outputs from multiple tools
+- Identify patterns and insights across tools
+- Provide actionable recommendations
+- Update Memory with final results
+
+This comprehensive MCP integration ensures maximum efficiency and effectiveness when using multiple AI-powered tools together.
