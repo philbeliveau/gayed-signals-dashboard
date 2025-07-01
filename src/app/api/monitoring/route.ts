@@ -139,9 +139,9 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
         circuitBreakerState: riskHealthStatus.circuitBreakerState
       },
       security: {
-        rateLimiting: securityStats.rateLimiting,
-        events: securityStats.events,
-        suspiciousIPs: securityStats.suspiciousIPs
+        rateLimiting: securityStats?.rateLimiting || {},
+        events: securityStats?.events || [],
+        suspiciousIPs: securityStats?.suspiciousIPs || []
       },
       dataSources: combinedDataSources,
       alerts: recentAlerts,
@@ -151,7 +151,12 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
         serviceStatus: serviceStatus
       },
       performance: {
-        requestStats: riskStats.requests,
+        requestStats: {
+          ...riskStats.requests,
+          averageResponseTime: riskStats.requests.responseTimes?.length > 0 
+            ? riskStats.requests.responseTimes.reduce((a, b) => a + b, 0) / riskStats.requests.responseTimes.length
+            : 0
+        },
         clientStats: clientStats
       },
       timestamp: new Date().toISOString(),

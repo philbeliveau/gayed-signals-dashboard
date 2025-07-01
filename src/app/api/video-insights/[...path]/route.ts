@@ -172,7 +172,7 @@ async function proxyToFastAPI(
     console.error('❌ FastAPI proxy error:', error);
 
     // Handle timeout
-    if (error.name === 'AbortError') {
+    if (error instanceof Error && error.name === 'AbortError') {
       return NextResponse.json(
         {
           status: 'error',
@@ -184,7 +184,7 @@ async function proxyToFastAPI(
     }
 
     // Handle network errors
-    if (error.code === 'ECONNREFUSED' || error.message.includes('fetch failed')) {
+    if ((error as any)?.code === 'ECONNREFUSED' || (error instanceof Error && error.message.includes('fetch failed'))) {
       return NextResponse.json(
         {
           status: 'error',

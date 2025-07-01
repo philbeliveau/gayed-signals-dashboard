@@ -682,6 +682,39 @@ export class GracefulDegradationManager {
   getServiceStatus(): ServiceStatus {
     return { ...this.serviceStatus };
   }
+
+  /**
+   * Provide simplified signals when signal calculation fails
+   */
+  private async provideSimplifiedSignals(): Promise<Signal[]> {
+    const now = new Date().toISOString();
+    return [
+      {
+        date: now,
+        type: 'sp500_ma',
+        signal: 'Neutral',
+        strength: 'Weak',
+        confidence: 0.3,
+        rawValue: 0,
+        metadata: { fallback: true, source: 'emergency' }
+      }
+    ];
+  }
+
+  /**
+   * Provide basic consensus when consensus calculation fails
+   */
+  private async provideBasicConsensus(): Promise<ConsensusSignal> {
+    const now = new Date().toISOString();
+    return {
+      date: now,
+      consensus: 'Mixed',
+      confidence: 0.2,
+      riskOnCount: 0,
+      riskOffCount: 0,
+      signals: []
+    };
+  }
 }
 
 // Export singleton instance

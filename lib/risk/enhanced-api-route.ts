@@ -108,11 +108,46 @@ export async function enhancedGETHandler(request: NextRequest): Promise<NextResp
 
         // Calculate signals with graceful degradation
         const signalCalculators = {
-          utilities_spy: (data: Record<string, import('../types').MarketData[]>) => ({ signal: 'Risk-On', confidence: 0.8, date: new Date().toISOString() }),
-          lumber_gold: (data: Record<string, import('../types').MarketData[]>) => ({ signal: 'Risk-Off', confidence: 0.7, date: new Date().toISOString() }),
-          treasury_curve: (data: Record<string, import('../types').MarketData[]>) => ({ signal: 'Risk-On', confidence: 0.6, date: new Date().toISOString() }),
-          sp500_ma: (data: Record<string, import('../types').MarketData[]>) => ({ signal: 'Risk-On', confidence: 0.9, date: new Date().toISOString() }),
-          vix_defensive: (data: Record<string, import('../types').MarketData[]>) => ({ signal: 'Risk-Off', confidence: 0.5, date: new Date().toISOString() })
+          utilities_spy: (data: Record<string, import('../types').MarketData[]>) => [{
+            date: new Date().toISOString(),
+            type: 'utilities_spy' as const,
+            signal: 'Risk-On' as const,
+            strength: 'Strong' as const,
+            confidence: 0.8,
+            rawValue: 1.0
+          }],
+          lumber_gold: (data: Record<string, import('../types').MarketData[]>) => [{
+            date: new Date().toISOString(),
+            type: 'lumber_gold' as const,
+            signal: 'Risk-Off' as const,
+            strength: 'Moderate' as const,
+            confidence: 0.7,
+            rawValue: -0.5
+          }],
+          treasury_curve: (data: Record<string, import('../types').MarketData[]>) => [{
+            date: new Date().toISOString(),
+            type: 'treasury_curve' as const,
+            signal: 'Risk-On' as const,
+            strength: 'Moderate' as const,
+            confidence: 0.6,
+            rawValue: 0.3
+          }],
+          sp500_ma: (data: Record<string, import('../types').MarketData[]>) => [{
+            date: new Date().toISOString(),
+            type: 'sp500_ma' as const,
+            signal: 'Risk-On' as const,
+            strength: 'Strong' as const,
+            confidence: 0.9,
+            rawValue: 1.2
+          }],
+          vix_defensive: (data: Record<string, import('../types').MarketData[]>) => [{
+            date: new Date().toISOString(),
+            type: 'vix_defensive' as const,
+            signal: 'Risk-Off' as const,
+            strength: 'Weak' as const,
+            confidence: 0.5,
+            rawValue: -0.2
+          }]
         };
 
         const signalsResult = await gracefulDegradationManager.calculateSignalsWithDegradation(
@@ -375,13 +410,10 @@ export async function healthCheckHandler(_request: NextRequest): Promise<NextRes
     const [
       clientHealth,
       riskManagerHealth,
-      // providerHealth,
       securityStats
     ] = await Promise.all([
       enhancedYahooFinanceClient.healthCheck(),
       riskManager.getHealthStatus(),
-      // dataFallbackManager.getProviderHealth(), // Would need to expose this method
-      {},
       securityManager.getSecurityStats()
     ]);
 
@@ -407,8 +439,8 @@ export async function healthCheckHandler(_request: NextRequest): Promise<NextRes
         },
         security: {
           status: 'healthy',
-          rateLimiting: securityStats.rateLimiting,
-          suspiciousIPs: securityStats.suspiciousIPs.length
+          rateLimiting: securityStats?.rateLimiting || {},
+          suspiciousIPs: securityStats?.suspiciousIPs?.length || 0
         }
       },
       metrics: riskManagerHealth.metrics

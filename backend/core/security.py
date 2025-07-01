@@ -169,8 +169,8 @@ async def get_current_user_optional(
     Get current user with optional authentication for development.
     Creates a test user if no auth is provided.
     """
-    # If no credentials provided (development mode), create/get test user
-    if credentials is None:
+    # If no credentials provided or dev-token (development mode), create/get test user
+    if credentials is None or (credentials and credentials.credentials == 'dev-token'):
         # Try to get existing test user
         result = await db.execute(
             select(User).where(User.email == "test@example.com")

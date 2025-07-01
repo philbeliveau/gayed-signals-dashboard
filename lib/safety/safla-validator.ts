@@ -445,9 +445,9 @@ export class SAFLAValidator {
     }
 
     // Validate that we have adequate signal coverage
-    const requiredSignalTypes = ['utilities_spy', 'lumber_gold', 'treasury_curve', 'vix_defensive', 'sp500_ma'];
+    const requiredSignalTypes = ['utilities_spy', 'lumber_gold', 'treasury_curve', 'vix_defensive', 'sp500_ma'] as const;
     const availableSignalTypes = validSignals.map(s => s.type);
-    const missingSignalTypes = requiredSignalTypes.filter(type => !availableSignalTypes.includes(type));
+    const missingSignalTypes = requiredSignalTypes.filter(type => !availableSignalTypes.includes(type as any));
 
     if (missingSignalTypes.length > 2) {
       results.push({

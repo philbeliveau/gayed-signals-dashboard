@@ -497,7 +497,7 @@ export default function VideoInsightsPage() {
                           <SummaryPanel
                             video={state.currentVideo}
                             summaries={[]} // This would be loaded from VideoDetails
-                            onRegenerateSummary={async (mode, prompt) => {
+                            onRegenerateSummary={async (mode: string, prompt?: string) => {
                               // Implement regenerate summary
                             }}
                             isRegenerating={false}

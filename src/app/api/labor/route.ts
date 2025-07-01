@@ -76,16 +76,12 @@ export async function GET(request: NextRequest) {
     
     // Initialize housing/labor processor
     const marketClient = new EnhancedMarketClient({
-      tiingo: {
-        apiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
-        rateLimit: 500
-      },
-      alphaVantage: {
-        apiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
-        rateLimit: 12000
-      },
-      yahoo: {
-        rateLimit: 100
+      tiingoApiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
+      alphaVantageApiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
+      rateLimits: {
+        tiingo: 500,
+        alphaVantage: 12000,
+        yahooFinance: 100
       }
     });
     
@@ -304,7 +300,7 @@ export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
 function generateMockLaborData(period: string) {
   // Mock data generation - in production this would be replaced with real DOL/BLS API calls
   const weeks = period === '3m' ? 12 : period === '6m' ? 24 : period === '12m' ? 52 : 104;
-  const data = [];
+  const data: any[] = [];
   
   // Starting realistic values (based on 2023-2024 trends)
   let baseInitialClaims = 220000;

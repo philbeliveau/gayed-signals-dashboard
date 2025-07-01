@@ -576,12 +576,7 @@ export class RiskManager extends EventEmitter {
   /**
    * Get performance statistics
    */
-  getStats(): {
-    requests: typeof this.requestStats;
-    health: HealthMetrics[];
-    alerts: Alert[];
-    uptime: number;
-  } {
+  getStats() {
     return {
       requests: { ...this.requestStats },
       health: [...this.healthMetrics],
