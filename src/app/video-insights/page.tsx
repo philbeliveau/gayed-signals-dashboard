@@ -94,7 +94,7 @@ export default function VideoInsightsPage() {
 
       setState(prev => ({
         ...prev,
-        videos: videosResult.videos,
+        videos: videosResult && videosResult.videos ? videosResult.videos : [],
         folders: foldersResult,
         loading: false,
       }));
@@ -137,7 +137,7 @@ export default function VideoInsightsPage() {
         sort_order: 'desc',
         per_page: 20
       });
-      setState(prev => ({ ...prev, videos: result.videos }));
+      setState(prev => ({ ...prev, videos: result && result.videos ? result.videos : [] }));
     } catch (error) {
       console.error('Failed to refresh video list:', error);
     }
@@ -157,11 +157,11 @@ export default function VideoInsightsPage() {
       setState(prev => ({
         ...prev,
         processingStatus: {
-          task_id: response.task_id || '',
+          task_id: response && response.task_id ? response.task_id : '',
           status: 'queued',
           progress: 0,
           stage: 'downloading',
-          estimated_completion: response.estimated_completion_time || 240,
+          estimated_completion: response && response.estimated_completion_time ? response.estimated_completion_time : 240,
         }
       }));
 
@@ -185,7 +185,7 @@ export default function VideoInsightsPage() {
       const videoDetails = await videoInsightsAPI.getVideoDetails(videoId);
       setState(prev => ({ 
         ...prev, 
-        currentVideo: videoDetails.video,
+        currentVideo: videoDetails && videoDetails.video ? videoDetails.video : null,
         loading: false 
       }));
     } catch (error) {
