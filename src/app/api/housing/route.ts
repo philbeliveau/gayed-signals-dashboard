@@ -133,7 +133,24 @@ export async function GET(request: NextRequest) {
     }
     
     // Process the data through the housing processor
-    const processedData = await processHousingData(processor, housingMarketData.timeSeries || housingMarketData);
+    // Handle different data structures from FRED service vs mock data
+    let timeSeriesData;
+    if (housingMarketData.time_series) {
+      // Data from FRED service has time_series property
+      timeSeriesData = housingMarketData.time_series;
+    } else if (housingMarketData.timeSeries) {
+      // Fallback for different naming convention
+      timeSeriesData = housingMarketData.timeSeries;
+    } else if (Array.isArray(housingMarketData)) {
+      // Mock data returns array directly
+      timeSeriesData = housingMarketData;
+    } else {
+      // If no time series data found, use empty array
+      console.warn('⚠️ No time series data found in housingMarketData:', Object.keys(housingMarketData));
+      timeSeriesData = [];
+    }
+    
+    const processedData = await processHousingData(processor, timeSeriesData);
     
     const responseData = {
       region,
