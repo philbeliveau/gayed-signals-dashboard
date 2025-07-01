@@ -12,7 +12,12 @@
     "test:coverage": "jest --coverage",
     "check-services": "node scripts/check-services.js",
     "validate-config": "node scripts/validate-config.js",
-    "health-check": "npm run validate-config && npm run check-services"
+    "health-check": "npm run validate-config && npm run check-services",
+    "start-platform": "./scripts/start-platform.sh",
+    "stop-platform": "./scripts/stop-platform.sh",
+    "clean-platform": "./scripts/clean-platform.sh",
+    "restart-platform": "npm run stop-platform && sleep 3 && npm run start-platform",
+    "platform-status": "cat .platform-status 2>/dev/null || echo 'Platform not running'"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",
