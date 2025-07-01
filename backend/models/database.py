@@ -6,7 +6,9 @@ from sqlalchemy import (
     Column, String, Text, Integer, DateTime, Boolean, 
     ForeignKey, JSON, UniqueConstraint, Index, Date, Float, Enum
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
+from sqlalchemy.types import TypeDecorator, CHAR
+# Removed unused import: uuid as uuid_module
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
@@ -15,12 +17,48 @@ import uuid
 from core.database import Base
 
 
+class SQLiteUUID(TypeDecorator):
+    """
+    Platform-independent UUID type that stores UUIDs as strings in SQLite
+    and as native UUID types in PostgreSQL.
+    """
+    impl = CHAR
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        """Choose the appropriate implementation based on database dialect."""
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(PostgresUUID(as_uuid=True))
+        else:
+            return dialect.type_descriptor(CHAR(36))
+
+    def process_bind_param(self, value, dialect):
+        """Convert UUID to appropriate format for storage."""
+        if value is None:
+            return value
+        elif dialect.name == 'postgresql':
+            return value if isinstance(value, uuid.UUID) else uuid.UUID(value)
+        else:
+            return str(value) if isinstance(value, uuid.UUID) else value
+
+    def process_result_value(self, value, dialect):
+        """Convert stored value back to UUID object."""
+        if value is None:
+            return value
+        elif dialect.name == 'postgresql':
+            return value if isinstance(value, uuid.UUID) else uuid.UUID(value)
+        else:
+            return uuid.UUID(value) if isinstance(value, str) else value
+
+
+
+
 class User(Base):
     """User model for authentication and authorization."""
     
     __tablename__ = "users"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
     email = Column(String(255), unique=True, nullable=False, index=True)
     username = Column(String(100), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
@@ -41,8 +79,8 @@ class Folder(Base):
     
     __tablename__ = "folders"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(SQLiteUUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(Text)
     color = Column(String(7), default="#3B82F6")  # Hex color code
@@ -65,9 +103,9 @@ class Video(Base):
     
     __tablename__ = "videos"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    folder_id = Column(UUID(as_uuid=True), ForeignKey("folders.id", ondelete="SET NULL"), nullable=True)
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(SQLiteUUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    folder_id = Column(SQLiteUUID(), ForeignKey("folders.id", ondelete="SET NULL"), nullable=True)
     
     # YouTube metadata
     youtube_url = Column(String(500), nullable=False)
@@ -116,8 +154,8 @@ class Transcript(Base):
     
     __tablename__ = "transcripts"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    video_id = Column(UUID(as_uuid=True), ForeignKey("videos.id", ondelete="CASCADE"), nullable=False, unique=True)
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
+    video_id = Column(SQLiteUUID(), ForeignKey("videos.id", ondelete="CASCADE"), nullable=False, unique=True)
     
     # Transcript data
     full_text = Column(Text, nullable=False)
@@ -137,11 +175,13 @@ class Transcript(Base):
     # Relationships
     video = relationship("Video", back_populates="transcript")
     
-    # Full-text search and performance indexes
+    # Performance indexes
     __table_args__ = (
-        Index("idx_transcripts_search", "full_text", postgresql_using="gin", 
-              postgresql_ops={"full_text": "gin_trgm_ops"}),
-        Index("idx_transcripts_chunks_jsonb", "chunks", postgresql_using="gin"),
+        # Note: Full-text search index disabled - requires pg_trgm extension
+        # Index("idx_transcripts_search", "full_text", postgresql_using="gin", 
+        #       postgresql_ops={"full_text": "gin_trgm_ops"}),
+        # Index("idx_transcripts_chunks_jsonb", "chunks", postgresql_using="gin", 
+        #       postgresql_ops={"chunks": "jsonb_ops"}),  # Disabled for SQLite compatibility
         Index("idx_transcripts_duration_confidence", "total_audio_duration", "confidence_score"),
     )
 
@@ -151,9 +191,9 @@ class Summary(Base):
     
     __tablename__ = "summaries"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    video_id = Column(UUID(as_uuid=True), ForeignKey("videos.id", ondelete="CASCADE"), nullable=False)
-    prompt_template_id = Column(UUID(as_uuid=True), ForeignKey("prompt_templates.id", ondelete="SET NULL"), nullable=True)
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
+    video_id = Column(SQLiteUUID(), ForeignKey("videos.id", ondelete="CASCADE"), nullable=False)
+    prompt_template_id = Column(SQLiteUUID(), ForeignKey("prompt_templates.id", ondelete="SET NULL"), nullable=True)
     
     # Summary content
     summary_text = Column(Text, nullable=False)
@@ -182,8 +222,8 @@ class Summary(Base):
     # Constraints and indexes
     __table_args__ = (
         Index("idx_summaries_video_mode", "video_id", "mode"),
-        Index("idx_summaries_search", "summary_text", postgresql_using="gin",
-              postgresql_ops={"summary_text": "gin_trgm_ops"}),
+        # Index("idx_summaries_search", "summary_text", postgresql_using="gin",
+        #       postgresql_ops={"summary_text": "gin_trgm_ops"}),  # Requires pg_trgm extension
         Index("idx_summaries_created", "created_at"),
         Index("idx_summaries_token_cost", "token_count", "processing_cost"),
         Index("idx_summaries_provider_model", "llm_provider", "llm_model"),
@@ -195,8 +235,8 @@ class PromptTemplate(Base):
     
     __tablename__ = "prompt_templates"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(SQLiteUUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
     # Template metadata
     name = Column(String(255), nullable=False)
@@ -233,8 +273,8 @@ class ProcessingJob(Base):
     
     __tablename__ = "processing_jobs"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    video_id = Column(UUID(as_uuid=True), ForeignKey("videos.id", ondelete="CASCADE"), nullable=False)
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
+    video_id = Column(SQLiteUUID(), ForeignKey("videos.id", ondelete="CASCADE"), nullable=False)
     
     # Job metadata
     job_type = Column(String(50), nullable=False)  # download, transcribe, summarize
@@ -269,7 +309,7 @@ class EconomicSeries(Base):
     
     __tablename__ = "economic_series"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
     series_id = Column(String(50), unique=True, nullable=False, index=True)  # FRED series ID (e.g., 'ICSA', 'CSUSHPINSA')
     name = Column(String(255), nullable=False)
     description = Column(Text)
@@ -298,8 +338,8 @@ class EconomicDataPoint(Base):
     
     __tablename__ = "economic_data_points"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    series_id = Column(UUID(as_uuid=True), ForeignKey("economic_series.id", ondelete="CASCADE"), nullable=False)
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
+    series_id = Column(SQLiteUUID(), ForeignKey("economic_series.id", ondelete="CASCADE"), nullable=False)
     observation_date = Column(DateTime(timezone=True), nullable=False)
     value = Column(String(50))  # Store as string to handle FRED's '.' for missing values
     numeric_value = Column(Integer)  # Parsed numeric value for calculations
@@ -335,15 +375,15 @@ def create_search_indexes():
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_folders_user_id ON folders(user_id);",
         
         # Full-text search indexes with trigram support
-        "CREATE EXTENSION IF NOT EXISTS pg_trgm;",
-        "CREATE EXTENSION IF NOT EXISTS btree_gin;",
+        # "CREATE EXTENSION IF NOT EXISTS pg_trgm;",  # Requires superuser privileges
+        # "CREATE EXTENSION IF NOT EXISTS btree_gin;",  # Requires superuser privileges
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transcripts_fulltext ON transcripts USING gin(to_tsvector('english', full_text));",
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transcripts_trigram ON transcripts USING gin(full_text gin_trgm_ops);",
+        # "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transcripts_trigram ON transcripts USING gin(full_text gin_trgm_ops);",  # Requires pg_trgm extension
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_summaries_fulltext ON summaries USING gin(to_tsvector('english', summary_text));",
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_summaries_trigram ON summaries USING gin(summary_text gin_trgm_ops);",
+        # "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_summaries_trigram ON summaries USING gin(summary_text gin_trgm_ops);",  # Requires pg_trgm extension
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_videos_title_channel_fulltext ON videos USING gin(to_tsvector('english', title || ' ' || coalesce(channel_name, '')));",
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_videos_title_trigram ON videos USING gin(title gin_trgm_ops);",
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_videos_channel_trigram ON videos USING gin(channel_name gin_trgm_ops);",
+        # "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_videos_title_trigram ON videos USING gin(title gin_trgm_ops);",  # Requires pg_trgm extension
+        # "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_videos_channel_trigram ON videos USING gin(channel_name gin_trgm_ops);",  # Requires pg_trgm extension
         
         # Performance indexes for video processing
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_videos_youtube_id ON videos(youtube_id);",
@@ -355,7 +395,7 @@ def create_search_indexes():
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transcripts_video_id ON transcripts(video_id);",
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transcripts_language ON transcripts(language);",
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transcripts_confidence ON transcripts(confidence_score) WHERE confidence_score IS NOT NULL;",
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transcripts_chunks_gin ON transcripts USING gin(chunks);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transcripts_chunks_gin ON transcripts USING gin(chunks jsonb_ops);",
         
         # Summary performance indexes
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_summaries_video_mode ON summaries(video_id, mode);",
@@ -365,7 +405,7 @@ def create_search_indexes():
         
         # Folder and organization indexes
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_folders_user_created ON folders(user_id, created_at DESC);",
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_folders_name_trigram ON folders USING gin(name gin_trgm_ops);",
+        # "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_folders_name_trigram ON folders USING gin(name gin_trgm_ops);",  # Requires pg_trgm extension
         
         # Processing job indexes
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_jobs_status_created ON processing_jobs(status, created_at DESC);",
@@ -380,7 +420,7 @@ def create_search_indexes():
         # Prompt template indexes
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_prompt_templates_category_public ON prompt_templates(category, is_public, is_featured);",
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_prompt_templates_usage_desc ON prompt_templates(usage_count DESC);",
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_prompt_templates_name_trigram ON prompt_templates USING gin(name gin_trgm_ops);",
+        # "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_prompt_templates_name_trigram ON prompt_templates USING gin(name gin_trgm_ops);",  # Requires pg_trgm extension
         
         # Composite indexes for common queries
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_videos_user_folder_status ON videos(user_id, folder_id, status, created_at DESC);",

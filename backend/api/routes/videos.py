@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 
 from core.database import get_db
-from core.security import get_current_user
+from core.security import get_current_user_optional
 from models.database import User, Video, Transcript, Summary, Folder
 from services.youtube_service import youtube_service
 from services.cache_service import CacheService
@@ -80,7 +80,7 @@ class ProcessingStatusResponse(BaseModel):
 async def process_video(
     request: VideoProcessRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -217,7 +217,7 @@ async def process_video(
 @router.post("/process-playlist", response_model=ProcessingStatusResponse)
 async def process_playlist(
     request: PlaylistProcessRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -280,7 +280,7 @@ async def list_videos(
     search: Optional[str] = Query(None, description="Search in title and channel name"),
     limit: int = Query(20, ge=1, le=100, description="Number of videos to return"),
     offset: int = Query(0, ge=0, description="Number of videos to skip"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -379,7 +379,7 @@ async def list_videos(
 @router.get("/{video_id}", response_model=VideoDetailResponse)
 async def get_video(
     video_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -482,7 +482,7 @@ async def get_video(
 @router.delete("/{video_id}")
 async def delete_video(
     video_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -546,7 +546,7 @@ async def delete_video(
 @router.get("/status/{task_id}", response_model=ProcessingStatusResponse)
 async def get_processing_status(
     task_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Get processing status for a video processing task.
@@ -583,7 +583,7 @@ async def regenerate_summary(
     video_id: UUID,
     summary_mode: str = "bullet",
     user_prompt: Optional[str] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """

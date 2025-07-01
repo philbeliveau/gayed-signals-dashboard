@@ -95,6 +95,21 @@ class Settings(BaseSettings):
         env="FRED_API_KEY",
         description="Federal Reserve Economic Data (FRED) API key"
     )
+    TIINGO_API_KEY: Optional[str] = Field(
+        default=None,
+        env="TIINGO_API_KEY",
+        description="Tiingo financial data API key"
+    )
+    ALPHA_VANTAGE_KEY: Optional[str] = Field(
+        default=None,
+        env="ALPHA_VANTAGE_KEY",
+        description="Alpha Vantage financial data API key"
+    )
+    BUREAU_OF_STATISTIC_KEY: Optional[str] = Field(
+        default=None,
+        env="BUREAU_OF_STATISTIC_KEY",
+        description="Bureau of Labor Statistics API key"
+    )
     
     # YouTube processing settings
     MAX_VIDEO_DURATION_MINUTES: int = Field(
@@ -263,6 +278,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "allow"  # Allow extra environment variables
     
     def get_database_url_sync(self) -> str:
         """Get synchronous database URL for non-async operations."""

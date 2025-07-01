@@ -10,10 +10,10 @@ from datetime import datetime, timedelta
 from celery import Task, current_task
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.celery_app import celery_app
-from backend.core.database import async_session_maker
-from backend.services.fred_service import fred_service
-from backend.models.database import EconomicSeries, EconomicDataPoint
+from core.celery_app import celery_app
+from core.database import async_session_maker
+from services.fred_service import fred_service
+from models.database import EconomicSeries, EconomicDataPoint
 
 logger = logging.getLogger(__name__)
 

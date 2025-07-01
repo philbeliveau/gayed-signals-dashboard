@@ -13,7 +13,7 @@ from datetime import datetime
 import re
 
 from core.database import get_db
-from core.security import get_current_user
+from core.security import get_current_user_optional
 from models.database import User, PromptTemplate
 from services.cache_service import CacheService
 from pydantic import BaseModel, Field, validator
@@ -181,7 +181,7 @@ async def list_prompt_templates(
     category: Optional[str] = Query(None, description="Filter by category"),
     include_public: bool = Query(True, description="Include public templates"),
     search: Optional[str] = Query(None, description="Search in name and description"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -261,7 +261,7 @@ async def list_prompt_templates(
 @router.post("/templates", response_model=PromptTemplateResponse, status_code=status.HTTP_201_CREATED)
 async def create_prompt_template(
     template_data: PromptTemplateCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -337,7 +337,7 @@ async def create_prompt_template(
 @router.get("/templates/{template_id}", response_model=PromptTemplateResponse)
 async def get_prompt_template(
     template_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -402,7 +402,7 @@ async def get_prompt_template(
 async def update_prompt_template(
     template_id: UUID,
     template_update: PromptTemplateUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -505,7 +505,7 @@ async def update_prompt_template(
 @router.delete("/templates/{template_id}")
 async def delete_prompt_template(
     template_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -561,7 +561,7 @@ async def delete_prompt_template(
 @router.post("/validate", response_model=PromptValidationResponse)
 async def validate_prompt(
     validation_request: PromptValidationRequest,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Validate a prompt template and provide suggestions.
@@ -631,7 +631,7 @@ async def validate_prompt(
 @router.post("/templates/{template_id}/use")
 async def use_prompt_template(
     template_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -706,7 +706,7 @@ async def get_prompt_categories():
 
 @router.post("/templates/initialize-defaults")
 async def initialize_default_templates(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """

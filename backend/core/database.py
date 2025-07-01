@@ -87,10 +87,10 @@ async def create_db_and_tables():
             # Create all tables
             await conn.run_sync(Base.metadata.create_all)
             
-            # Enable required PostgreSQL extensions
-            await conn.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm;")
-            await conn.execute("CREATE EXTENSION IF NOT EXISTS btree_gin;")
-            await conn.execute("CREATE EXTENSION IF NOT EXISTS pg_stat_statements;")
+            # Enable required PostgreSQL extensions (commented out - requires superuser)
+            # await conn.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm;")
+            # await conn.execute("CREATE EXTENSION IF NOT EXISTS btree_gin;")
+            # await conn.execute("CREATE EXTENSION IF NOT EXISTS pg_stat_statements;")
             
             # Set PostgreSQL performance parameters
             performance_settings = """
@@ -124,51 +124,51 @@ async def create_db_and_tables():
             except Exception as e:
                 logger.warning(f"Could not set performance parameters (may require superuser): {e}")
             
-            # Enable Row Level Security and create policies
-            await conn.execute("""
-                -- Enable RLS on all user-scoped tables
-                ALTER TABLE IF EXISTS users ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE IF EXISTS videos ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE IF EXISTS transcripts ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE IF EXISTS summaries ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE IF EXISTS folders ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE IF EXISTS prompt_templates ENABLE ROW LEVEL SECURITY;
-                
-                -- Create database role for authenticated users
-                DO $$ 
-                BEGIN
-                    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated_user') THEN
-                        CREATE ROLE authenticated_user;
-                    END IF;
-                END
-                $$;
-                
-                -- Create RLS policies for user isolation
-                DROP POLICY IF EXISTS user_videos_policy ON videos;
-                CREATE POLICY user_videos_policy ON videos
-                    FOR ALL TO authenticated_user
-                    USING (user_id = current_setting('app.current_user_id')::uuid);
-                
-                DROP POLICY IF EXISTS user_folders_policy ON folders;
-                CREATE POLICY user_folders_policy ON folders
-                    FOR ALL TO authenticated_user
-                    USING (user_id = current_setting('app.current_user_id')::uuid);
-                
-                DROP POLICY IF EXISTS user_prompts_policy ON prompt_templates;
-                CREATE POLICY user_prompts_policy ON prompt_templates
-                    FOR ALL TO authenticated_user
-                    USING (user_id = current_setting('app.current_user_id')::uuid OR is_public = true);
-                
-                DROP POLICY IF EXISTS user_transcripts_policy ON transcripts;
-                CREATE POLICY user_transcripts_policy ON transcripts
-                    FOR ALL TO authenticated_user
-                    USING (EXISTS (SELECT 1 FROM videos WHERE videos.id = transcripts.video_id AND videos.user_id = current_setting('app.current_user_id')::uuid));
-                
-                DROP POLICY IF EXISTS user_summaries_policy ON summaries;
-                CREATE POLICY user_summaries_policy ON summaries
-                    FOR ALL TO authenticated_user
-                    USING (EXISTS (SELECT 1 FROM videos WHERE videos.id = summaries.video_id AND videos.user_id = current_setting('app.current_user_id')::uuid));
-            """)
+            # Enable Row Level Security and create policies (commented out - complex DDL)
+            # await conn.execute("""
+            #     -- Enable RLS on all user-scoped tables
+            #     ALTER TABLE IF EXISTS users ENABLE ROW LEVEL SECURITY;
+            #     ALTER TABLE IF EXISTS videos ENABLE ROW LEVEL SECURITY;
+            #     ALTER TABLE IF EXISTS transcripts ENABLE ROW LEVEL SECURITY;
+            #     ALTER TABLE IF EXISTS summaries ENABLE ROW LEVEL SECURITY;
+            #     ALTER TABLE IF EXISTS folders ENABLE ROW LEVEL SECURITY;
+            #     ALTER TABLE IF EXISTS prompt_templates ENABLE ROW LEVEL SECURITY;
+            #     
+            #     -- Create database role for authenticated users
+            #     DO $$ 
+            #     BEGIN
+            #         IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated_user') THEN
+            #             CREATE ROLE authenticated_user;
+            #         END IF;
+            #     END
+            #     $$;
+            #     
+            #     -- Create RLS policies for user isolation
+            #     DROP POLICY IF EXISTS user_videos_policy ON videos;
+            #     CREATE POLICY user_videos_policy ON videos
+            #         FOR ALL TO authenticated_user
+            #         USING (user_id = current_setting('app.current_user_id')::uuid);
+            #     
+            #     DROP POLICY IF EXISTS user_folders_policy ON folders;
+            #     CREATE POLICY user_folders_policy ON folders
+            #         FOR ALL TO authenticated_user
+            #         USING (user_id = current_setting('app.current_user_id')::uuid);
+            #     
+            #     DROP POLICY IF EXISTS user_prompts_policy ON prompt_templates;
+            #     CREATE POLICY user_prompts_policy ON prompt_templates
+            #         FOR ALL TO authenticated_user
+            #         USING (user_id = current_setting('app.current_user_id')::uuid OR is_public = true);
+            #     
+            #     DROP POLICY IF EXISTS user_transcripts_policy ON transcripts;
+            #     CREATE POLICY user_transcripts_policy ON transcripts
+            #         FOR ALL TO authenticated_user
+            #         USING (EXISTS (SELECT 1 FROM videos WHERE videos.id = transcripts.video_id AND videos.user_id = current_setting('app.current_user_id')::uuid));
+            #     
+            #     DROP POLICY IF EXISTS user_summaries_policy ON summaries;
+            #     CREATE POLICY user_summaries_policy ON summaries
+            #         FOR ALL TO authenticated_user
+            #         USING (EXISTS (SELECT 1 FROM videos WHERE videos.id = summaries.video_id AND videos.user_id = current_setting('app.current_user_id')::uuid));
+            # """)
             
         # Create performance indexes
         logger.info("Creating performance indexes...")

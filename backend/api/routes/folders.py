@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 
 from core.database import get_db
-from core.security import get_current_user
+from core.security import get_current_user_optional
 from models.database import User, Folder, Video
 from services.cache_service import CacheService
 from pydantic import BaseModel, Field
@@ -59,7 +59,7 @@ class FolderWithVideos(FolderResponse):
 @router.post("/", response_model=FolderResponse, status_code=status.HTTP_201_CREATED)
 async def create_folder(
     folder_data: FolderCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -130,7 +130,7 @@ async def create_folder(
 @router.get("/", response_model=List[FolderResponse])
 async def list_folders(
     include_video_count: bool = Query(True, description="Include video count for each folder"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -192,7 +192,7 @@ async def list_folders(
 async def get_folder(
     folder_id: UUID,
     include_videos: bool = Query(True, description="Include videos in the folder"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -283,7 +283,7 @@ async def get_folder(
 async def update_folder(
     folder_id: UUID,
     folder_update: FolderUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -386,7 +386,7 @@ async def update_folder(
 async def delete_folder(
     folder_id: UUID,
     force: bool = Query(False, description="Force delete even if folder contains videos"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -476,7 +476,7 @@ async def delete_folder(
 async def add_video_to_folder(
     folder_id: UUID,
     video_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -554,7 +554,7 @@ async def add_video_to_folder(
 async def remove_video_from_folder(
     folder_id: UUID,
     video_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """

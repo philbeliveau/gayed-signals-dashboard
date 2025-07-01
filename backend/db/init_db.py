@@ -61,9 +61,9 @@ async def create_extensions():
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""))
             logger.info("Created uuid-ossp extension")
             
-            # Enable full-text search extensions
-            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
-            logger.info("Created pg_trgm extension")
+            # Enable full-text search extensions (commented out - requires superuser)
+            # await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
+            # logger.info("Created pg_trgm extension")
             
             # Enable Row Level Security helper functions
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS \"pgcrypto\""))

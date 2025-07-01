@@ -20,9 +20,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert, update, and_, or_
 from sqlalchemy.exc import IntegrityError
 
-from backend.core.config import settings
-from backend.core.database import async_session_maker
-from backend.services.cache_service import cache_service
+from core.config import settings
+from core.database import async_session_maker
+from services.cache_service import cache_service
 
 logger = logging.getLogger(__name__)
 
@@ -159,10 +159,16 @@ class FREDService:
         """Get FRED API key from settings."""
         api_key = getattr(settings, 'FRED_API_KEY', None)
         if not api_key:
-            raise ValueError(
-                "FRED_API_KEY not found in settings. Please set FRED_API_KEY environment variable."
+            logger.warning(
+                "FRED_API_KEY not found in settings. FRED services will be disabled."
             )
+            return ""
         return api_key
+    
+    @property
+    def is_enabled(self) -> bool:
+        """Check if FRED service is enabled (has valid API key)."""
+        return bool(self.api_key)
     
     async def __aenter__(self):
         """Async context manager entry."""
@@ -328,6 +334,10 @@ class FREDService:
         Raises:
             Exception: If API request fails or data is invalid
         """
+        if not self.is_enabled:
+            logger.warning(f"FRED service disabled - returning empty data for {series_id}")
+            return []
+        
         params = {'series_id': series_id}
         
         if start_date:
@@ -386,6 +396,16 @@ class FREDService:
         Raises:
             Exception: If API request fails or series not found
         """
+        if not self.is_enabled:
+            logger.warning(f"FRED service disabled - returning default info for {series_id}")
+            return FREDSeriesInfo(
+                id=series_id,
+                title=f"Series {series_id} (FRED service disabled)",
+                units="N/A",
+                frequency="N/A",
+                notes="FRED service disabled - no API key configured"
+            )
+        
         params = {'series_id': series_id}
         
         try:
@@ -429,6 +449,10 @@ class FREDService:
         Returns:
             Dictionary mapping series names to data points
         """
+        if not self.is_enabled:
+            logger.warning("FRED service disabled - returning empty housing market data")
+            return {}
+        
         logger.info("Fetching comprehensive housing market data from FRED...")
         
         tasks = []
@@ -469,6 +493,10 @@ class FREDService:
         Returns:
             Dictionary mapping series names to data points
         """
+        if not self.is_enabled:
+            logger.warning("FRED service disabled - returning empty labor market data")
+            return {}
+        
         logger.info("Fetching comprehensive labor market data from FRED...")
         
         tasks = []

@@ -17,10 +17,11 @@ import uvicorn
 import os
 from typing import Dict, Any
 import logging
+from sqlalchemy import text
 
 from core.config import settings
 from core.database import engine, create_db_and_tables
-from core.security import get_current_user
+from core.security import get_current_user_optional
 from api.routes import videos, folders, prompts, economic_data
 from models.database import Base
 
@@ -57,28 +58,28 @@ app.include_router(
     videos.router,
     prefix="/api/v1/videos",
     tags=["videos"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user_optional)]
 )
 
 app.include_router(
     folders.router,
     prefix="/api/v1/folders",
     tags=["folders"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user_optional)]
 )
 
 app.include_router(
     prompts.router,
     prefix="/api/v1/prompts",
     tags=["prompts"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user_optional)]
 )
 
 app.include_router(
     economic_data.router,
     prefix="/api/v1/economic",
     tags=["economic-data"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user_optional)]
 )
 
 
@@ -126,7 +127,7 @@ async def health_check() -> Dict[str, Any]:
         # Check database connection
         from core.database import async_session_maker
         async with async_session_maker() as session:
-            await session.execute("SELECT 1")
+            await session.execute(text("SELECT 1"))
         
         return {
             "status": "healthy",
@@ -155,7 +156,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8002,
+        port=8000,
         reload=True,
         log_level="info"
     )

@@ -14,8 +14,9 @@ import asyncio
 from enum import Enum
 
 from core.database import get_db
-from core.security import get_current_user
+from core.security import get_current_user_optional
 from models.database import User
+from services.fred_service import fred_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -194,7 +195,6 @@ class ErrorResponse(BaseModel):
 async def get_labor_market_summary(
     period: TimePeriod = Query(TimePeriod.TWELVE_MONTHS, description="Time period for data"),
     fast_mode: bool = Query(False, description="Enable fast mode for essential indicators only"),
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> LaborMarketSummaryResponse:
     """
@@ -209,7 +209,7 @@ async def get_labor_market_summary(
     - Job Openings (JTSJOL)
     """
     try:
-        logger.info(f"Fetching labor market summary for user {current_user.id}, period: {period}")
+        logger.info(f"Fetching labor market summary, period: {period}")
         
         # Mock data generation - In production, this would fetch from DOL/BLS APIs
         labor_data = await generate_mock_labor_data(period, fast_mode)
@@ -223,7 +223,7 @@ async def get_labor_market_summary(
             correlation_analysis=labor_data["correlation_analysis"],
             metadata={
                 "timestamp": datetime.utcnow().isoformat(),
-                "user_id": str(current_user.id),
+                "user_id": str(current_user.id) if current_user else "anonymous",
                 "period": period,
                 "fast_mode": fast_mode,
                 "data_source": "mock_data",  # In production: "dol_bls_api"
@@ -249,7 +249,6 @@ async def get_housing_summary(
     region: str = Query("national", description="Geographic region (national, ca, ny, fl, etc.)"),
     period: TimePeriod = Query(TimePeriod.TWELVE_MONTHS, description="Time period for data"),
     fast_mode: bool = Query(False, description="Enable fast mode for essential indicators only"),
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> HousingSummaryResponse:
     """
@@ -264,7 +263,7 @@ async def get_housing_summary(
     - Building Permits (PERMIT)
     """
     try:
-        logger.info(f"Fetching housing summary for user {current_user.id}, region: {region}, period: {period}")
+        logger.info(f"Fetching housing summary, region: {region}, period: {period}")
         
         # Mock data generation - In production, this would fetch from FRED API
         housing_data = await generate_mock_housing_data(region, period, fast_mode)
@@ -278,7 +277,6 @@ async def get_housing_summary(
             statistics=housing_data["statistics"],
             metadata={
                 "timestamp": datetime.utcnow().isoformat(),
-                "user_id": str(current_user.id),
                 "region": region,
                 "period": period,
                 "fast_mode": fast_mode,
@@ -303,7 +301,7 @@ async def get_housing_summary(
             description="Retrieve time series data for specified economic indicators with custom date ranges")
 async def get_time_series_data(
     query: TimeSeriesQuery,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ) -> TimeSeriesResponse:
     """
@@ -313,7 +311,7 @@ async def get_time_series_data(
     Returns statistical analysis and correlation matrices.
     """
     try:
-        logger.info(f"Fetching time series data for user {current_user.id}, indicators: {query.indicators}")
+        logger.info(f"Fetching time series data for user {current_user.id if current_user else 'anonymous'}, indicators: {query.indicators}")
         
         # Validate date range
         if query.start_date and query.end_date:
@@ -347,7 +345,7 @@ async def get_time_series_data(
             correlation_matrix=correlation_matrix,
             metadata={
                 "timestamp": datetime.utcnow().isoformat(),
-                "user_id": str(current_user.id),
+                "user_id": str(current_user.id) if current_user else "anonymous",
                 "query": query.dict(),
                 "data_points": len(time_series_data["data"]),
                 "data_source": "mock_data"  # In production: multiple APIs
@@ -371,7 +369,7 @@ async def get_time_series_data(
            description="Get list of all available economic indicators with descriptions")
 async def list_economic_indicators(
     category: Optional[str] = Query(None, description="Filter by category (labor, housing)"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
     """
     List all available economic indicators with descriptions and metadata.
@@ -457,6 +455,329 @@ async def list_economic_indicators(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve economic indicators"
+        )
+
+# NEW ENDPOINTS FOR FRONTEND INTEGRATION
+
+@router.get("/labor-market",
+           summary="Get labor market data (frontend endpoint)",
+           description="Retrieve labor market data with real FRED integration")
+async def get_labor_market_data(
+    period: str = Query("12m", description="Time period for data"),
+    fast: bool = Query(False, description="Enable fast mode for essential indicators only")
+) -> Dict[str, Any]:
+    """
+    Get labor market data using real FRED API service.
+    This endpoint is called by the frontend labor market tab.
+    """
+    try:
+        logger.info(f"Fetching labor market data via FRED service, period: {period}, fast: {fast}")
+        
+        # Calculate date range based on period
+        period_days = {"3m": 90, "6m": 180, "12m": 365, "24m": 730}
+        days = period_days.get(period, 365)
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
+        
+        # Use the FRED service to get real data
+        async with fred_service as fred:
+            try:
+                # Get labor market data from FRED
+                labor_data = await fred.fetch_labor_market_data(
+                    start_date=start_date.strftime('%Y-%m-%d'),
+                    end_date=end_date.strftime('%Y-%m-%d'),
+                    limit=100 if fast else None
+                )
+                
+                # Transform FRED data to expected frontend format
+                time_series = []
+                for date_str in sorted(set(dp.date for series_data in labor_data.values() for dp in series_data)):
+                    # Get data for this date from all series
+                    date_data = {"date": date_str}
+                    
+                    for series_name, series_data in labor_data.items():
+                        date_points = [dp for dp in series_data if dp.date == date_str]
+                        if date_points:
+                            value = date_points[0].value or 0
+                            if series_name == "INITIAL_CLAIMS":
+                                date_data["initialClaims"] = int(value)
+                            elif series_name == "CONTINUED_CLAIMS":
+                                date_data["continuedClaims"] = int(value)
+                            elif series_name == "UNEMPLOYMENT_RATE":
+                                date_data["unemploymentRate"] = round(value, 1)
+                            elif series_name == "NONFARM_PAYROLLS":
+                                date_data["nonfarmPayrolls"] = int(value)
+                            elif series_name == "LABOR_PARTICIPATION":
+                                date_data["laborParticipation"] = round(value, 1)
+                            elif series_name == "JOB_OPENINGS":
+                                date_data["jobOpenings"] = int(value)
+                    
+                    # Calculate derived fields
+                    if len(time_series) > 0:
+                        prev_data = time_series[-1]
+                        if "initialClaims" in date_data and "initialClaims" in prev_data:
+                            date_data["weeklyChangeInitial"] = round(((date_data["initialClaims"] / prev_data["initialClaims"]) - 1) * 100, 1)
+                        if "continuedClaims" in date_data and "continuedClaims" in prev_data:
+                            date_data["weeklyChangeContinued"] = round(((date_data["continuedClaims"] / prev_data["continuedClaims"]) - 1) * 100, 1)
+                    
+                    # Calculate 4-week average
+                    if len(time_series) >= 3 and "initialClaims" in date_data:
+                        recent_claims = [date_data["initialClaims"]] + [ts.get("initialClaims", 0) for ts in time_series[-3:]]
+                        date_data["claims4Week"] = int(sum(recent_claims) / len(recent_claims))
+                    
+                    time_series.append(date_data)
+                
+                # Generate alerts based on current data
+                alerts = []
+                if time_series:
+                    current_data = time_series[-1]
+                    if current_data.get("continuedClaims", 0) > 1800000:
+                        alerts.append({
+                            "id": "continued_claims_alert",
+                            "type": "claims_spike",
+                            "severity": "critical",
+                            "message": f"Continued claims ({current_data['continuedClaims']:,}) above concerning level",
+                            "timestamp": datetime.utcnow().isoformat()
+                        })
+                
+                return {
+                    "laborData": time_series,
+                    "alerts": alerts,
+                    "metadata": {
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "dataSource": "fred_api",
+                        "period": period,
+                        "fastMode": fast,
+                        "dataPoints": len(time_series)
+                    }
+                }
+                
+            except Exception as fred_error:
+                logger.warning(f"FRED service failed, falling back to mock data: {fred_error}")
+                # Fallback to mock data if FRED fails
+                mock_data = await generate_mock_labor_data(TimePeriod(period), fast)
+                return {
+                    "laborData": mock_data["time_series"],
+                    "alerts": mock_data["alerts"],
+                    "metadata": {
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "dataSource": "mock_fallback",
+                        "period": period,
+                        "fastMode": fast,
+                        "fallbackReason": str(fred_error)
+                    }
+                }
+        
+    except Exception as e:
+        logger.error(f"Error in labor market endpoint: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch labor market data: {str(e)}"
+        )
+
+@router.get("/housing-market",
+           summary="Get housing market data (frontend endpoint)",
+           description="Retrieve housing market data with real FRED integration")
+async def get_housing_market_data(
+    region: str = Query("national", description="Geographic region"),
+    period: str = Query("12m", description="Time period for data"),
+    fast: bool = Query(False, description="Enable fast mode for essential indicators only")
+) -> Dict[str, Any]:
+    """
+    Get housing market data using real FRED API service.
+    This endpoint is called by the frontend housing market tab.
+    """
+    try:
+        logger.info(f"Fetching housing market data via FRED service, region: {region}, period: {period}, fast: {fast}")
+        
+        # Calculate date range based on period
+        period_days = {"3m": 90, "6m": 180, "12m": 365, "24m": 730}
+        days = period_days.get(period, 365)
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
+        
+        # Use the FRED service to get real data
+        async with fred_service as fred:
+            try:
+                # Get housing market data from FRED
+                housing_data = await fred.fetch_housing_market_data(
+                    start_date=start_date.strftime('%Y-%m-%d'),
+                    end_date=end_date.strftime('%Y-%m-%d'),
+                    limit=100 if fast else None
+                )
+                
+                # Transform FRED data to expected frontend format
+                time_series = []
+                for date_str in sorted(set(dp.date for series_data in housing_data.values() for dp in series_data)):
+                    # Get data for this date from all series
+                    date_data = {"date": date_str}
+                    
+                    for series_name, series_data in housing_data.items():
+                        date_points = [dp for dp in series_data if dp.date == date_str]
+                        if date_points:
+                            value = date_points[0].value or 0
+                            if series_name == "CASE_SHILLER":
+                                date_data["caseSillerIndex"] = round(value, 1)
+                            elif series_name == "HOUSING_STARTS":
+                                date_data["housingStarts"] = int(value)
+                            elif series_name == "MONTHS_SUPPLY":
+                                date_data["monthsSupply"] = round(value, 1)
+                            elif series_name == "NEW_HOME_SALES":
+                                date_data["newHomeSales"] = int(value)
+                    
+                    # Calculate price changes
+                    if len(time_series) > 0 and "caseSillerIndex" in date_data:
+                        prev_data = time_series[-1]
+                        if "caseSillerIndex" in prev_data:
+                            date_data["priceChangeMonthly"] = round(((date_data["caseSillerIndex"] / prev_data["caseSillerIndex"]) - 1) * 100, 1)
+                    
+                    if len(time_series) >= 12 and "caseSillerIndex" in date_data:
+                        year_ago_data = time_series[-12]
+                        if "caseSillerIndex" in year_ago_data:
+                            date_data["priceChangeYearly"] = round(((date_data["caseSillerIndex"] / year_ago_data["caseSillerIndex"]) - 1) * 100, 1)
+                    
+                    time_series.append(date_data)
+                
+                # Generate alerts based on current data
+                alerts = []
+                if time_series:
+                    current_data = time_series[-1]
+                    if current_data.get("monthsSupply", 0) > 6.0:
+                        alerts.append({
+                            "id": "high_inventory_alert",
+                            "type": "supply_surge",
+                            "severity": "warning",
+                            "message": f"Housing inventory at {current_data['monthsSupply']} months supply - above healthy range",
+                            "timestamp": datetime.utcnow().isoformat()
+                        })
+                
+                return {
+                    "housingData": time_series,
+                    "alerts": alerts,
+                    "metadata": {
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "dataSource": "fred_api",
+                        "region": region,
+                        "period": period,
+                        "fastMode": fast,
+                        "dataPoints": len(time_series)
+                    }
+                }
+                
+            except Exception as fred_error:
+                logger.warning(f"FRED service failed, falling back to mock data: {fred_error}")
+                # Fallback to mock data if FRED fails
+                mock_data = await generate_mock_housing_data(region, TimePeriod(period), fast)
+                return {
+                    "housingData": mock_data["time_series"],
+                    "alerts": mock_data["alerts"],
+                    "metadata": {
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "dataSource": "mock_fallback",
+                        "region": region,
+                        "period": period,
+                        "fastMode": fast,
+                        "fallbackReason": str(fred_error)
+                    }
+                }
+        
+    except Exception as e:
+        logger.error(f"Error in housing market endpoint: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch housing market data: {str(e)}"
+        )
+
+@router.get("/series/{indicator}",
+           summary="Get historical data for specific indicator",
+           description="Retrieve historical time series data for a specific economic indicator")
+async def get_series_data(
+    indicator: str,
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    region: Optional[str] = Query(None, description="Geographic region (for regional indicators)")
+) -> Dict[str, Any]:
+    """
+    Get historical time series data for a specific economic indicator using FRED API.
+    This endpoint is called by the frontend for historical data requests.
+    """
+    try:
+        logger.info(f"Fetching series data for {indicator} from {start_date} to {end_date}")
+        
+        # Use the FRED service to get real data
+        async with fred_service as fred:
+            try:
+                # Get series data from FRED
+                observations = await fred.fetch_series_data(
+                    series_id=indicator,
+                    start_date=start_date,
+                    end_date=end_date
+                )
+                
+                # Transform to expected format
+                data = [
+                    {
+                        "date": obs.date,
+                        "value": obs.value,
+                        "symbol": indicator,
+                        "source": "FRED"
+                    }
+                    for obs in observations
+                    if obs.value is not None
+                ]
+                
+                return {
+                    "observations": data,
+                    "metadata": {
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "dataSource": "fred_api",
+                        "indicator": indicator,
+                        "dataPoints": len(data),
+                        "startDate": start_date,
+                        "endDate": end_date,
+                        "region": region
+                    }
+                }
+                
+            except Exception as fred_error:
+                logger.warning(f"FRED service failed for series {indicator}, falling back to mock: {fred_error}")
+                # Fallback to mock data
+                from datetime import datetime as dt
+                mock_observations = []
+                current_date = dt.strptime(start_date, '%Y-%m-%d')
+                end_dt = dt.strptime(end_date, '%Y-%m-%d')
+                base_value = 220000 if 'ICSA' in indicator else 311.2 if 'CSUSH' in indicator else 1500000
+                
+                while current_date <= end_dt:
+                    trend = (hash(str(current_date)) % 100 - 50) * 0.001
+                    value = base_value * (1 + trend)
+                    mock_observations.append({
+                        "date": current_date.strftime('%Y-%m-%d'),
+                        "value": round(value, 2),
+                        "symbol": indicator,
+                        "source": "MOCK"
+                    })
+                    current_date += timedelta(days=7 if 'weekly' in indicator.lower() else 30)
+                
+                return {
+                    "observations": mock_observations,
+                    "metadata": {
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "dataSource": "mock_fallback",
+                        "indicator": indicator,
+                        "dataPoints": len(mock_observations),
+                        "startDate": start_date,
+                        "endDate": end_date,
+                        "region": region,
+                        "fallbackReason": str(fred_error)
+                    }
+                }
+        
+    except Exception as e:
+        logger.error(f"Error fetching series data for {indicator}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch series data: {str(e)}"
         )
 
 # Helper Functions

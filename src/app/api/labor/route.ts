@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
     let laborMarketData;
     try {
       console.log('🔄 Calling Python FRED service for labor market data...');
-      const fredResponse = await fetch(`${process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'}/api/economic-data/labor-market?period=${period}&fast=${fastMode}`, {
+      const fredResponse = await fetch(`${process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'}/api/v1/economic/labor-market/summary?period=${period}&fast=${fastMode}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -199,6 +199,7 @@ export async function POST(request: NextRequest) {
     
     // Call Python backend FRED service for historical labor data
     let historicalData;
+    let usedFallback = false;
     try {
       console.log(`🔄 Calling Python FRED service for historical ${indicator} data...`);
       const fredResponse = await fetch(`${process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'}/api/economic-data/series/${indicator}?start_date=${startDate}&end_date=${endDate}`, {
@@ -220,6 +221,7 @@ export async function POST(request: NextRequest) {
     } catch (fredError) {
       console.warn('⚠️ FRED service unavailable for historical data, falling back to mock:', fredError);
       historicalData = generateMockHistoricalData(indicator, startDate, endDate);
+      usedFallback = true;
     }
     
     if (!historicalData || historicalData.length === 0) {
@@ -251,7 +253,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         timestamp: new Date().toISOString(),
         dataPoints: historicalData.length,
-        dataSource: historicalData === generateMockHistoricalData(indicator, startDate, endDate) ? 'mock_fallback' : 'fred_api'
+        dataSource: usedFallback ? 'mock_fallback' : 'fred_api'
       }
     });
     

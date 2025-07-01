@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
-from backend.core.config import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 

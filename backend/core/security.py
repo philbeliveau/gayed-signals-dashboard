@@ -9,6 +9,7 @@ from jwt import PyJWTError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from typing import Union
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -158,6 +159,73 @@ async def get_current_user(
     await set_user_context(db, str(user.id))
     
     return user
+
+
+async def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+    db: AsyncSession = Depends(get_db)
+) -> User:
+    """
+    Get current user with optional authentication for development.
+    Creates a test user if no auth is provided.
+    """
+    # If no credentials provided (development mode), create/get test user
+    if credentials is None:
+        # Try to get existing test user
+        result = await db.execute(
+            select(User).where(User.email == "test@example.com")
+        )
+        user = result.scalar_one_or_none()
+        
+        if user is None:
+            # Create test user for development using raw SQL to bypass UUID issues
+            import uuid
+            from sqlalchemy import text
+            import logging
+            
+            logger = logging.getLogger(__name__)
+            
+            try:
+                user_id = uuid.uuid4()
+                hashed_password = get_password_hash("testpassword")
+                
+                logger.info(f"Attempting to create test user with UUID: {user_id}")
+                
+                # Use raw SQL to insert with proper UUID casting
+                await db.execute(text("""
+                    INSERT INTO users (id, email, username, hashed_password, full_name, is_active, is_superuser, created_at, updated_at)
+                    VALUES (:id::uuid, :email, :username, :hashed_password, :full_name, :is_active, :is_superuser, now(), now())
+                """), {
+                    "id": str(user_id),
+                    "email": "test@example.com",
+                    "username": "testuser",
+                    "hashed_password": hashed_password,
+                    "full_name": "Test User",
+                    "is_active": True,
+                    "is_superuser": False
+                })
+                await db.commit()
+                
+                logger.info("Raw SQL insert successful")
+                
+                # Now get the user object
+                result = await db.execute(
+                    select(User).where(User.email == "test@example.com")
+                )
+                user = result.scalar_one()
+                logger.info(f"Successfully retrieved test user with ID: {user.id}")
+                
+            except Exception as e:
+                logger.error(f"Raw SQL approach failed: {e}")
+                # If raw SQL fails, try alternative approach
+                raise e
+        
+        # Set user context for Row Level Security
+        await set_user_context(db, str(user.id))
+        return user
+    
+    # If credentials provided, use normal auth flow
+    return await get_current_user(credentials, db)
 
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:

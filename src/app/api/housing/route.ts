@@ -100,12 +100,40 @@ export async function GET(request: NextRequest) {
     
     console.log(`📊 Fetching data for housing indicators: ${housingSymbols.join(', ')}`);
     
-    // NOTE: This is a mock implementation since we don't have real FRED/DOL API integration yet
-    // In production, this would fetch real data from FRED API using the housing symbols
-    const mockHousingData = generateMockHousingData(region, period);
+    // Call the Python backend FRED service for real housing market data
+    let housingMarketData;
+    try {
+      console.log('🏠 Calling Python FRED service for housing market data...');
+      const fredResponse = await fetch(`${process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'}/api/v1/economic/housing/summary?region=${region}&period=${period}&fast=${fastMode}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        // Add timeout for the request
+        signal: AbortSignal.timeout(30000) // 30 second timeout
+      });
+      
+      if (!fredResponse.ok) {
+        throw new Error(`FRED service responded with status: ${fredResponse.status}`);
+      }
+      
+      housingMarketData = await fredResponse.json();
+      console.log('✅ Successfully received housing market data from FRED service');
+    } catch (fredError) {
+      console.warn('⚠️ FRED service unavailable, falling back to mock data:', fredError);
+      // Fallback to mock data if FRED service is not available
+      housingMarketData = {
+        timeSeries: generateMockHousingData(region, period),
+        metadata: {
+          dataSource: 'mock_fallback',
+          reason: fredError instanceof Error ? fredError.message : 'FRED service unavailable'
+        }
+      };
+    }
     
     // Process the data through the housing processor
-    const processedData = await processHousingData(processor, mockHousingData);
+    const processedData = await processHousingData(processor, housingMarketData.timeSeries || housingMarketData);
     
     const responseData = {
       region,
@@ -117,11 +145,12 @@ export async function GET(request: NextRequest) {
       statistics: processedData.statistics,
       metadata: {
         timestamp: new Date().toISOString(),
-        dataSource: 'mock_data', // In production: 'fred_api'
+        dataSource: housingMarketData?.metadata?.dataSource || 'fred_api',
         indicatorCount: housingSymbols.length,
         fastMode,
         region,
-        period
+        period,
+        fallbackReason: housingMarketData?.metadata?.reason
       }
     };
     
@@ -171,8 +200,32 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // Mock historical data - in production this would fetch from FRED API
-    const historicalData = generateMockHistoricalData(indicator, startDate, endDate, region);
+    // Call Python backend FRED service for historical housing data
+    let historicalData;
+    let usedFallback = false;
+    try {
+      console.log(`🔄 Calling Python FRED service for historical ${indicator} data (${region})...`);
+      const fredResponse = await fetch(`${process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'}/api/economic-data/series/${indicator}?start_date=${startDate}&end_date=${endDate}&region=${region}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(30000)
+      });
+      
+      if (!fredResponse.ok) {
+        throw new Error(`FRED service responded with status: ${fredResponse.status}`);
+      }
+      
+      const fredData = await fredResponse.json();
+      historicalData = fredData.observations || fredData.data || [];
+      console.log(`✅ Successfully received ${historicalData.length} historical housing data points from FRED`);
+    } catch (fredError) {
+      console.warn('⚠️ FRED service unavailable for historical housing data, falling back to mock:', fredError);
+      historicalData = generateMockHistoricalData(indicator, startDate, endDate, region);
+      usedFallback = true;
+    }
     
     if (!historicalData || historicalData.length === 0) {
       return NextResponse.json({ 
@@ -201,7 +254,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         timestamp: new Date().toISOString(),
         dataPoints: historicalData.length,
-        dataSource: 'mock_data' // In production: 'fred_api'
+        dataSource: usedFallback ? 'mock_fallback' : 'fred_api'
       }
     });
     
