@@ -4,11 +4,24 @@ FROM python:3.9-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including ta-lib
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
+    wget \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
+
+# Install ta-lib C library with ARM64 support
+RUN cd /tmp && \
+    wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+    tar -xzf ta-lib-0.4.0-src.tar.gz && \
+    cd ta-lib/ && \
+    ./configure --build=aarch64-unknown-linux-gnu --prefix=/usr && \
+    make && \
+    make install && \
+    cd / && \
+    rm -rf /tmp/ta-lib*
 
 # Copy requirements first for better caching
 COPY requirements.txt .

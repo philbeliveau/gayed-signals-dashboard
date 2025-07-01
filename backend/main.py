@@ -78,8 +78,7 @@ app.include_router(
 app.include_router(
     economic_data.router,
     prefix="/api/v1/economic",
-    tags=["economic-data"],
-    dependencies=[Depends(get_current_user_optional)]
+    tags=["economic-data"]
 )
 
 

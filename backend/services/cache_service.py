@@ -24,22 +24,18 @@ class CacheService:
         # Parse Redis URL
         redis_url = settings.REDIS_URL
         
-        # Connection pool settings for high performance
+        # Connection pool settings for high performance with AsyncRESP2Parser fix
         connection_pool = redis.ConnectionPool.from_url(
             redis_url,
             decode_responses=False,  # Handle binary data for compression
-            max_connections=100,     # Increased for high concurrency
+            max_connections=50,      # Reduced to prevent parser issues
             retry_on_timeout=True,
             retry_on_error=[ConnectionError],
             health_check_interval=30,
-            socket_keepalive=True,
-            socket_keepalive_options={
-                1: 1,  # TCP_KEEPIDLE
-                2: 3,  # TCP_KEEPINTVL 
-                3: 5,  # TCP_KEEPCNT
-            },
-            socket_connect_timeout=5,
-            socket_timeout=10,
+            socket_connect_timeout=10,
+            socket_timeout=15,
+            connection_class=redis.Connection,  # Explicit async connection class
+            parser_class=redis.connection._AsyncRESP2Parser  # Explicit parser class
         )
         
         self.redis: Redis = redis.Redis(
@@ -75,12 +71,37 @@ class CacheService:
         self.cache_miss_count = 0
         self.cache_error_count = 0
     
+    async def _ensure_connection(self) -> bool:
+        """Ensure Redis connection is healthy and reconnect if needed."""
+        try:
+            await self.redis.ping()
+            return True
+        except Exception as e:
+            logger.warning(f"Redis connection check failed: {e}")
+            try:
+                # Try to reconnect
+                await self.redis.connection_pool.disconnect()
+                await self.redis.ping()
+                logger.info("Redis connection restored")
+                return True
+            except Exception as reconnect_error:
+                logger.error(f"Redis reconnection failed: {reconnect_error}")
+                return False
+    
     async def health_check(self) -> dict:
         """Comprehensive Redis connection health check."""
         try:
-            # Test basic connectivity
+            # Test basic connectivity with AsyncRESP2Parser error handling
             ping_start = datetime.utcnow()
-            await self.redis.ping()
+            connection_healthy = await self._ensure_connection()
+            
+            if not connection_healthy:
+                return {
+                    'status': 'unhealthy',
+                    'error': 'Unable to establish Redis connection',
+                    'cache_hit_ratio': self._calculate_hit_ratio()
+                }
+            
             ping_time = (datetime.utcnow() - ping_start).total_seconds() * 1000
             
             # Get Redis info

@@ -194,7 +194,7 @@ async def get_current_user_optional(
                 # Use raw SQL to insert with proper UUID casting
                 await db.execute(text("""
                     INSERT INTO users (id, email, username, hashed_password, full_name, is_active, is_superuser, created_at, updated_at)
-                    VALUES (:id::uuid, :email, :username, :hashed_password, :full_name, :is_active, :is_superuser, now(), now())
+                    VALUES (:id, :email, :username, :hashed_password, :full_name, :is_active, :is_superuser, datetime('now'), datetime('now'))
                 """), {
                     "id": str(user_id),
                     "email": "test@example.com",

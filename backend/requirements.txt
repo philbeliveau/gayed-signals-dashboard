@@ -22,7 +22,7 @@ PyJWT==2.8.0
 
 # Background tasks
 celery==5.3.4
-redis==5.0.1
+redis==5.0.8
 
 # YouTube and media processing
 yt-dlp==2023.11.16

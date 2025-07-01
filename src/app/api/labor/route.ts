@@ -132,7 +132,24 @@ export async function GET(request: NextRequest) {
     }
     
     // Process the data through the labor processor
-    const processedData = await processLaborData(processor, laborMarketData.timeSeries || laborMarketData);
+    // Handle different data structures from FRED service vs mock data
+    let timeSeriesData;
+    if (laborMarketData.time_series) {
+      // Data from FRED service has time_series property
+      timeSeriesData = laborMarketData.time_series;
+    } else if (laborMarketData.timeSeries) {
+      // Fallback for different naming convention
+      timeSeriesData = laborMarketData.timeSeries;
+    } else if (Array.isArray(laborMarketData)) {
+      // Mock data returns array directly
+      timeSeriesData = laborMarketData;
+    } else {
+      // If no time series data found, use empty array
+      console.warn('⚠️ No time series data found in laborMarketData:', Object.keys(laborMarketData));
+      timeSeriesData = [];
+    }
+    
+    const processedData = await processLaborData(processor, timeSeriesData);
     
     const responseData = {
       period,

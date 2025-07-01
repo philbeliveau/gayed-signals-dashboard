@@ -68,9 +68,13 @@ docs/
 
 # Large data files
 *.csv
-*.json
 data/
 memory/
+
+# JSON files (but allow package.json and package-lock.json)
+*.json
+!package.json
+!package-lock.json
 
 # Conda environment
 conda-meta/
