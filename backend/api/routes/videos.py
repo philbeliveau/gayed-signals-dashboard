@@ -578,6 +578,77 @@ async def get_processing_status(
         )
 
 
+@router.patch("/{video_id}/status")
+async def update_video_status(
+    video_id: UUID,
+    status: str,
+    error_message: Optional[str] = None,
+    current_user: User = Depends(get_current_user_optional),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Update video processing status.
+    
+    Args:
+        video_id: Video ID
+        status: New status (processing, complete, error)
+        error_message: Optional error message for failed videos
+        current_user: Current authenticated user
+        db: Database session
+        
+    Returns:
+        Success response
+    """
+    try:
+        # Get video with user ownership check
+        video_result = await db.execute(
+            select(Video).where(
+                and_(
+                    Video.id == video_id,
+                    Video.user_id == current_user.id
+                )
+            )
+        )
+        video = video_result.scalar_one_or_none()
+        
+        if not video:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Video not found"
+            )
+        
+        # Validate status
+        valid_statuses = ["processing", "complete", "error"]
+        if status not in valid_statuses:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+            )
+        
+        # Update video status
+        video.status = status
+        if error_message:
+            video.error_message = error_message
+        
+        await db.commit()
+        
+        logger.info(f"Updated video {video_id} status to {status}")
+        
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": f"Video status updated to {status}"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating video status {video_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update video status"
+        )
+
+
 @router.post("/{video_id}/regenerate-summary")
 async def regenerate_summary(
     video_id: UUID,

@@ -58,9 +58,7 @@ const nextConfig: NextConfig = {
   
   // Development configuration
   ...(process.env.NODE_ENV === 'development' && {
-    experimental: {
-      serverComponentsExternalPackages: ['yahoo-finance2'],
-    },
+    serverExternalPackages: ['yahoo-finance2'],
   }),
 };
 

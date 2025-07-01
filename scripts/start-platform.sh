@@ -138,7 +138,7 @@ echo -e "${BLUE}⏳ Waiting for Docker services...${NC}"
 sleep 5
 
 # Validate Docker services
-docker_services=("postgres" "redis" "video-insights-api")
+docker_services=("postgres" "redis" "video-insights-api" "celery-worker")
 for service in "${docker_services[@]}"; do
     if ! docker compose -f docker-compose.backend.yml ps "$service" | grep -q "running"; then
         echo -e "${RED}❌ Docker service $service is not running${NC}"

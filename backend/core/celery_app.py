@@ -14,10 +14,8 @@ celery_app = Celery(
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
     include=[
-        "backend.tasks.video_tasks",
-        "backend.tasks.transcription_tasks",
-        "backend.tasks.summarization_tasks",
-        "backend.tasks.economic_tasks"
+        "tasks.video_tasks",
+        "tasks.economic_tasks"
     ]
 )
 
@@ -32,12 +30,8 @@ celery_app.conf.update(
     
     # Enhanced task routing with priority queues
     task_routes={
-        "backend.tasks.video_tasks.*": {"queue": "video_processing"},
-        "backend.tasks.transcription_tasks.*": {"queue": "transcription"},
-        "backend.tasks.summarization_tasks.*": {"queue": "summarization"},
-        "backend.tasks.maintenance_tasks.*": {"queue": "maintenance"},
-        "backend.tasks.cache_tasks.*": {"queue": "cache_operations"},
-        "backend.tasks.economic_tasks.*": {"queue": "economic_data"},
+        "tasks.video_tasks.*": {"queue": "video_processing"},
+        "tasks.economic_tasks.*": {"queue": "economic_data"},
     },
     
     # Queue priority settings
@@ -80,52 +74,32 @@ celery_app.conf.update(
     
     # Enhanced beat scheduler for maintenance tasks
     beat_schedule={
-        'cleanup-temp-files': {
-            'task': 'backend.tasks.maintenance_tasks.cleanup_temp_files',
-            'schedule': 300.0,  # Every 5 minutes
-            'options': {'queue': 'maintenance', 'priority': 1}
-        },
-        'update-processing-stats': {
-            'task': 'backend.tasks.maintenance_tasks.update_processing_stats',
-            'schedule': 900.0,  # Every 15 minutes
-            'options': {'queue': 'maintenance', 'priority': 2}
-        },
-        'warm-cache': {
-            'task': 'backend.tasks.cache_tasks.warm_popular_content',
-            'schedule': 3600.0,  # Every hour
-            'options': {'queue': 'cache_operations', 'priority': 3}
-        },
-        'cleanup-old-results': {
-            'task': 'backend.tasks.maintenance_tasks.cleanup_old_results',
-            'schedule': 21600.0,  # Every 6 hours
-            'options': {'queue': 'maintenance', 'priority': 1}
-        },
-        # Economic data tasks
+        # Economic data tasks (commented out non-existent tasks)
         'update-housing-market-data': {
-            'task': 'backend.tasks.economic_tasks.update_housing_market_data',
+            'task': 'tasks.economic_tasks.update_housing_market_data',
             'schedule': 3600.0,  # Every hour
             'args': [1],  # 1 day back
             'options': {'queue': 'economic_data', 'priority': 7}
         },
         'update-labor-market-data': {
-            'task': 'backend.tasks.economic_tasks.update_labor_market_data', 
+            'task': 'tasks.economic_tasks.update_labor_market_data', 
             'schedule': 3600.0,  # Every hour
             'args': [1],  # 1 day back
             'options': {'queue': 'economic_data', 'priority': 7}
         },
         'daily-complete-economic-update': {
-            'task': 'backend.tasks.economic_tasks.update_all_economic_data',
+            'task': 'tasks.economic_tasks.update_all_economic_data',
             'schedule': 86400.0,  # Daily at midnight
             'args': [7],  # 7 days back for comprehensive update
             'options': {'queue': 'economic_data', 'priority': 8}
         },
         'validate-economic-data': {
-            'task': 'backend.tasks.economic_tasks.validate_economic_data',
+            'task': 'tasks.economic_tasks.validate_economic_data',
             'schedule': 43200.0,  # Every 12 hours
             'options': {'queue': 'economic_data', 'priority': 4}
         },
         'cleanup-old-economic-data': {
-            'task': 'backend.tasks.economic_tasks.cleanup_old_economic_data',
+            'task': 'tasks.economic_tasks.cleanup_old_economic_data',
             'schedule': 604800.0,  # Weekly
             'args': [730],  # Keep 2 years of data
             'options': {'queue': 'economic_data', 'priority': 2}
@@ -158,23 +132,11 @@ celery_app.conf.update(
     
     # Rate limiting
     task_annotations={
-        'backend.tasks.video_tasks.process_youtube_video': {
+        'tasks.video_tasks.process_youtube_video': {
             'rate_limit': '10/m',  # Max 10 video processing tasks per minute
             'priority': 9
         },
-        'backend.tasks.transcription_tasks.*': {
-            'rate_limit': '20/m',  # Max 20 transcription tasks per minute
-            'priority': 8
-        },
-        'backend.tasks.cache_tasks.*': {
-            'rate_limit': '100/m',  # Max 100 cache operations per minute
-            'priority': 5
-        },
-        'backend.tasks.maintenance_tasks.*': {
-            'rate_limit': '30/m',  # Max 30 maintenance tasks per minute
-            'priority': 3
-        },
-        'backend.tasks.economic_tasks.*': {
+        'tasks.economic_tasks.*': {
             'rate_limit': '60/h',  # Max 60 economic data tasks per hour (respects FRED API limits)
             'priority': 7
         }

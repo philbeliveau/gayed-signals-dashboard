@@ -72,23 +72,20 @@ def process_youtube_video(
         # Step 1: Extract video metadata (5%)
         self.update_progress(1, 20, "Extracting video metadata")
         
-        # Run async operations in event loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
+        # Run async operations 
         try:
-            metadata = loop.run_until_complete(
+            metadata = asyncio.run(
                 youtube_service.get_video_metadata(youtube_url)
             )
             
             # Update database with metadata
-            loop.run_until_complete(
+            asyncio.run(
                 update_video_metadata(video_id, metadata)
             )
             
             # Step 2: Extract audio (10%)
             self.update_progress(2, 20, "Extracting audio")
-            audio_path = loop.run_until_complete(
+            audio_path = asyncio.run(
                 youtube_service.download_audio(youtube_url, metadata['youtube_id'])
             )
             
@@ -98,7 +95,7 @@ def process_youtube_video(
             # Step 3: Transcribe audio (60%)
             self.update_progress(4, 20, "Transcribing audio")
             
-            transcription_result = loop.run_until_complete(
+            transcription_result = asyncio.run(
                 transcription_service.transcribe_audio(audio_path)
             )
             
@@ -108,14 +105,14 @@ def process_youtube_video(
             # Step 4: Save transcript to database (70%)
             self.update_progress(16, 20, "Saving transcript")
             
-            transcript_id = loop.run_until_complete(
+            transcript_id = asyncio.run(
                 save_transcript(video_id, full_transcript, transcript_chunks)
             )
             
             # Step 5: Generate summary with LLM (85%)
             self.update_progress(17, 20, "Generating summary")
             
-            summary_response = loop.run_until_complete(
+            summary_response = asyncio.run(
                 llm_service.generate_summary(
                     transcript=full_transcript,
                     metadata=metadata,
@@ -129,7 +126,7 @@ def process_youtube_video(
             # Step 6: Save summary to database (95%)
             self.update_progress(19, 20, "Saving summary")
             
-            summary_id = loop.run_until_complete(
+            summary_id = asyncio.run(
                 save_summary(video_id, summary_text, summary_mode, user_prompt)
             )
             
@@ -137,17 +134,17 @@ def process_youtube_video(
             self.update_progress(20, 20, "Finalizing")
             
             # Cache transcript chunks for fast retrieval
-            loop.run_until_complete(
+            asyncio.run(
                 cache_service.cache_transcript_chunks(video_id, transcript_chunks)
             )
             
             # Cache video metadata
-            loop.run_until_complete(
+            asyncio.run(
                 cache_service.cache_video_metadata(youtube_url, metadata)
             )
             
             # Update video status to complete
-            loop.run_until_complete(
+            asyncio.run(
                 update_video_status(video_id, "complete")
             )
             
@@ -165,21 +162,32 @@ def process_youtube_video(
                 'processing_time': self.request.time_start
             }
             
-        finally:
-            loop.close()
+        except Exception as e:
+            logger.error(f"Error processing video {video_id}: {str(e)}")
             
+            # Update video status to error
+            try:
+                asyncio.run(
+                    update_video_status(video_id, "error", error_message=str(e))
+                )
+            except Exception as db_error:
+                logger.error(f"Failed to update error status: {db_error}")
+            
+            # Cleanup any temp files
+            cleanup_temp_files()
+            
+            raise Exception(f"Video processing failed: {str(e)}")
+    
     except Exception as e:
         logger.error(f"Error processing video {video_id}: {str(e)}")
         
         # Update video status to error
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
         try:
-            loop.run_until_complete(
+            asyncio.run(
                 update_video_status(video_id, "error", error_message=str(e))
             )
-        finally:
-            loop.close()
+        except Exception as db_error:
+            logger.error(f"Failed to update error status: {db_error}")
         
         # Cleanup any temp files
         cleanup_temp_files()

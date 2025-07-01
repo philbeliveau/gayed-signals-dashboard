@@ -1,55 +1,88 @@
-1. First issue related to video:
-TypeError: Cannot read properties of undefined (reading 'forEach')
-    at buildFolderTree (webpack-internal:///(app-pages-browser)/./src/components/video-insights/FolderSidebar.tsx:42:17)
-    at FolderSidebar (webpack-internal:///(app-pages-browser)/./src/components/video-insights/FolderSidebar.tsx:59:24)
-    at VideoInsightsPage (webpack-internal:///(app-pages-browser)/./src/app/video-insights/page.tsx:442:110)
-    at ClientPageRoot (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/client-page.js:20:50)
+Solve these issue, use MCP to help you: 
 
-2. Housing data: 
-<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for Compilation/codeGeneration|javascript/auto|/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/node_modules/next/dist/build/webpack/loaders/next-flight-client-module-loader.js!/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/node_modules/next/dist/build/webpack/loaders/next-swc-loader.js??ruleSet[1].rules[16].oneOf[6].use[1]!/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/node_modules/recharts/es6/chart/LineChart.js|app-pages-browser|webpack from pack: Error: incorrect header check
-<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for Compilation/codeGeneration|javascript/auto|/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/node_modules/next/dist/build/webpack/loaders/next-flight-client-module-loader.js!/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/node_modules/next/dist/build/webpack/loaders/next-swc-loader.js??ruleSet[1].rules[16].oneOf[6].use[1]!/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/node_modules/recharts/es6/chart/ComposedChart.js|app-pages-browser|webpack from pack: Error: incorrect header check
-<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for Compilation/codeGeneration|javascript/auto|/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/node_modules/next/dist/build/webpack/loaders/next-flight-client-module-loader.js!/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/node_modules/next/dist/build/webpack/loaders/next-swc-loader.js??ruleSet[1].rules[16].oneOf[6].use[1]!/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/node_modules/recharts/es6/util/ScatterUtils.js|app-pages-browser|webpack from pack: Error: incorrect header check
- ✓ Compiled /housing in 1145ms (2246 modules)
- GET /housing 200 in 1241ms
-<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for Compilation/assets|chunkapp/api/housing/route from pack: Error: incorrect header check
- ✓ Compiled /api/housing in 164ms (2249 modules)
-🏠 Fetching housing market data for national (12m)...
-📊 Fetching data for housing indicators: CSUSHPINSA, HOUST, MSACSR, HSN1F, EXHOSLUSM156S, PERMIT, USSTHPI
-🏠 Calling Python FRED service for housing market data...
-⚠️ FRED service unavailable, falling back to mock data: Error: FRED service responded with status: 404
-    at GET (src/app/api/housing/route.ts:114:14)
-  112 |       
-  113 |       if (!fredResponse.ok) {
-> 114 |         throw new Error(`FRED service responded with status: ${fredResponse.status}`);
-      |              ^
-  115 |       }
-  116 |       
-  117 |       housingMarketData = await fredResponse.json();
-🔍 Checking data completeness for 12 housing data points...
-📊 Found 12 complete data points out of 12 total
-✅ Using 12 complete real housing data points
-✅ Successfully processed housing data for national with 4 alerts
- GET /api/housing?region=national&period=12m&fast=false 200 in 299ms
-🏠 Returning cached housing data for national (12m)
- GET /api/housing?region=national&period=12m&fast=false 200 in 4ms
+1. ✓ Compiled /api/video-insights/[...path] in 450ms (448 modules)
+🔄 Proxying POST request to FastAPI: http://localhost:8002/api/v1/videos/process
+🔄 Proxying DELETE request to FastAPI: http://localhost:8002/api/v1/videos/2185f428-fa92-4a74-83cc-6ab531a36b65
+ DELETE /api/video-insights/videos/2185f428-fa92-4a74-83cc-6ab531a36b65 200 in 75ms
+🔄 Proxying DELETE request to FastAPI: http://localhost:8002/api/v1/videos/690818f6-b84e-45bf-b6c7-d3c20eb42e21
+ DELETE /api/video-insights/videos/690818f6-b84e-45bf-b6c7-d3c20eb42e21 200 in 43ms
+🔄 Proxying DELETE request to FastAPI: http://localhost:8002/api/v1/videos/d4ae047e-f112-4029-abd9-743be86d2fd8
+ DELETE /api/video-insights/videos/d4ae047e-f112-4029-abd9-743be86d2fd8 200 in 122ms
+❌ FastAPI proxy error: Error [AbortError]: This operation was aborted
+    at async proxyToFastAPI (src/app/api/video-insights/[...path]/route.ts:154:21)
+  152 |
+  153 |     // Make request to FastAPI
+> 154 |     const response = await fetch(targetUrl, requestOptions);
+      |                     ^
+  155 |     clearTimeout(timeoutId);
+  156 |
+  157 |     // Handle different response types {
+  code: 20,
+  INDEX_SIZE_ERR: 1,
+  DOMSTRING_SIZE_ERR: 2,
+  HIERARCHY_REQUEST_ERR: 3,
+  WRONG_DOCUMENT_ERR: 4,
+  INVALID_CHARACTER_ERR: 5,
+  NO_DATA_ALLOWED_ERR: 6,
+  NO_MODIFICATION_ALLOWED_ERR: 7,
+  NOT_FOUND_ERR: 8,
+  NOT_SUPPORTED_ERR: 9,
+  INUSE_ATTRIBUTE_ERR: 10,
+  INVALID_STATE_ERR: 11,
+  SYNTAX_ERR: 12,
+  INVALID_MODIFICATION_ERR: 13,
+  NAMESPACE_ERR: 14,
+  INVALID_ACCESS_ERR: 15,
+  VALIDATION_ERR: 16,
+  TYPE_MISMATCH_ERR: 17,
+  SECURITY_ERR: 18,
+  NETWORK_ERR: 19,
+  ABORT_ERR: 20,
+  URL_MISMATCH_ERR: 21,
+  QUOTA_EXCEEDED_ERR: 22,
+  TIMEOUT_ERR: 23,
+  INVALID_NODE_TYPE_ERR: 24,
+  DATA_CLONE_ERR: 25
+}
+ POST /api/video-insights/videos/process 408 in 60699ms
+ ✓ Compiled / in 469ms (501 modules)
+ GET / 200 in 638ms
+ ○ Compiling /api/signals ...
+<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for Compilation/assets|chunkapp/api/signals/route from pack: Error: incorrect header check
+ ✓ Compiled /api/signals in 558ms (1037 modules)
+🔄 Fetching fast market data for Gayed signals...
+📊 Fetching data for symbols: SPY, XLU
+ℹ️ Enhanced Market Client: Fetching data for 2 symbols [{"operation":"bulk_fetch_start","symbolCount":2,"symbols":"SPY,XLU"}]
+ℹ️ Fetching SPY from Tiingo [{"symbol":"SPY","dataSource":"tiingo","operation":"fetch_start"}]
+(node:40353) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ℹ️ Fetching XLU from Tiingo [{"symbol":"XLU","dataSource":"tiingo","operation":"fetch_start"}]
+ℹ️ Data fetch successful for SPY [{"symbol":"SPY","dataSource":"tiingo","operation":"data_fetch","duration":292,"dataPoints":500}]
+ℹ️ Data validation passed for SPY [{"symbol":"SPY","operation":"data_validation","isValid":true,"warningCount":0}]
+ℹ️ Data fetch successful for XLU [{"symbol":"XLU","dataSource":"tiingo","operation":"data_fetch","duration":281,"dataPoints":500}]
+ℹ️ Data validation passed for XLU [{"symbol":"XLU","operation":"data_validation","isValid":true,"warningCount":0}]
+ℹ️ Enhanced Market Client Summary [{"operation":"bulk_fetch_complete","totalSymbols":2,"successfulSymbols":2,"failedSymbols":0,"cacheHits":0,"cacheMisses":2,"failoverEvents":0,"successfulSymbolsList":["SPY","XLU"],"failedSymbolsList":[]}]
+ℹ️ Data source statistics: tiingo [{"operation":"source_statistics","dataSource":"tiingo","totalRequests":2,"successfulRequests":2,"failedRequests":0,"rateLimitHits":0,"successRate":100,"lastRequestTime":"2025-07-01T20:36:49.114Z"}]
+🧮 Calculating Gayed signals...
+✅ Successfully calculated 2 signals with Risk-On consensus (80.0% confidence)
+ GET /api/signals?fast=true 200 in 1646ms
+🚀 Returning cached signals (fast mode)
+ GET /api/signals?fast=true 200 in 3ms
+🚀 Returning cached signals (fast mode)
+ GET /api/signals?fast=true 200 in 3ms
+ ○ Compiling /housing ...
 
- 3. Labour data: 
-  GET /labor 200 in 1086ms
- ✓ Compiled /api/labor in 457ms (2255 modules)
+
+2. Labor market graph: Nothing appear. It seems no data are able to be fecth. It receives nothing. 
+
 👥 Fetching labor market data (12m)...
 📊 Fetching data for labor indicators: ICSA, CCSA
 🔄 Calling Python FRED service for labor market data...
-⚠️ FRED service unavailable, falling back to mock data: Error: FRED service responded with status: 404
-    at GET (src/app/api/labor/route.ts:113:14)
-  111 |       
-  112 |       if (!fredResponse.ok) {
-> 113 |         throw new Error(`FRED service responded with status: ${fredResponse.status}`);
-      |              ^
-  114 |       }
-  115 |       
-  116 |       laborMarketData = await fredResponse.json();
-📊 Generated 52 mock labor data points
-✅ Successfully processed labor data with 4 alerts
- GET /api/labor?fast=true 200 in 582ms
+✅ Successfully received labor market data from FRED service
+⚠️ processLaborData received empty or invalid data, using defaults
+✅ Successfully processed labor data with 0 alerts
+ GET /api/labor?fast=true 200 in 2322ms
 👥 Returning cached labor data (12m)
- GET /api/labor?fast=true 200 in 3ms
+ GET /api/labor?fast=true 200 in 6ms
+ GET /labor 200 in 295ms
+ ✓ Compiled /favicon.ico in 290ms (1278 modules)

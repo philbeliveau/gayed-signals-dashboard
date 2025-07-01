@@ -30,7 +30,10 @@ import {
   Youtube,
   Eye,
   Calendar,
-  User
+  User,
+  Trash2,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
 const POLLING_INTERVAL = 2000; // 2 seconds
@@ -260,6 +263,83 @@ export default function VideoInsightsPage() {
     }
   };
 
+  const handleVideoDelete = async (videoId: string) => {
+    if (!confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await videoInsightsAPI.deleteVideo(videoId);
+      setState(prev => ({
+        ...prev,
+        videos: prev.videos.filter(v => v.id !== videoId),
+        currentVideo: prev.currentVideo?.id === videoId ? null : prev.currentVideo
+      }));
+      
+      if (selectedVideoId === videoId) {
+        setSelectedVideoId(null);
+      }
+      
+      // Show success message
+      setState(prev => ({
+        ...prev,
+        error: null
+      }));
+    } catch (error) {
+      console.error('Failed to delete video:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to delete video'
+      }));
+    }
+  };
+
+  const handleVideoStatusUpdate = async (videoId: string, status: 'processing' | 'complete' | 'error', errorMessage?: string) => {
+    try {
+      await videoInsightsAPI.updateVideoStatus(videoId, status, errorMessage);
+      
+      // Update local state
+      setState(prev => ({
+        ...prev,
+        videos: prev.videos.map(v => 
+          v.id === videoId 
+            ? { ...v, status, error_message: errorMessage }
+            : v
+        )
+      }));
+    } catch (error) {
+      console.error('Failed to update video status:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to update video status'
+      }));
+    }
+  };
+
+  const handleFixStuckVideos = async () => {
+    const stuckVideos = state.videos.filter(v => v.status === 'processing');
+    
+    if (stuckVideos.length === 0) {
+      return;
+    }
+
+    if (!confirm(`Found ${stuckVideos.length} stuck video(s) in processing state. Update them to error status?`)) {
+      return;
+    }
+
+    for (const video of stuckVideos) {
+      try {
+        await handleVideoStatusUpdate(
+          video.id,
+          'error',
+          'Video processing failed: Unable to download video from YouTube (403 Forbidden). This is likely due to YouTube blocking automated downloads.'
+        );
+      } catch (error) {
+        console.error(`Failed to update status for video ${video.id}:`, error);
+      }
+    }
+  };
+
   const getStatusIcon = (status: Video['status']) => {
     switch (status) {
       case 'processing':
@@ -303,6 +383,18 @@ export default function VideoInsightsPage() {
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Debug Controls */}
+              {state.videos.filter(v => v.status === 'processing').length > 0 && (
+                <button
+                  onClick={handleFixStuckVideos}
+                  className="p-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors flex items-center space-x-2"
+                  title="Fix stuck videos"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  <span className="text-sm">Fix Stuck ({state.videos.filter(v => v.status === 'processing').length})</span>
+                </button>
+              )}
+              
               <button
                 onClick={() => setShowSidebar(!showSidebar)}
                 className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors"
@@ -373,6 +465,53 @@ export default function VideoInsightsPage() {
               </div>
             )}
 
+            {/* Debugging Alerts */}
+            {state.videos.filter(v => v.status === 'processing' || v.status === 'error').length > 0 && (
+              <div className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+                <div className="flex items-center space-x-3 mb-3">
+                  <Info className="w-5 h-5 text-amber-600" />
+                  <h3 className="font-semibold text-amber-800 dark:text-amber-200">Video Processing Status</h3>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  {state.videos.filter(v => v.status === 'processing').length > 0 && (
+                    <div className="flex items-center justify-between bg-amber-100 dark:bg-amber-800/30 p-3 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                        <span className="text-amber-800 dark:text-amber-200">
+                          {state.videos.filter(v => v.status === 'processing').length} video(s) stuck in processing
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleFixStuckVideos}
+                        className="text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100 underline"
+                      >
+                        Fix Now
+                      </button>
+                    </div>
+                  )}
+                  
+                  {state.videos.filter(v => v.status === 'error').length > 0 && (
+                    <div className="flex items-center space-x-2 bg-red-100 dark:bg-red-900/30 p-3 rounded-lg">
+                      <XCircle className="w-4 h-4 text-red-600" />
+                      <span className="text-red-800 dark:text-red-200">
+                        {state.videos.filter(v => v.status === 'error').length} video(s) failed to process
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="text-amber-700 dark:text-amber-300 mt-2">
+                    <p><strong>Common Issues:</strong></p>
+                    <ul className="list-disc ml-5 space-y-1">
+                      <li>YouTube blocks automated downloads (403 Forbidden)</li>
+                      <li>Video may be private, age-restricted, or region-locked</li>
+                      <li>Celery workers may not be running</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Search */}
             <div className="mb-6">
               <div className="relative">
@@ -427,8 +566,7 @@ export default function VideoInsightsPage() {
                       {videosToDisplay.map((video) => (
                         <div
                           key={video.id}
-                          onClick={() => handleVideoSelect(video.id)}
-                          className={`p-4 cursor-pointer hover:bg-theme-card-hover transition-colors ${
+                          className={`p-4 transition-colors ${
                             selectedVideoId === video.id ? 'bg-theme-card-secondary' : ''
                           }`}
                         >
@@ -436,7 +574,10 @@ export default function VideoInsightsPage() {
                             <div className="flex-shrink-0">
                               {getStatusIcon(video.status)}
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <div 
+                              className="flex-1 min-w-0 cursor-pointer"
+                              onClick={() => handleVideoSelect(video.id)}
+                            >
                               <h3 className="font-medium text-theme-text truncate">{video.title}</h3>
                               <div className="flex items-center space-x-2 mt-1 text-sm text-theme-text-muted">
                                 <User className="w-4 h-4" />
@@ -451,7 +592,51 @@ export default function VideoInsightsPage() {
                                   <Calendar className="w-3 h-3" />
                                   <span>{new Date(video.created_at).toLocaleDateString()}</span>
                                 </div>
+                                <div className="flex items-center space-x-1">
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    video.status === 'complete' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200' :
+                                    video.status === 'processing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200' :
+                                    video.status === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200' :
+                                    'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200'
+                                  }`}>
+                                    {video.status}
+                                  </span>
+                                </div>
                               </div>
+                              
+                              {/* Error Message Display */}
+                              {video.status === 'error' && (video as any).error_message && (
+                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-xs text-red-700 dark:text-red-300">
+                                  {(video as any).error_message}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Action Buttons */}
+                            <div className="flex-shrink-0 flex items-center space-x-2">
+                              {video.status === 'error' && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleVideoStatusUpdate(video.id, 'processing');
+                                  }}
+                                  className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                                  title="Retry processing"
+                                >
+                                  <RefreshCw className="w-4 h-4" />
+                                </button>
+                              )}
+                              
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleVideoDelete(video.id);
+                                }}
+                                className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                title="Delete video"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
                         </div>
