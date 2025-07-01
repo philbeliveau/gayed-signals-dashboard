@@ -550,42 +550,86 @@ async def get_labor_market_data(
                 )
                 
                 # Transform FRED data to expected frontend format
+                logger.info(f"Raw FRED labor data keys: {list(labor_data.keys())}")
+                logger.info(f"FRED data sample: {[(k, len(v) if v else 0) for k, v in labor_data.items()]}")
+                
                 time_series = []
-                for date_str in sorted(set(dp.date for series_data in labor_data.values() for dp in series_data)):
+                
+                # Get all unique dates from all series
+                all_dates = set()
+                for series_data in labor_data.values():
+                    if series_data:  # Check if series_data is not empty
+                        for dp in series_data:
+                            all_dates.add(dp.date)
+                
+                logger.info(f"Found {len(all_dates)} unique dates in FRED data")
+                
+                for date_str in sorted(all_dates):
                     # Get data for this date from all series
                     date_data = {"date": date_str}
                     
                     for series_name, series_data in labor_data.items():
-                        date_points = [dp for dp in series_data if dp.date == date_str]
-                        if date_points:
-                            value = date_points[0].value or 0
-                            if series_name == "INITIAL_CLAIMS":
-                                date_data["initialClaims"] = int(value)
-                            elif series_name == "CONTINUED_CLAIMS":
-                                date_data["continuedClaims"] = int(value)
-                            elif series_name == "UNEMPLOYMENT_RATE":
-                                date_data["unemploymentRate"] = round(value, 1)
-                            elif series_name == "NONFARM_PAYROLLS":
-                                date_data["nonfarmPayrolls"] = int(value)
-                            elif series_name == "LABOR_PARTICIPATION":
-                                date_data["laborParticipation"] = round(value, 1)
-                            elif series_name == "JOB_OPENINGS":
-                                date_data["jobOpenings"] = int(value)
+                        if series_data:  # Check if series_data is not empty
+                            date_points = [dp for dp in series_data if dp.date == date_str]
+                            if date_points and date_points[0].value is not None:
+                                value = date_points[0].value
+                                
+                                # Map FRED series names to frontend field names
+                                if series_name == "INITIAL_CLAIMS":
+                                    date_data["initialClaims"] = int(value)
+                                elif series_name == "CONTINUED_CLAIMS":
+                                    date_data["continuedClaims"] = int(value)
+                                elif series_name == "UNEMPLOYMENT_RATE":
+                                    date_data["unemploymentRate"] = round(value, 1)
+                                elif series_name == "NONFARM_PAYROLLS":
+                                    date_data["nonfarmPayrolls"] = int(value)
+                                elif series_name == "LABOR_PARTICIPATION":
+                                    date_data["laborParticipation"] = round(value, 1)
+                                elif series_name == "JOB_OPENINGS":
+                                    date_data["jobOpenings"] = int(value)
                     
-                    # Calculate derived fields
-                    if len(time_series) > 0:
-                        prev_data = time_series[-1]
-                        if "initialClaims" in date_data and "initialClaims" in prev_data:
-                            date_data["weeklyChangeInitial"] = round(((date_data["initialClaims"] / prev_data["initialClaims"]) - 1) * 100, 1)
-                        if "continuedClaims" in date_data and "continuedClaims" in prev_data:
-                            date_data["weeklyChangeContinued"] = round(((date_data["continuedClaims"] / prev_data["continuedClaims"]) - 1) * 100, 1)
-                    
-                    # Calculate 4-week average
-                    if len(time_series) >= 3 and "initialClaims" in date_data:
-                        recent_claims = [date_data["initialClaims"]] + [ts.get("initialClaims", 0) for ts in time_series[-3:]]
-                        date_data["claims4Week"] = int(sum(recent_claims) / len(recent_claims))
-                    
-                    time_series.append(date_data)
+                    # Only add data points that have at least some economic data
+                    if len(date_data) > 1:  # More than just the date
+                        # Set defaults for missing fields to ensure chart compatibility
+                        date_data.setdefault("initialClaims", 0)
+                        date_data.setdefault("continuedClaims", 0)
+                        date_data.setdefault("unemploymentRate", 0.0)
+                        date_data.setdefault("nonfarmPayrolls", 0)
+                        date_data.setdefault("laborParticipation", 0.0)
+                        date_data.setdefault("jobOpenings", 0)
+                        
+                        # Calculate derived fields
+                        if len(time_series) > 0:
+                            prev_data = time_series[-1]
+                            if date_data["initialClaims"] > 0 and prev_data.get("initialClaims", 0) > 0:
+                                date_data["weeklyChangeInitial"] = round(((date_data["initialClaims"] / prev_data["initialClaims"]) - 1) * 100, 1)
+                            else:
+                                date_data["weeklyChangeInitial"] = 0.0
+                                
+                            if date_data["continuedClaims"] > 0 and prev_data.get("continuedClaims", 0) > 0:
+                                date_data["weeklyChangeContinued"] = round(((date_data["continuedClaims"] / prev_data["continuedClaims"]) - 1) * 100, 1)
+                            else:
+                                date_data["weeklyChangeContinued"] = 0.0
+                        else:
+                            date_data["weeklyChangeInitial"] = 0.0
+                            date_data["weeklyChangeContinued"] = 0.0
+                        
+                        # Calculate 4-week average
+                        if len(time_series) >= 3 and date_data["initialClaims"] > 0:
+                            recent_claims = [date_data["initialClaims"]] + [ts.get("initialClaims", 0) for ts in time_series[-3:] if ts.get("initialClaims", 0) > 0]
+                            if recent_claims:
+                                date_data["claims4Week"] = int(sum(recent_claims) / len(recent_claims))
+                            else:
+                                date_data["claims4Week"] = date_data["initialClaims"]
+                        else:
+                            date_data["claims4Week"] = date_data["initialClaims"]
+                        
+                        # Default monthly change (would need more complex logic for actual calculation)
+                        date_data["monthlyChangePayrolls"] = 0.0
+                        
+                        time_series.append(date_data)
+                
+                logger.info(f"Transformed {len(time_series)} data points for frontend")
                 
                 # Generate alerts based on current data
                 alerts = []
@@ -602,6 +646,7 @@ async def get_labor_market_data(
                 
                 return {
                     "laborData": time_series,
+                    "timeSeries": time_series,  # Support both naming conventions
                     "alerts": alerts,
                     "metadata": {
                         "timestamp": datetime.utcnow().isoformat(),
@@ -616,15 +661,21 @@ async def get_labor_market_data(
                 logger.warning(f"FRED service failed, falling back to mock data: {fred_error}")
                 # Fallback to mock data if FRED fails
                 mock_data = await generate_mock_labor_data(TimePeriod(period), fast)
+                
+                # Ensure consistent data structure
+                labor_data_result = mock_data["time_series"]
+                
                 return {
-                    "laborData": mock_data["time_series"],
-                    "alerts": mock_data["alerts"],
+                    "laborData": labor_data_result,
+                    "timeSeries": labor_data_result,  # Support both naming conventions
+                    "alerts": mock_data.get("alerts", []),
                     "metadata": {
                         "timestamp": datetime.utcnow().isoformat(),
                         "dataSource": "mock_fallback",
                         "period": period,
                         "fastMode": fast,
-                        "fallbackReason": str(fred_error)
+                        "fallbackReason": str(fred_error),
+                        "dataPoints": len(labor_data_result)
                     }
                 }
         
@@ -713,6 +764,8 @@ async def get_housing_market_data(
                 
                 return {
                     "housingData": time_series,
+                    "timeSeries": time_series,  # Frontend compatibility
+                    "time_series": time_series,  # Alternative naming
                     "alerts": alerts,
                     "metadata": {
                         "timestamp": datetime.utcnow().isoformat(),
@@ -730,6 +783,8 @@ async def get_housing_market_data(
                 mock_data = await generate_mock_housing_data(region, TimePeriod(period), fast)
                 return {
                     "housingData": mock_data["time_series"],
+                    "timeSeries": mock_data["time_series"],  # Frontend compatibility
+                    "time_series": mock_data["time_series"],  # Alternative naming
                     "alerts": mock_data["alerts"],
                     "metadata": {
                         "timestamp": datetime.utcnow().isoformat(),
@@ -1068,6 +1123,7 @@ async def generate_mock_labor_data(period: TimePeriod, fast_mode: bool) -> Dict[
     return {
         "current_metrics": current_metrics,
         "time_series": time_series,
+        "laborData": time_series,  # Add compatibility field
         "alerts": alerts,
         "historical_comparison": {
             "baseline_2021": {"initial_claims": 350000, "unemployment_rate": 5.4},
@@ -1114,24 +1170,24 @@ async def generate_mock_housing_data(region: str, period: TimePeriod, fast_mode:
         
         time_series.append({
             "date": current_date.strftime("%Y-%m-%d"),
-            "case_shiller_index": case_shiller,
-            "housing_starts": housing_starts,
-            "months_supply": round(4.2 + (hash(str(current_date)) % 20 - 10) * 0.02, 1),
-            "new_home_sales": 650000 + int((hash(str(current_date)) % 100 - 50) * 1000),
-            "existing_home_sales": 4000000 + int((hash(str(current_date)) % 200 - 100) * 1000),
-            "building_permits": 1400000 + int((hash(str(current_date)) % 100 - 50) * 2000)
+            "caseSillerIndex": case_shiller,
+            "housingStarts": housing_starts,
+            "monthsSupply": round(4.2 + (hash(str(current_date)) % 20 - 10) * 0.02, 1),
+            "newHomeSales": 650000 + int((hash(str(current_date)) % 100 - 50) * 1000),
+            "existingHomeSales": 4000000 + int((hash(str(current_date)) % 200 - 100) * 1000),
+            "buildingPermits": 1400000 + int((hash(str(current_date)) % 100 - 50) * 2000)
         })
     
     current_data = time_series[-1]
     
     # Generate current metrics
     current_metrics = HousingMarketMetrics(
-        case_shiller_index=current_data["case_shiller_index"],
-        housing_starts=current_data["housing_starts"],
-        months_supply=current_data["months_supply"],
-        new_home_sales=current_data["new_home_sales"],
-        existing_home_sales=current_data["existing_home_sales"],
-        building_permits=current_data["building_permits"],
+        case_shiller_index=current_data["caseSillerIndex"],
+        housing_starts=current_data["housingStarts"],
+        months_supply=current_data["monthsSupply"],
+        new_home_sales=current_data["newHomeSales"],
+        existing_home_sales=current_data["existingHomeSales"],
+        building_permits=current_data["buildingPermits"],
         price_change_monthly=-0.3 if len(time_series) > 1 else 0.0,
         price_change_yearly=4.2 if len(time_series) > 12 else 0.0
     )
@@ -1148,7 +1204,7 @@ async def generate_mock_housing_data(region: str, period: TimePeriod, fast_mode:
     
     # Generate statistics
     statistics = StatisticalAnalysis(
-        current=current_data["case_shiller_index"],
+        current=current_data["caseSillerIndex"],
         mom_change=-0.9,
         mom_percent_change=-0.3,
         yoy_change=13.1,
@@ -1161,7 +1217,7 @@ async def generate_mock_housing_data(region: str, period: TimePeriod, fast_mode:
     
     # Generate alerts
     alerts = []
-    if current_data["months_supply"] > 6.0:
+    if current_data["monthsSupply"] > 6.0:
         alerts.append(AlertResult(
             id="high_inventory",
             name="Elevated Housing Inventory",
@@ -1169,9 +1225,9 @@ async def generate_mock_housing_data(region: str, period: TimePeriod, fast_mode:
             severity="info",
             triggered=True,
             triggered_at=datetime.utcnow().isoformat(),
-            message=f"Housing inventory at {current_data['months_supply']} months supply indicates cooling market",
+            message=f"Housing inventory at {current_data['monthsSupply']} months supply indicates cooling market",
             data={
-                "current_value": current_data["months_supply"],
+                "current_value": current_data["monthsSupply"],
                 "threshold_value": 6.0,
                 "indicator": "MSACSR",
                 "context": {"region": region, "period": period}

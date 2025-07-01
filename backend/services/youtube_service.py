@@ -108,9 +108,15 @@ class YouTubeService:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     return ydl.extract_info(youtube_url, download=False)
             
-            # Run in thread pool to avoid blocking
+            # Run in thread pool with timeout to avoid hanging
             loop = asyncio.get_event_loop()
-            info = await loop.run_in_executor(None, run_ydl)
+            try:
+                info = await asyncio.wait_for(
+                    loop.run_in_executor(None, run_ydl),
+                    timeout=15.0  # 15 second timeout for metadata extraction
+                )
+            except asyncio.TimeoutError:
+                raise Exception("YouTube metadata extraction timed out. The video may be private, age-restricted, or YouTube is blocking the request.")
             
             if not info:
                 raise Exception("Could not extract video information")

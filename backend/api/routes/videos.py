@@ -152,13 +152,19 @@ async def process_video(
                     detail="Folder not found"
                 )
         
-        # Try to get cached metadata to validate video
+        # Quick validation without metadata fetch to avoid timeout
+        # Metadata validation will happen in the background task
         try:
-            metadata = await youtube_service.get_video_metadata(str(request.youtube_url))
+            # Only validate URL format, not actual video accessibility
+            if not youtube_service.is_valid_youtube_url(str(request.youtube_url)):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid YouTube URL format"
+                )
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Failed to access video: {str(e)}"
+                detail=f"URL validation failed: {str(e)}"
             )
         
         # Create or update video record
@@ -173,11 +179,11 @@ async def process_video(
                 folder_id=request.folder_id,
                 youtube_url=str(request.youtube_url),
                 youtube_id=youtube_id,
-                title=metadata.get('title', ''),
-                channel_name=metadata.get('channel_name', ''),
-                description=metadata.get('description', ''),
-                duration=metadata.get('duration', 0),
-                thumbnail_url=metadata.get('thumbnail_url', ''),
+                title=f"Processing: {youtube_id}",  # Temporary title, will be updated by background task
+                channel_name="",  # Will be updated by background task
+                description="",  # Will be updated by background task
+                duration=0,  # Will be updated by background task
+                thumbnail_url="",  # Will be updated by background task
                 status="processing",
                 processing_started_at=datetime.utcnow()
             )

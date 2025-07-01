@@ -7,7 +7,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // FastAPI backend configuration with validation
 const FASTAPI_BASE_URL = process.env.FASTAPI_BASE_URL || 'http://localhost:8002';
-const API_TIMEOUT = parseInt(process.env.API_TIMEOUT || '60000'); // 60 seconds default
+// Different timeouts for different operations
+const DEFAULT_API_TIMEOUT = parseInt(process.env.API_TIMEOUT || '180000'); // 180 seconds (3 minutes)
+const VIDEO_PROCESSING_TIMEOUT = parseInt(process.env.VIDEO_PROCESSING_TIMEOUT || '180000'); // 3 minutes for video processing
+const HEALTH_CHECK_TIMEOUT = 5000; // 5 seconds for health checks
 
 // Validate backend service on startup
 let serviceValidated = false;
@@ -17,7 +20,7 @@ async function validateBackendService() {
   try {
     const healthResponse = await fetch(`${FASTAPI_BASE_URL}/health`, { 
       method: 'GET',
-      signal: AbortSignal.timeout(5000)
+      signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT)
     });
     
     if (healthResponse.ok) {
@@ -85,7 +88,27 @@ async function proxyToFastAPI(
   method: string
 ): Promise<NextResponse> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+  
+  // Determine timeout based on the operation type
+  const getTimeoutForPath = (path: string[], method: string): number => {
+    const pathString = path.join('/');
+    
+    // Video processing operations need longer timeout
+    if (pathString.includes('videos/process') && method === 'POST') {
+      return VIDEO_PROCESSING_TIMEOUT;
+    }
+    
+    // Health checks need shorter timeout
+    if (pathString === 'health') {
+      return HEALTH_CHECK_TIMEOUT;
+    }
+    
+    // Default timeout for other operations
+    return DEFAULT_API_TIMEOUT;
+  };
+  
+  const timeout = getTimeoutForPath(path, method);
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     // Get authentication token
@@ -148,7 +171,7 @@ async function proxyToFastAPI(
       }
     }
 
-    console.log(`🔄 Proxying ${method} request to FastAPI: ${targetUrl}`);
+    console.log(`🔄 Proxying ${method} request to FastAPI: ${targetUrl} (timeout: ${timeout}ms)`);
 
     // Make request to FastAPI
     const response = await fetch(targetUrl, requestOptions);
@@ -197,11 +220,14 @@ async function proxyToFastAPI(
 
     // Handle timeout
     if (error instanceof Error && error.name === 'AbortError') {
+      console.error(`❌ Request timeout after ${timeout}ms for ${method} ${targetUrl}`);
       return NextResponse.json(
         {
           status: 'error',
-          error: 'Request timeout',
-          code: 'TIMEOUT'
+          error: `Request timeout after ${timeout}ms`,
+          code: 'TIMEOUT',
+          path: path.join('/'),
+          method
         },
         { status: 408 }
       );
@@ -233,6 +259,68 @@ async function proxyToFastAPI(
 }
 
 /**
+ * Helper function to determine if a request should use retry logic
+ */
+function shouldRetryRequest(path: string[], method: string): boolean {
+  const pathString = path.join('/');
+  return pathString.includes('videos/process') && method === 'POST';
+}
+
+/**
+ * Enhanced proxy function with retry logic for video processing
+ */
+async function enhancedProxyToFastAPI(
+  request: NextRequest,
+  path: string[],
+  method: string
+): Promise<NextResponse> {
+  // Use retry logic for video processing requests
+  if (shouldRetryRequest(path, method)) {
+    console.log('🔄 Using retry logic for video processing request');
+    
+    let lastError: Error | null = null;
+    const maxRetries = 2;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Attempt ${attempt}/${maxRetries} for video processing`);
+        
+        const response = await proxyToFastAPI(request, path, method);
+        
+        if (response.status < 500) {
+          return response;
+        }
+        
+        console.log(`⚠️ Attempt ${attempt} returned status ${response.status}, retrying...`);
+        
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.log(`❌ Attempt ${attempt} failed: ${lastError.message}`);
+        
+        if (attempt < maxRetries) {
+          const delayMs = 1000 * Math.pow(2, attempt - 1);
+          console.log(`⏳ Waiting ${delayMs}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+    
+    return NextResponse.json(
+      {
+        status: 'error',
+        error: `Video processing failed after ${maxRetries} attempts`,
+        code: 'MAX_RETRIES_EXCEEDED',
+        lastError: lastError?.message
+      },
+      { status: 503 }
+    );
+  }
+  
+  // Use regular proxy for non-video requests
+  return proxyToFastAPI(request, path, method);
+}
+
+/**
  * GET handler
  */
 export async function GET(
@@ -240,7 +328,7 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> }
 ): Promise<NextResponse> {
   const resolvedParams = await params;
-  return proxyToFastAPI(request, resolvedParams.path, 'GET');
+  return enhancedProxyToFastAPI(request, resolvedParams.path, 'GET');
 }
 
 /**
@@ -251,7 +339,7 @@ export async function POST(
   { params }: { params: Promise<{ path: string[] }> }
 ): Promise<NextResponse> {
   const resolvedParams = await params;
-  return proxyToFastAPI(request, resolvedParams.path, 'POST');
+  return enhancedProxyToFastAPI(request, resolvedParams.path, 'POST');
 }
 
 /**
@@ -262,7 +350,7 @@ export async function PUT(
   { params }: { params: Promise<{ path: string[] }> }
 ): Promise<NextResponse> {
   const resolvedParams = await params;
-  return proxyToFastAPI(request, resolvedParams.path, 'PUT');
+  return enhancedProxyToFastAPI(request, resolvedParams.path, 'PUT');
 }
 
 /**
@@ -273,7 +361,7 @@ export async function DELETE(
   { params }: { params: Promise<{ path: string[] }> }
 ): Promise<NextResponse> {
   const resolvedParams = await params;
-  return proxyToFastAPI(request, resolvedParams.path, 'DELETE');
+  return enhancedProxyToFastAPI(request, resolvedParams.path, 'DELETE');
 }
 
 /**
@@ -284,7 +372,7 @@ export async function PATCH(
   { params }: { params: Promise<{ path: string[] }> }
 ): Promise<NextResponse> {
   const resolvedParams = await params;
-  return proxyToFastAPI(request, resolvedParams.path, 'PATCH');
+  return enhancedProxyToFastAPI(request, resolvedParams.path, 'PATCH');
 }
 
 /**
@@ -321,7 +409,7 @@ export async function HEAD(
       const healthUrl = `${FASTAPI_BASE_URL}/health`;
       const response = await fetch(healthUrl, {
         method: 'GET',
-        signal: AbortSignal.timeout(5000), // 5 second timeout for health check
+        signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT), // 5 second timeout for health check
       });
 
       return new NextResponse(null, {

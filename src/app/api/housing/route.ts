@@ -99,31 +99,41 @@ export async function GET(request: NextRequest) {
     // Call the Python backend FRED service for real housing market data
     let housingMarketData;
     try {
-      console.log('🏠 Calling Python FRED service for housing market data...');
-      const fredResponse = await fetch(`${process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'}/api/v1/economic/housing/summary?region=${region}&period=${period}&fast=${fastMode}`, {
+      console.log('🏠 Attempting to call Python FRED service for housing market data...');
+      
+      // Check if Python backend is available first
+      const backendUrl = process.env.PYTHON_BACKEND_URL || 'http://localhost:8000';
+      const fredResponse = await fetch(`${backendUrl}/api/v1/economic/housing/summary?region=${region}&period=${period}&fast=${fastMode}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         // Add timeout for the request
-        signal: AbortSignal.timeout(30000) // 30 second timeout
+        signal: AbortSignal.timeout(10000) // Reduced to 10 second timeout for faster fallback
       });
       
       if (!fredResponse.ok) {
-        throw new Error(`FRED service responded with status: ${fredResponse.status}`);
+        throw new Error(`FRED service responded with status: ${fredResponse.status} ${fredResponse.statusText}`);
       }
       
       housingMarketData = await fredResponse.json();
       console.log('✅ Successfully received housing market data from FRED service');
     } catch (fredError) {
-      console.warn('⚠️ FRED service unavailable, falling back to mock data:', fredError);
-      // Fallback to mock data if FRED service is not available
+      console.warn('⚠️ FRED service unavailable, using mock data fallback:', fredError);
+      
+      // IMPROVED FALLBACK: Always generate mock data when FRED fails
+      const mockData = generateMockHousingData(region, period);
+      console.log(`📊 Generated ${mockData.length} mock housing data points for reliable chart rendering`);
+      
       housingMarketData = {
-        timeSeries: generateMockHousingData(region, period),
+        timeSeries: mockData,
+        time_series: mockData, // Support both naming conventions
+        housingData: mockData, // Support backward compatibility
         metadata: {
           dataSource: 'mock_fallback',
-          reason: fredError instanceof Error ? fredError.message : 'FRED service unavailable'
+          reason: fredError instanceof Error ? fredError.message : 'FRED service unavailable',
+          dataPoints: mockData.length
         }
       };
     }
@@ -146,40 +156,46 @@ export async function GET(request: NextRequest) {
       timeSeriesData = [];
     }
     
-    // Data completeness check - ensure housing chart reliability matches labor chart
-    console.log(`🔍 Checking data completeness for ${timeSeriesData.length} housing data points...`);
+    // IMPROVED Data validation and completeness check
+    console.log(`🔍 Validating housing data structure for ${timeSeriesData.length} data points...`);
     
-    // Count data points with complete housing metrics
-    const completeDataPoints = timeSeriesData.filter((point: any) => {
-      const hasRequiredFields = point.caseSillerIndex && 
-                               point.housingStarts && 
-                               point.monthsSupply;
-      const hasValidNumbers = typeof point.caseSillerIndex === 'number' && 
-                             typeof point.housingStarts === 'number' && 
-                             typeof point.monthsSupply === 'number' &&
-                             point.caseSillerIndex > 0 && 
-                             point.housingStarts > 0 && 
-                             point.monthsSupply > 0;
-      
-      return hasRequiredFields && hasValidNumbers;
-    }).length;
-    
-    console.log(`📊 Found ${completeDataPoints} complete data points out of ${timeSeriesData.length} total`);
-    
-    // If we have insufficient complete data, fall back to mock data like labor chart does
-    if (completeDataPoints < 10) {
-      console.log(`⚠️ Insufficient complete housing data (${completeDataPoints} < 10), falling back to mock data for chart reliability`);
+    // Ensure we have an array of data
+    if (!Array.isArray(timeSeriesData) || timeSeriesData.length === 0) {
+      console.log('⚠️ Invalid or empty time series data, generating mock data');
       timeSeriesData = generateMockHousingData(region, period);
       
-      // Update metadata to reflect the fallback
       if (housingMarketData && housingMarketData.metadata) {
-        housingMarketData.metadata.dataSource = 'mock_fallback_completeness';
-        housingMarketData.metadata.reason = `Insufficient complete data points: ${completeDataPoints}/10 required`;
+        housingMarketData.metadata.dataSource = 'mock_fallback_empty';
+        housingMarketData.metadata.reason = 'Empty or invalid time series data received';
       }
-      
-      console.log(`✅ Using ${timeSeriesData.length} complete mock housing data points for reliable chart rendering`);
     } else {
-      console.log(`✅ Using ${completeDataPoints} complete real housing data points`);
+      // Count data points with complete housing metrics
+      const completeDataPoints = timeSeriesData.filter((point: any) => {
+        // More lenient validation - at least one required field should exist
+        const hasBasicData = point && 
+          (point.caseSillerIndex !== undefined || 
+           point.housingStarts !== undefined || 
+           point.monthsSupply !== undefined);
+        
+        return hasBasicData && point.date;
+      }).length;
+      
+      console.log(`📊 Found ${completeDataPoints} valid data points out of ${timeSeriesData.length} total`);
+      
+      // Only fallback if we have very few or no valid points
+      if (completeDataPoints < 5) {
+        console.log(`⚠️ Insufficient valid housing data (${completeDataPoints} < 5), using mock data for chart reliability`);
+        timeSeriesData = generateMockHousingData(region, period);
+        
+        if (housingMarketData && housingMarketData.metadata) {
+          housingMarketData.metadata.dataSource = 'mock_fallback_completeness';
+          housingMarketData.metadata.reason = `Insufficient valid data points: ${completeDataPoints}/5 required`;
+        }
+        
+        console.log(`✅ Using ${timeSeriesData.length} complete mock housing data points for reliable chart rendering`);
+      } else {
+        console.log(`✅ Using ${completeDataPoints} valid real housing data points`);
+      }
     }
     
     const processedData = await processHousingData(processor, timeSeriesData);
@@ -336,12 +352,12 @@ export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
 // Helper functions
 
 function generateMockHousingData(region: string, period: string) {
-  // Mock data generation - in production this would be replaced with real FRED API calls
-  const months = period === '3m' ? 3 : period === '6m' ? 6 : period === '12m' ? 12 : 24;
+  // IMPROVED Mock data generation for reliable chart rendering
+  const months = period === '3m' ? 3 : period === '6m' ? 6 : period === '12m' ? 12 : period === '24m' ? 24 : 12;
   const data = [];
   
   const baseValues = {
-    caseSiller: region === 'national' ? 311.2 : region === 'ca' ? 398.7 : 278.9,
+    caseSiller: region === 'national' ? 311.2 : region === 'ca' ? 398.7 : region === 'ny' ? 289.4 : region === 'fl' ? 356.2 : 278.9,
     houst: 1500000,
     supply: 4.2,
     newSales: 650000
@@ -349,6 +365,8 @@ function generateMockHousingData(region: string, period: string) {
   
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() - months);
+  
+  let previousCaseSiller = baseValues.caseSiller;
   
   for (let i = 0; i < months; i++) {
     const currentDate = new Date(startDate);
@@ -358,15 +376,26 @@ function generateMockHousingData(region: string, period: string) {
     const seasonality = Math.sin((i / 12) * 2 * Math.PI) * 0.02;
     const noise = (Math.random() - 0.5) * 0.01;
     
+    const currentCaseSiller = Math.round((baseValues.caseSiller * (1 + trend + seasonality + noise)) * 100) / 100;
+    const monthlyChange = i > 0 ? ((currentCaseSiller / previousCaseSiller - 1) * 100) : 0;
+    const yearlyChange = i >= 12 ? ((currentCaseSiller / data[i-12]?.caseSillerIndex - 1) * 100) : Math.random() * 4 - 1;
+    
     data.push({
       date: currentDate.toISOString().split('T')[0],
-      caseSillerIndex: Math.round((baseValues.caseSiller * (1 + trend + seasonality + noise)) * 100) / 100,
+      caseSillerIndex: currentCaseSiller,
       housingStarts: Math.round(baseValues.houst * (1 + (Math.random() - 0.5) * 0.05)),
       monthsSupply: Math.round((baseValues.supply + (Math.random() - 0.5) * 0.4) * 10) / 10,
-      newHomeSales: Math.round(baseValues.newSales * (1 + (Math.random() - 0.5) * 0.08))
+      newHomeSales: Math.round(baseValues.newSales * (1 + (Math.random() - 0.5) * 0.08)),
+      priceChangeMonthly: Math.round(monthlyChange * 10) / 10,
+      priceChangeYearly: Math.round(yearlyChange * 10) / 10,
+      inventoryLevel: Math.round((baseValues.supply * 100000) + (Math.random() * 50000)),
+      daysOnMarket: Math.round(25 + (Math.random() * 20))
     });
+    
+    previousCaseSiller = currentCaseSiller;
   }
   
+  console.log(`📊 Generated ${data.length} mock housing data points with complete metrics`);
   return data;
 }
 

@@ -72,11 +72,23 @@ def process_youtube_video(
         # Step 1: Extract video metadata (5%)
         self.update_progress(1, 20, "Extracting video metadata")
         
-        # Run async operations 
+        # Run async operations with timeout  
         try:
-            metadata = asyncio.run(
-                youtube_service.get_video_metadata(youtube_url)
-            )
+            # Add timeout for metadata fetch to prevent hanging
+            def get_metadata_sync():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(
+                        asyncio.wait_for(
+                            youtube_service.get_video_metadata(youtube_url),
+                            timeout=120.0  # 2 minutes timeout for metadata fetch
+                        )
+                    )
+                finally:
+                    loop.close()
+            
+            metadata = get_metadata_sync()
             
             # Update database with metadata
             asyncio.run(
