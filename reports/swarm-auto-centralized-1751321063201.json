@@ -1,0 +1,13 @@
+{
+  "objective": "I want you to implement this file /Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/task/Labour&Housing.md",
+  "strategy": "auto",
+  "mode": "centralized",
+  "maxAgents": 5,
+  "timeout": 60,
+  "parallel": false,
+  "monitor": false,
+  "output": "json",
+  "outputDir": "./reports",
+  "timestamp": "2025-06-30T22:04:23.200Z",
+  "id": "swarm-auto-centralized-1751321063201"
+}
