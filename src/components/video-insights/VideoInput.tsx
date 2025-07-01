@@ -169,7 +169,7 @@ export default function VideoInput({ onSubmit, isProcessing, folders }: VideoInp
   };
 
   const selectedMode = SUMMARY_MODES.find(mode => mode.id === formData.summary_mode);
-  const selectedFolder = folders.find(folder => folder.id === formData.folder_id);
+  const selectedFolder = folders && Array.isArray(folders) ? folders.find(folder => folder.id === formData.folder_id) : null;
 
   return (
     <div className="bg-theme-card border border-theme-border rounded-xl p-6">
@@ -283,7 +283,7 @@ export default function VideoInput({ onSubmit, isProcessing, folders }: VideoInp
         )}
 
         {/* Folder Selection */}
-        {folders.length > 0 && (
+        {folders && Array.isArray(folders) && folders.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-theme-text mb-2">
               Save to Folder (Optional)
@@ -316,7 +316,7 @@ export default function VideoInput({ onSubmit, isProcessing, folders }: VideoInp
                   >
                     <span className="text-theme-text-muted">No folder</span>
                   </button>
-                  {folders.map((folder) => (
+                  {folders && Array.isArray(folders) && folders.map((folder) => (
                     <button
                       key={folder.id}
                       type="button"

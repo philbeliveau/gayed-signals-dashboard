@@ -311,7 +311,7 @@ export default function FolderSidebar({
               All Videos
             </span>
             <span className="text-xs text-theme-text-muted ml-auto">
-              ({folders.reduce((sum, f) => sum + (f.video_count || 0), 0)})
+              ({folders && Array.isArray(folders) ? folders.reduce((sum, f) => sum + (f.video_count || 0), 0) : 0})
             </span>
           </div>
         </button>
@@ -328,7 +328,7 @@ export default function FolderSidebar({
             
             {parentFolderId && (
               <div className="text-xs text-theme-text-muted">
-                Creating in: {folders.find(f => f.id === parentFolderId)?.name}
+                Creating in: {folders && Array.isArray(folders) ? folders.find(f => f.id === parentFolderId)?.name : 'Unknown'}
               </div>
             )}
             
@@ -409,7 +409,7 @@ export default function FolderSidebar({
             <p className="text-theme-text mb-6">
               Are you sure you want to delete "
               <span className="font-medium">
-                {folders.find(f => f.id === showDeleteConfirm)?.name}
+                {folders && Array.isArray(folders) ? folders.find(f => f.id === showDeleteConfirm)?.name : 'Unknown'}
               </span>
               "? All videos in this folder will be moved to uncategorized.
             </p>
