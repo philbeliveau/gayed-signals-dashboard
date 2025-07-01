@@ -158,7 +158,7 @@ export function useHousingMarketData({
     return 'low';
   }, [getCurrentData, state.alerts]);
 
-  const getPricetrend = useCallback(): 'bullish' | 'bearish' | 'sideways' => {
+  const getPriceTrend = useCallback(() => {
     if (state.data.length < 3) return 'sideways';
     
     const recent = state.data.slice(-3);
@@ -190,7 +190,7 @@ export function useHousingMarketData({
     // Helper functions
     getCurrentData,
     getStressLevel,
-    getPricetrend,
+    getPriceTrend,
     
     // Configuration
     region,

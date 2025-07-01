@@ -1,0 +1,53 @@
+{
+  "orchestrator": {
+    "maxConcurrentAgents": 10,
+    "taskQueueSize": 100,
+    "healthCheckInterval": 30000,
+    "shutdownTimeout": 30000
+  },
+  "terminal": {
+    "type": "auto",
+    "poolSize": 5,
+    "recycleAfter": 10,
+    "healthCheckInterval": 60000,
+    "commandTimeout": 300000
+  },
+  "memory": {
+    "backend": "hybrid",
+    "cacheSizeMB": 100,
+    "syncInterval": 5000,
+    "conflictResolution": "crdt",
+    "retentionDays": 30
+  },
+  "coordination": {
+    "maxRetries": 3,
+    "retryDelay": 1000,
+    "deadlockDetection": true,
+    "resourceTimeout": 60000,
+    "messageTimeout": 30000
+  },
+  "mcp": {
+    "transport": "stdio",
+    "port": 3000,
+    "tlsEnabled": false,
+    "servers": {
+      "trader": {
+        "command": "python",
+        "args": [
+          "-m",
+          "mcp_trader.server"
+        ],
+        "cwd": "./mcp-integrations/trader",
+        "env": {
+          "TIINGO_API_KEY": "36181da7f5290c0544e9cc0b3b5f19249eb69a61",
+          "PYTHONPATH": "src"
+        }
+      }
+    }
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "destination": "console"
+  }
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { TranscriptViewerProps } from '../../lib/types/video-insights';
+import { TranscriptViewerProps } from '../../../lib/types/video-insights';
 import { 
   Play, 
   Search, 

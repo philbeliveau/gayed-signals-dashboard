@@ -118,8 +118,10 @@ export async function GET(request: NextRequest) {
     } catch (fredError) {
       console.warn('⚠️ FRED service unavailable, falling back to mock data:', fredError);
       // Fallback to mock data if FRED service is not available
+      const mockData = generateMockLaborData(period);
+      console.log(`📊 Generated ${mockData.length} mock labor data points`);
       laborMarketData = {
-        timeSeries: generateMockLaborData(period),
+        timeSeries: mockData,
         metadata: {
           dataSource: 'mock_fallback',
           reason: fredError instanceof Error ? fredError.message : 'FRED service unavailable'
@@ -149,7 +151,8 @@ export async function GET(request: NextRequest) {
     
     const responseData = {
       period,
-      laborData: processedData.timeSeries,
+      timeSeries: processedData.timeSeries,
+      laborData: processedData.timeSeries, // Keep for backward compatibility
       currentMetrics: processedData.currentMetrics,
       alerts: processedData.alerts,
       historicalComparison: processedData.historicalComparison,
@@ -439,6 +442,32 @@ function getWeekPeriod(date: Date): string {
 }
 
 async function processLaborData(processor: HousingLaborProcessor, rawData: any[]) {
+  // Handle empty or undefined data
+  if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+    console.warn('⚠️ processLaborData received empty or invalid data, using defaults');
+    return {
+      timeSeries: [],
+      currentMetrics: {
+        initialClaims: 0,
+        continuedClaims: 0,
+        unemploymentRate: 0,
+        nonfarmPayrolls: 0,
+        laborParticipation: 0,
+        jobOpenings: 0,
+        claims4Week: 0,
+        weeklyChangeInitial: 0,
+        weeklyChangeContinued: 0,
+        monthlyChangePayrolls: 0
+      },
+      alerts: [],
+      historicalComparison: {
+        continuedClaims: null,
+        unemploymentRate: null
+      },
+      correlationAnalysis: {}
+    };
+  }
+  
   // Convert raw data to EconomicIndicator format
   const economicData: Record<string, EconomicIndicator[]> = {};
   

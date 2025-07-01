@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FolderSidebarProps } from '../../lib/types/video-insights';
+import { FolderSidebarProps } from '../../../lib/types/video-insights';
 import { 
   Folder, 
   FolderPlus, 

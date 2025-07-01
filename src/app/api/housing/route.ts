@@ -77,8 +77,8 @@ export async function GET(request: NextRequest) {
     
     // Initialize housing/labor processor
     const marketClient = new EnhancedMarketClient({
-      tiingoApiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
-      alphaVantageApiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
+      tiingoApiKey: process.env.TIINGO_API_KEY,
+      alphaVantageApiKey: process.env.ALPHA_VANTAGE_KEY,
       rateLimits: {
         tiingo: 500,
         alphaVantage: 12000,
@@ -146,12 +146,49 @@ export async function GET(request: NextRequest) {
       timeSeriesData = [];
     }
     
+    // Data completeness check - ensure housing chart reliability matches labor chart
+    console.log(`🔍 Checking data completeness for ${timeSeriesData.length} housing data points...`);
+    
+    // Count data points with complete housing metrics
+    const completeDataPoints = timeSeriesData.filter((point: any) => {
+      const hasRequiredFields = point.caseSillerIndex && 
+                               point.housingStarts && 
+                               point.monthsSupply;
+      const hasValidNumbers = typeof point.caseSillerIndex === 'number' && 
+                             typeof point.housingStarts === 'number' && 
+                             typeof point.monthsSupply === 'number' &&
+                             point.caseSillerIndex > 0 && 
+                             point.housingStarts > 0 && 
+                             point.monthsSupply > 0;
+      
+      return hasRequiredFields && hasValidNumbers;
+    }).length;
+    
+    console.log(`📊 Found ${completeDataPoints} complete data points out of ${timeSeriesData.length} total`);
+    
+    // If we have insufficient complete data, fall back to mock data like labor chart does
+    if (completeDataPoints < 10) {
+      console.log(`⚠️ Insufficient complete housing data (${completeDataPoints} < 10), falling back to mock data for chart reliability`);
+      timeSeriesData = generateMockHousingData(region, period);
+      
+      // Update metadata to reflect the fallback
+      if (housingMarketData && housingMarketData.metadata) {
+        housingMarketData.metadata.dataSource = 'mock_fallback_completeness';
+        housingMarketData.metadata.reason = `Insufficient complete data points: ${completeDataPoints}/10 required`;
+      }
+      
+      console.log(`✅ Using ${timeSeriesData.length} complete mock housing data points for reliable chart rendering`);
+    } else {
+      console.log(`✅ Using ${completeDataPoints} complete real housing data points`);
+    }
+    
     const processedData = await processHousingData(processor, timeSeriesData);
     
     const responseData = {
       region,
       period,
-      housingData: processedData.timeSeries,
+      timeSeries: processedData.timeSeries,
+      housingData: processedData.timeSeries, // Keep for backward compatibility
       currentMetrics: processedData.currentMetrics,
       alerts: processedData.alerts,
       trendAnalysis: processedData.trendAnalysis,

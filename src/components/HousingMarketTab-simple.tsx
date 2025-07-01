@@ -5,12 +5,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Home, TrendingUp, TrendingDown, AlertTriangle, MapPin, Calendar, RefreshCw, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 export default function HousingMarketTab() {
-  const [housingData, setHousingData] = useState([]);
-  const [currentMetrics, setCurrentMetrics] = useState(null);
-  const [alerts, setAlerts] = useState([]);
+  const [housingData, setHousingData] = useState<any[]>([]);
+  const [currentMetrics, setCurrentMetrics] = useState<any>(null);
+  const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [selectedRegion, setSelectedRegion] = useState('national');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -35,7 +35,7 @@ export default function HousingMarketTab() {
       }
       
       // Filter out empty data points that only have dates
-      const filteredHousingData = (result.housingData || []).filter(dataPoint => 
+      const filteredHousingData = (result.housingData || []).filter((dataPoint: any) => 
         dataPoint.caseSillerIndex !== undefined || 
         dataPoint.housingStarts !== undefined || 
         dataPoint.monthsSupply !== undefined ||
@@ -48,7 +48,7 @@ export default function HousingMarketTab() {
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching housing data:', error);
-      setError(error.message);
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -59,7 +59,7 @@ export default function HousingMarketTab() {
     fetchHousingData(true);
   }, [selectedRegion]);
 
-  const TrendArrow = ({ value, showValue = true, suffix = '%' }) => {
+  const TrendArrow = ({ value, showValue = true, suffix = '%' }: { value: number; showValue?: boolean; suffix?: string }) => {
     const isPositive = value > 0;
     const isNeutral = value === 0;
     const colorClass = isNeutral ? 'text-gray-500' : isPositive ? 'text-green-600' : 'text-red-600';
@@ -73,7 +73,14 @@ export default function HousingMarketTab() {
     );
   };
 
-  const DataCard = ({ title, value, change, subtitle, icon, status = 'normal' }) => {
+  const DataCard = ({ title, value, change, subtitle, icon, status = 'normal' }: { 
+    title: string; 
+    value: any; 
+    change?: number; 
+    subtitle?: string; 
+    icon: any; 
+    status?: 'normal' | 'warning' | 'critical' 
+  }) => {
     const statusColors = {
       normal: 'border-gray-200 bg-white',
       warning: 'border-yellow-400 bg-yellow-50',
@@ -95,7 +102,7 @@ export default function HousingMarketTab() {
     );
   };
 
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

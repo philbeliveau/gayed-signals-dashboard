@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-07-01T02:02:06.564Z",
+  "timestamp": "2025-07-01T13:18:13.838Z",
   "version": "1.0",
   "entries": [
     {
@@ -14,7 +14,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-06-30T19:36:39.300Z",
       "updatedAt": "2025-06-30T19:36:39.300Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 1277,
       "compressed": true,
@@ -34,7 +34,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-06-30T19:52:59.345Z",
       "updatedAt": "2025-06-30T19:52:59.345Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 3399,
       "compressed": true,
@@ -54,7 +54,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-06-30T19:58:53.704Z",
       "updatedAt": "2025-06-30T19:58:53.704Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 2511,
       "compressed": true,
@@ -74,7 +74,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-06-30T19:59:08.509Z",
       "updatedAt": "2025-06-30T19:59:08.509Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 6579,
       "compressed": true,
@@ -94,7 +94,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-06-30T19:59:10.401Z",
       "updatedAt": "2025-06-30T19:59:10.401Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 7342,
       "compressed": true,
@@ -114,7 +114,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-06-30T22:06:27.183Z",
       "updatedAt": "2025-06-30T22:06:27.183Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 605,
       "compressed": false,
@@ -134,7 +134,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-06-30T22:09:43.837Z",
       "updatedAt": "2025-06-30T22:09:43.837Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 519,
       "compressed": false,
@@ -154,7 +154,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-06-30T22:10:11.758Z",
       "updatedAt": "2025-06-30T22:10:11.758Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 888,
       "compressed": false,
@@ -174,7 +174,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-07-01T00:49:56.734Z",
       "updatedAt": "2025-07-01T00:49:56.734Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 3920,
       "compressed": true,
@@ -194,7 +194,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-07-01T00:55:25.799Z",
       "updatedAt": "2025-07-01T00:55:25.799Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 1111,
       "compressed": true,
@@ -214,7 +214,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-07-01T02:00:57.327Z",
       "updatedAt": "2025-07-01T02:00:57.327Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 5689,
       "compressed": true,
@@ -234,7 +234,7 @@
       "accessLevel": "shared",
       "createdAt": "2025-07-01T02:01:18.747Z",
       "updatedAt": "2025-07-01T02:01:18.747Z",
-      "lastAccessedAt": "2025-07-01T02:01:41.817Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 1170,
       "compressed": true,
@@ -254,61 +254,235 @@
       "accessLevel": "shared",
       "createdAt": "2025-07-01T02:02:06.563Z",
       "updatedAt": "2025-07-01T02:02:06.563Z",
-      "lastAccessedAt": "2025-07-01T02:02:06.563Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
       "version": 1,
       "size": 2966,
       "compressed": true,
       "checksum": "0fb34822b9fe5676c30fb9312452bbf460e37b6826e065bdceda4f59acbd1100",
       "references": [],
       "dependencies": []
+    },
+    {
+      "id": "entry_mcjvvanv_w68e7xcjp",
+      "key": "swarm-auto-centralized-1751334969239/config-coordinator/config-fixes",
+      "value": "\"## CONFIGURATION FIXES PREPARED\\n\\n### 1. Created .env.template\\n✅ Unified environment configuration template created\\n- Standardized all API key names to *_API_KEY format\\n- Coordinated service ports (FastAPI on 8002, Flask on 5000)\\n- Unified Redis and database configurations\\n- Added comprehensive documentation\\n\\n### 2. Identified config.py Duplicate Fields Issue\\n**Problem**: Lines 44-59 have duplicate field definitions that conflict with properties\\n\\n**Current Issues**:\\n- Properties parse REDIS_URL (lines 28-43) \\n- Then duplicate fields redefine same values (lines 44-59)\\n- Same issue with CELERY fields (multiple definitions)\\n\\n**Fix Required**: Remove duplicate field definitions, keep only properties OR only fields\\n\\n### 3. Port Configuration Standardization\\n**Implemented Standards**:\\n- Frontend: 3000\\n- Flask Backend: 5000  \\n- FastAPI Backend: 8002\\n- PostgreSQL: 5432 (5433 externally)\\n- Redis: 6379\\n\\n### 4. Docker Compose Coordination Points\\n**Key Alignments Needed**:\\n- Environment variables must match .env.template\\n- Service dependencies require proper health checks\\n- Network configuration must support all service communication\\n\\n### 5. Database Strategy\\n**Development**: SQLite for local development\\n**Production**: PostgreSQL for Docker deployment\\n**Solution**: Environment-specific DATABASE_URL configuration\\n\\n### STATUS: READY FOR IMPLEMENTATION\\nWaiting for other agents to complete analysis before implementing fixes.\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-07-01T02:03:03.739Z",
+      "updatedAt": "2025-07-01T02:03:03.739Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
+      "version": 1,
+      "size": 1544,
+      "compressed": true,
+      "checksum": "8dafa20fd743b1b12a7dea17e43f30e0dcff662828b67cd3a302878708672652",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mcjvwnw8_kwb9iw5k7",
+      "key": "swarm-auto-centralized-1751334969239/config-coordinator/final-implementation",
+      "value": "\"## CONFIGURATION COORDINATOR - FINAL IMPLEMENTATION PLAN\\n\\n### DELIVERABLES COMPLETED ✅\\n\\n1. **Unified Configuration Strategy** (.env.template)\\n   - Standardized environment variables across all services\\n   - Consistent API key naming (*_API_KEY format)\\n   - Coordinated service ports and networking\\n   - Comprehensive documentation with all required settings\\n\\n2. **Configuration Fixes Analysis** \\n   - Identified duplicate field definitions in config.py\\n   - Mapped port conflicts and resolutions\\n   - Standardized database configuration strategy\\n   - Prepared environment-specific configurations\\n\\n3. **Deployment Coordination Guide** (CONFIGURATION_DEPLOYMENT_GUIDE.md)\\n   - Step-by-step implementation procedures\\n   - Service startup sequence coordination\\n   - Health check verification procedures\\n   - Rollback and monitoring procedures\\n\\n### COORDINATION WITH OTHER AGENTS\\n\\n**Redis Specialist Analysis Integration**:\\n- Confirmed Redis infrastructure is healthy\\n- Error 22 root cause: missing service dependencies, not Redis connectivity\\n- Implementation plan addresses proper startup sequence\\n\\n**Waiting for Integration**:\\n- Docker Specialist (for container optimization)\\n- Database Specialist (for schema coordination)\\n- API Integration Specialist (for endpoint coordination)\\n\\n### IMMEDIATE IMPLEMENTATION READY\\n\\n**Critical Fixes Prepared**:\\n1. Environment variable standardization\\n2. Configuration file duplicate removal\\n3. Port conflict resolution  \\n4. Service dependency coordination\\n5. Database URL environment alignment\\n\\n**Implementation Sequence**:\\n1. Apply environment templates\\n2. Fix configuration duplicates\\n3. Update service ports\\n4. Deploy with proper startup sequence\\n5. Verify health and integration\\n\\n### SYSTEM ARCHITECTURE COORDINATION\\n\\n**Service Communication Plan**:\\n- Frontend (3000) → Backend (5000) → Video API (8002)\\n- All services → Redis (6379) for caching/queuing\\n- All services → PostgreSQL (5432) for persistence\\n- Proper CORS and security configurations\\n\\n**Environment Strategy**:\\n- Development: SQLite + local Redis\\n- Production: PostgreSQL + containerized Redis\\n- Configuration template supports both\\n\\n### STATUS: IMPLEMENTATION READY\\nAll configuration coordination completed. System ready for unified deployment following the deployment guide procedures.\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-07-01T02:04:07.544Z",
+      "updatedAt": "2025-07-01T02:04:07.544Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
+      "version": 1,
+      "size": 2450,
+      "compressed": true,
+      "checksum": "8529553996c8d77e034c82f6a70b99e5f2c958d18f02cc95bf7efa6d2089f1bf",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mckjcln6_q9sfjl7zw",
+      "key": "persistent_issues_context",
+      "value": {
+        "docker_build_error": "TypeScript type error in monitoring route line 142",
+        "video_insights_auth": "401 Unauthorized on listFolders/listVideos endpoints",
+        "housing_chart": "Empty chart rendering while labor chart works",
+        "working_services": [
+          "postgres",
+          "redis",
+          "video-insights-api"
+        ],
+        "file_locations": {
+          "error_source": "/src/app/api/monitoring/route.ts:142:9",
+          "auth_handler": "lib/api/video-insights.ts:71:15"
+        }
+      },
+      "type": "object",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-07-01T13:00:22.290Z",
+      "updatedAt": "2025-07-01T13:00:22.290Z",
+      "lastAccessedAt": "2025-07-01T13:17:53.822Z",
+      "version": 1,
+      "size": 430,
+      "compressed": false,
+      "checksum": "77b366732939af12583eec247fba7dbb479a6e897858592ace91b38c6b17bbff",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mckjmhjd_xw95lhyir",
+      "key": "swarm-analysis-distributed-1751375058064/typescript-agent/findings",
+      "value": {
+        "agent": "Agent 1 - TypeScript Build Errors Specialist",
+        "timestamp": "2025-07-01T13:08:03.3NZ",
+        "status": "CRITICAL_ISSUES_PARTIALLY_RESOLVED",
+        "assigned_tasks": {
+          "task_1": {
+            "description": "Investigate monitoring route TypeScript error (/src/app/api/monitoring/route.ts:142:9)",
+            "status": "RESOLVED",
+            "fix_applied": "Fixed rateLimiting type safety issue - replaced || {} with proper type structure",
+            "details": "Changed securityStats?.rateLimiting || {} to proper fallback with totalIPs: 0, suspiciousIPs: 0, totalRequests: 0"
+          },
+          "task_2": {
+            "description": "Fix rateLimiting type safety issue - securityStats?.rateLimiting || {} creates wrong type",
+            "status": "RESOLVED",
+            "fix_applied": "Provided proper fallback structure matching SecurityManager.getStats() return type",
+            "details": "Also fixed events fallback to { total: 0, recent: [] } structure"
+          },
+          "task_3": {
+            "description": "Examine all TypeScript build errors preventing Docker deployment",
+            "status": "PARTIALLY_COMPLETED",
+            "blocking_errors_found": [
+              "ChartTestDemo.tsx: Dynamic import type incompatibility with Recharts components",
+              "Video insights components: Missing type declarations for video-insights module",
+              "UniversalStrategyChart.tsx: Index signature issues with ETF color mapping",
+              "API integration tests: Undici type signature issues",
+              "Prompt management: ES2018 regex flag compatibility"
+            ]
+          },
+          "task_4": {
+            "description": "Provide concrete fixes for type safety compliance",
+            "status": "COMPLETED_FOR_ASSIGNED_ERRORS",
+            "fixes_provided": [
+              "Monitoring route: Fixed security stats type fallbacks",
+              "Housing hook: Fixed function name and useCallback syntax"
+            ]
+          }
+        },
+        "docker_build_assessment": {
+          "status": "BLOCKED_BY_TYPESCRIPT_ERRORS",
+          "primary_blocker": "ChartTestDemo.tsx dynamic import issues",
+          "dockerfile_status": "PROPERLY_CONFIGURED",
+          "build_command": "npm run build fails at type checking stage",
+          "estimated_resolution_effort": "2-4 hours for remaining issues"
+        },
+        "recommendations": {
+          "immediate_actions": [
+            "Fix ChartTestDemo.tsx dynamic imports (highest priority for Docker builds)",
+            "Add missing video-insights type definitions",
+            "Update tsconfig.json target to ES2018+ for regex compatibility"
+          ],
+          "swarm_coordination": [
+            "Frontend specialist should handle Chart component type issues",
+            "DevOps agent should verify Docker build after type fixes",
+            "Testing specialist should address test configuration issues"
+          ]
+        },
+        "files_modified": [
+          "/src/app/api/monitoring/route.ts",
+          "/src/hooks/useHousingMarketData.ts"
+        ],
+        "verification_status": "Core assigned issues resolved, Docker build still blocked by unrelated TypeScript errors"
+      },
+      "type": "object",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-07-01T13:08:03.529Z",
+      "updatedAt": "2025-07-01T13:08:03.529Z",
+      "lastAccessedAt": "2025-07-01T13:18:05.798Z",
+      "version": 1,
+      "size": 2680,
+      "compressed": true,
+      "checksum": "b3c391c052e2cc7fcf401abdf88d606691746efa551efddebc27e5a151c8a410",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mckjqyfm_vho5ffohl",
+      "key": "swarm-analysis-distributed-1751375058064/auth-agent/findings",
+      "value": "# VIDEO INSIGHTS AUTHENTICATION CRISIS - ROOT CAUSE ANALYSIS\n\n## EXECUTIVE SUMMARY\nThe systematic 401 Unauthorized errors across video insights endpoints are caused by multiple configuration and service mismatches, not authentication token issues.\n\n## CRITICAL FINDINGS\n\n### 1. PORT MISMATCH CRISIS\n- **Environment Configuration**: FASTAPI_BASE_URL=http://localhost:8002 (.env.local)\n- **Actual Backend Service**: Running on port 8000 (main.py:158)\n- **Service on Port 8002**: Different service responding to health checks\n- **Impact**: Frontend proxy targeting wrong backend service\n\n### 2. SERVICE ARCHITECTURE CONFUSION\n- **Port 8002**: Responds to /health with {\"status\":\"healthy\",\"database\":\"connected\",\"service\":\"YouTube Video Insights API\"}\n- **Port 8000**: FastAPI backend with authentication logic, returning \"Internal server error\"\n- **Authentication Flow**: Frontend → Next.js Proxy (→ port 8002) ≠ Backend Auth (port 8000)\n\n### 3. AUTHENTICATION LOGIC STATUS\n- **Development Token Handling**: get_current_user_optional() should accept 'dev-token'\n- **Environment Check**: NODE_ENV=development set correctly\n- **Security Module**: Implements proper dev-token fallback logic\n- **Current Issue**: Internal server error on port 8000 preventing auth validation\n\n### 4. ENVIRONMENT VARIABLE ANALYSIS\n**Correct Configuration:**\n- FASTAPI_BASE_URL=http://localhost:8002 (.env.local:37)\n- NODE_ENV=development (.env.local:17)\n- All authentication variables properly set\n\n**Service Reality:**\n- FastAPI backend actually running on port 8000\n- Port 8002 service is different/unknown service\n- Configuration-to-reality mismatch\n\n## SPECIFIC TECHNICAL ISSUES\n\n### Authentication Flow Breakdown:\n1. Frontend calls /api/video-insights/folders\n2. Next.js proxy reads FASTAPI_BASE_URL (port 8002)\n3. Proxy adds 'dev-token' in development mode\n4. Request goes to port 8002 (wrong service)\n5. Port 8002 service rejects with \"Could not validate credentials\"\n6. Real backend on port 8000 never receives request\n\n### Direct API Testing Results:\n- Port 8002: 401 \"Could not validate credentials\" with dev-token\n- Port 8000: 500 \"Internal server error\" with dev-token\n- Port 8002: 200 OK on /health endpoint\n- Port 8000: Connection issues/internal errors\n\n## ROOT CAUSE IDENTIFICATION\n\n**Primary Issue**: Configuration points to wrong service port\n**Secondary Issue**: Port 8000 backend has internal server errors\n**Tertiary Issue**: Port 8002 service doesn't implement expected auth logic\n\n## IMMEDIATE FIXES REQUIRED\n\n### 1. Port Configuration Fix\n- Update FASTAPI_BASE_URL to http://localhost:8000 in .env.local\n- OR update main.py to run on port 8002\n- OR investigate why two services are running\n\n### 2. Backend Service Investigation\n- Identify what service is running on port 8002\n- Fix internal server errors on port 8000\n- Ensure authentication logic works correctly\n\n### 3. Authentication Method Verification\n- Verify dev-token handling in get_current_user_optional\n- Test authentication flow after port fix\n- Ensure database connection for test user creation\n\n## ENVIRONMENT CONFIGURATION AUDIT\n\n**Current State:**\n```\nFASTAPI_BASE_URL=http://localhost:8002 ✓ (variable set)\nNODE_ENV=development ✓ (correct for dev-token)\n```\n\n**Required State:**\n```\nFASTAPI_BASE_URL=http://localhost:8000 (fix needed)\nOR\nFastAPI service port changed to 8002 (alternative fix)\n```\n\n## TESTING VALIDATION\n\n**Health Check Status:**\n- Port 8002: ✓ Healthy, wrong service\n- Port 8000: ✗ Internal errors, correct service\n\n**Authentication Test Results:**\n- Port 8002 + dev-token: ✗ \"Could not validate credentials\"\n- Port 8000 + dev-token: ✗ \"Internal server error\"\n\n## DELIVERABLES SUMMARY\n\n**Root Cause**: Port mismatch between configuration (8002) and actual backend service (8000)\n**Environment Audit**: Configuration correct, service running on wrong port\n**Authentication Fixes**: Port fix required first, then test auth flow\n\n## NEXT STEPS\n\n1. Fix port configuration mismatch immediately\n2. Debug internal server error on port 8000\n3. Verify authentication logic after port fix\n4. Test complete video insights functionality\n5. Document correct service architecture\n\n**CONFIDENCE LEVEL**: HIGH - Port mismatch is definitive root cause\n**PRIORITY**: CRITICAL - Complete service failure until port fix",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-07-01T13:11:32.050Z",
+      "updatedAt": "2025-07-01T13:11:32.050Z",
+      "lastAccessedAt": "2025-07-01T13:18:13.819Z",
+      "version": 1,
+      "size": 4616,
+      "compressed": true,
+      "checksum": "09f31a4bbe4c95d272a12f47c500e197ae164546a0d163804dba59b77dca39a0",
+      "references": [],
+      "dependencies": []
     }
   ],
   "statistics": {
     "overview": {
-      "totalEntries": 13,
-      "totalSize": 37976,
-      "compressedEntries": 10,
-      "compressionRatio": -16.87475149105368,
-      "indexSize": 650,
-      "memoryUsage": 10648896,
+      "totalEntries": 18,
+      "totalSize": 49696,
+      "compressedEntries": 14,
+      "compressionRatio": -18.35053235053235,
+      "indexSize": 900,
+      "memoryUsage": 11011840,
       "diskUsage": 0
     },
     "distribution": {
       "byNamespace": {
         "default": {
-          "count": 13,
-          "size": 37976
+          "count": 18,
+          "size": 49696
         }
       },
       "byType": {
         "string": {
-          "count": 9,
-          "size": 23855
+          "count": 12,
+          "size": 32465
         },
         "object": {
-          "count": 4,
-          "size": 14121
+          "count": 6,
+          "size": 17231
         }
       },
       "byOwner": {
         "system": {
-          "count": 13,
-          "size": 37976
+          "count": 18,
+          "size": 49696
         }
       },
       "byAccessLevel": {
         "shared": {
-          "count": 13,
-          "size": 37976
+          "count": 18,
+          "size": 49696
         }
       }
     },
     "temporal": {
-      "entriesCreatedLast24h": 13,
-      "entriesUpdatedLast24h": 13,
-      "entriesAccessedLast24h": 13,
+      "entriesCreatedLast24h": 18,
+      "entriesUpdatedLast24h": 18,
+      "entriesAccessedLast24h": 18,
       "oldestEntry": "2025-06-30T19:36:39.300Z",
-      "newestEntry": "2025-07-01T02:02:06.563Z"
+      "newestEntry": "2025-07-01T13:11:32.050Z"
     },
     "performance": {
       "averageQueryTime": 0,

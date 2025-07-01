@@ -5,13 +5,13 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Users, TrendingUp, TrendingDown, AlertTriangle, Clock, BarChart, ArrowUpRight, ArrowDownRight, Activity, RefreshCw, Briefcase, FileText } from 'lucide-react';
 
 export default function LaborMarketTab() {
-  const [laborData, setLaborData] = useState([]);
-  const [currentMetrics, setCurrentMetrics] = useState(null);
-  const [alerts, setAlerts] = useState([]);
-  const [metadata, setMetadata] = useState(null);
+  const [laborData, setLaborData] = useState<any[]>([]);
+  const [currentMetrics, setCurrentMetrics] = useState<any>(null);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [metadata, setMetadata] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchLaborData = async (fast = false) => {
@@ -33,7 +33,7 @@ export default function LaborMarketTab() {
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching labor data:', error);
-      setError(error.message);
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -44,7 +44,7 @@ export default function LaborMarketTab() {
     fetchLaborData(true);
   }, []);
 
-  const TrendArrow = ({ value, showValue = true, suffix = '%', inverse = false }) => {
+  const TrendArrow = ({ value, showValue = true, suffix = '%', inverse = false }: { value: number; showValue?: boolean; suffix?: string; inverse?: boolean }) => {
     const isPositive = inverse ? value < 0 : value > 0;
     const isNeutral = value === 0;
     const colorClass = isNeutral ? 'text-gray-500' : isPositive ? 'text-green-600' : 'text-red-600';
@@ -58,7 +58,15 @@ export default function LaborMarketTab() {
     );
   };
 
-  const DataCard = ({ title, value, change, subtitle, icon, status = 'normal', inverse = false }) => {
+  const DataCard = ({ title, value, change, subtitle, icon, status = 'normal', inverse = false }: { 
+    title: string; 
+    value: any; 
+    change?: number; 
+    subtitle?: string; 
+    icon: any; 
+    status?: 'normal' | 'warning' | 'critical'; 
+    inverse?: boolean 
+  }) => {
     const statusColors = {
       normal: 'border-gray-200 bg-white',
       warning: 'border-yellow-400 bg-yellow-50',
@@ -80,10 +88,10 @@ export default function LaborMarketTab() {
     );
   };
 
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
-      const formattedDate = new Date(label).toLocaleDateString() || label;
+      const formattedDate = label ? new Date(label).toLocaleDateString() : 'N/A';
       return (
         <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg">
           <p className="text-white font-medium mb-2">{formattedDate}</p>

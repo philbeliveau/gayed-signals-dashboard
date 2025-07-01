@@ -139,8 +139,12 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
         circuitBreakerState: riskHealthStatus.circuitBreakerState
       },
       security: {
-        rateLimiting: securityStats?.rateLimiting || {},
-        events: securityStats?.events || [],
+        rateLimiting: securityStats?.rateLimiting || {
+          totalIPs: 0,
+          suspiciousIPs: 0,
+          totalRequests: 0
+        },
+        events: securityStats?.events || { total: 0, recent: [] },
         suspiciousIPs: securityStats?.suspiciousIPs || []
       },
       dataSources: combinedDataSources,

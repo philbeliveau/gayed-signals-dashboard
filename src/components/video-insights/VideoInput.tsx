@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { VideoInputProps, VideoSummaryRequest, Folder } from '../../lib/types/video-insights';
+import { VideoInputProps, VideoSummaryRequest, Folder } from '../../../lib/types/video-insights';
 import { 
   Youtube, 
   Send, 

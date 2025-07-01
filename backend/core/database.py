@@ -206,8 +206,9 @@ async def create_performance_indexes():
 
 async def set_user_context(session: AsyncSession, user_id: str):
     """Set user context for Row Level Security."""
+    from sqlalchemy import text
     await session.execute(
-        f"SELECT set_config('app.current_user_id', '{user_id}', false)"
+        text(f"SELECT set_config('app.current_user_id', '{user_id}', false)")
     )
 
 

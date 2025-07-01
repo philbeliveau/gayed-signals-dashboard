@@ -6,8 +6,8 @@ import { Activity, Info } from 'lucide-react';
 
 interface ChartData {
   date: string;
-  [key: string]: string | number; // Dynamic ETF prices
   signals?: Record<string, string>; // Strategy signals by date
+  [key: string]: string | number | Record<string, string> | undefined; // Dynamic ETF prices and other properties
 }
 
 interface BacktestData {
@@ -344,7 +344,7 @@ export default function UniversalStrategyChart({ config }: Props) {
 
   // Generate historical signal timeline from real signals data
   const generateSignalTimeline = (signalsData: any) => {
-    const timeline = [];
+    const timeline: any[] = [];
     
     // If we have current signals, generate historical signal changes
     if (signalsData && signalsData.signals && signalsData.signals.length > 0) {
@@ -397,7 +397,7 @@ export default function UniversalStrategyChart({ config }: Props) {
 
   // Generate trading history based on signal changes
   const generateTradingHistory = (chartData: ChartData[], signalTimeline: any[]) => {
-    const trades = [];
+    const trades: any[] = [];
     const lastSignals: Record<string, string> = {};
     
     // Sort signal timeline by date to ensure chronological processing
@@ -422,7 +422,7 @@ export default function UniversalStrategyChart({ config }: Props) {
         if (priceData) {
           // Determine which ETFs to trade based on signal type (not just strategy)
           const etfsToTrade = config.symbols.filter(symbol => {
-            const riskType = ETF_RISK_CLASSIFICATION[symbol];
+            const riskType = (ETF_RISK_CLASSIFICATION as any)[symbol];
             
             // Trade ETFs that match the current signal
             if (signal === 'Risk-On') {
@@ -575,7 +575,7 @@ export default function UniversalStrategyChart({ config }: Props) {
           {/* Show ETF prices with Risk-On/Risk-Off classification */}
           <div className="space-y-1 mb-2">
             {config.symbols.map(symbol => {
-              const riskType = ETF_RISK_CLASSIFICATION[symbol];
+              const riskType = (ETF_RISK_CLASSIFICATION as any)[symbol];
               const price = data[symbol];
               const shouldBeBought = currentSignalState && 
                 ((currentSignalState.signal === 'Risk-On' && riskType === 'Risk-On') ||
@@ -715,22 +715,22 @@ export default function UniversalStrategyChart({ config }: Props) {
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="flex items-center space-x-3 mb-2">
-              <h3 className="text-lg font-bold text-theme-text">{backtestData.strategy}</h3>
+              <h3 className="text-lg font-bold text-theme-text">{backtestData?.strategy}</h3>
               <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 Real Market Data
               </div>
             </div>
             <p className="text-theme-text-muted text-sm">
-              {backtestData.timeframe.start} to {backtestData.timeframe.end} • {backtestData.symbols.join(', ')}
+              {backtestData?.timeframe?.start} to {backtestData?.timeframe?.end} • {backtestData?.symbols?.join(', ')}
             </p>
             <p className="text-theme-text-light text-xs mt-1">
-              Signals: {backtestData.signals.join(', ')}
+              Signals: {backtestData?.signals?.join(', ')}
             </p>
           </div>
           <div className="text-right">
-            <div className={`text-2xl font-bold ${backtestData.performance.totalReturn >= 0 ? 'text-theme-success' : 'text-theme-danger'}`}>
-              {(backtestData.performance.totalReturn * 100).toFixed(2)}%
+            <div className={`text-2xl font-bold ${(backtestData?.performance?.totalReturn ?? 0) >= 0 ? 'text-theme-success' : 'text-theme-danger'}`}>
+              {((backtestData?.performance?.totalReturn ?? 0) * 100).toFixed(2)}%
             </div>
             <div className="text-theme-text-muted text-sm">Estimated Return</div>
           </div>
@@ -738,23 +738,23 @@ export default function UniversalStrategyChart({ config }: Props) {
         
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
           <div>
-            <div className="text-theme-text font-medium">{(backtestData.performance.annualizedReturn * 100).toFixed(2)}%</div>
+            <div className="text-theme-text font-medium">{((backtestData?.performance?.annualizedReturn ?? 0) * 100).toFixed(2)}%</div>
             <div className="text-theme-text-muted">Annual Return</div>
           </div>
           <div>
-            <div className="text-theme-text font-medium">{backtestData.performance.sharpeRatio.toFixed(2)}</div>
+            <div className="text-theme-text font-medium">{(backtestData?.performance?.sharpeRatio ?? 0).toFixed(2)}</div>
             <div className="text-theme-text-muted">Sharpe Ratio</div>
           </div>
           <div>
-            <div className="text-theme-danger font-medium">{(backtestData.performance.maxDrawdown * 100).toFixed(2)}%</div>
+            <div className="text-theme-danger font-medium">{((backtestData?.performance?.maxDrawdown ?? 0) * 100).toFixed(2)}%</div>
             <div className="text-theme-text-muted">Max Drawdown</div>
           </div>
           <div>
-            <div className="text-theme-text font-medium">{(backtestData.performance.winRate * 100).toFixed(1)}%</div>
+            <div className="text-theme-text font-medium">{((backtestData?.performance?.winRate ?? 0) * 100).toFixed(1)}%</div>
             <div className="text-theme-text-muted">Win Rate</div>
           </div>
           <div>
-            <div className="text-theme-text font-medium">{backtestData.performance.totalTrades}</div>
+            <div className="text-theme-text font-medium">{backtestData?.performance?.totalTrades ?? 0}</div>
             <div className="text-theme-text-muted">Total Trades</div>
           </div>
         </div>
@@ -819,16 +819,16 @@ export default function UniversalStrategyChart({ config }: Props) {
                 </div>
               </div>
               <div className="text-xs text-theme-text-muted">
-                Chart: {backtestData.chartData?.length || 0} points | 
-                Signals: {backtestData.signalTimeline?.length || 0} events | 
-                Trades: {backtestData.trades?.length || 0} trades
+                Chart: {backtestData?.chartData?.length || 0} points | 
+                Signals: {backtestData?.signalTimeline?.length || 0} events | 
+                Trades: {backtestData?.trades?.length || 0} trades
               </div>
             </div>
             
             <div className="chart-responsive-wrapper flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
               {/* Debug: Test with sample data if no real data */}
-              {(!backtestData.chartData || backtestData.chartData.length === 0) ? (
+              {(!backtestData?.chartData || backtestData?.chartData?.length === 0) ? (
                 <ComposedChart 
                   data={[
                     { date: '2024-01-01', SPY: 470, XLU: 75 },
@@ -848,7 +848,7 @@ export default function UniversalStrategyChart({ config }: Props) {
                   <Line type="monotone" dataKey="XLU" stroke="#F59E0B" strokeWidth={2} name="XLU (Test Data)" />
                 </ComposedChart>
               ) : (
-                <ComposedChart data={backtestData.chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                <ComposedChart data={backtestData?.chartData ?? []} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" className="chart-grid-color" />
                   <XAxis 
                     dataKey="date" 
@@ -864,18 +864,18 @@ export default function UniversalStrategyChart({ config }: Props) {
                   <Legend />
                 
                 {/* Simplified background zones for signal states */}
-                {backtestData.signalTimeline && backtestData.signalTimeline.length > 0 && (() => {
+                {backtestData?.signalTimeline && backtestData?.signalTimeline?.length > 0 && (() => {
                   const signalZones = [];
                   
                   // Debug: Check date formats
-                  const chartDataSample = backtestData.chartData.slice(0, 3).map(d => d.date);
-                  const signalDateSample = backtestData.signalTimeline.slice(0, 3).map(s => s.date);
+                  const chartDataSample = (backtestData?.chartData ?? []).slice(0, 3).map(d => d.date);
+                  const signalDateSample = (backtestData?.signalTimeline ?? []).slice(0, 3).map(s => s.date);
                   console.log(`🔍 DEBUGGING: Chart data dates:`, chartDataSample);
                   console.log(`🔍 DEBUGGING: Signal timeline dates:`, signalDateSample);
                   
-                  for (let i = 0; i < backtestData.signalTimeline.length - 1; i++) {
-                    const currentSignal = backtestData.signalTimeline[i];
-                    const nextSignal = backtestData.signalTimeline[i + 1];
+                  for (let i = 0; i < (backtestData?.signalTimeline?.length ?? 0) - 1; i++) {
+                    const currentSignal = backtestData?.signalTimeline?.[i];
+                    const nextSignal = backtestData?.signalTimeline?.[i + 1];
                     
                     // Ensure dates are in consistent format
                     const startDate = currentSignal.date.includes('T') 
@@ -894,8 +894,8 @@ export default function UniversalStrategyChart({ config }: Props) {
                   }
                   
                   // Add last zone
-                  const lastSignal = backtestData.signalTimeline[backtestData.signalTimeline.length - 1];
-                  const lastDate = backtestData.chartData[backtestData.chartData.length - 1]?.date;
+                  const lastSignal = backtestData?.signalTimeline?.[backtestData?.signalTimeline?.length - 1];
+                  const lastDate = backtestData?.chartData?.[backtestData?.chartData?.length - 1]?.date;
                   if (lastSignal && lastDate) {
                     const startDate = lastSignal.date.includes('T') 
                       ? lastSignal.date.split('T')[0] 
@@ -928,7 +928,7 @@ export default function UniversalStrategyChart({ config }: Props) {
                 
                 {/* Render ETF price lines with different styles for Risk-On vs Risk-Off */}
                 {config.symbols.map((symbol) => {
-                  const riskType = ETF_RISK_CLASSIFICATION[symbol];
+                  const riskType = (ETF_RISK_CLASSIFICATION as any)[symbol];
                   const isRiskOn = riskType === 'Risk-On';
                   
                   return (
@@ -946,7 +946,7 @@ export default function UniversalStrategyChart({ config }: Props) {
                 })}
                 
                 {/* Simplified Buy/Sell markers as reference lines */}
-                {backtestData.trades && backtestData.trades.slice(0, 10).map((trade, index) => {
+                {backtestData?.trades && (backtestData?.trades ?? []).slice(0, 10).map((trade, index) => {
                   // Ensure consistent date format
                   const tradeDate = trade.date.includes('T') 
                     ? trade.date.split('T')[0] 
@@ -975,7 +975,7 @@ export default function UniversalStrategyChart({ config }: Props) {
                 })}
                 
                 {/* Signal flip markers */}
-                {backtestData.signalTimeline.map((signal, index) => {
+                {(backtestData?.signalTimeline ?? []).map((signal, index) => {
                   // Ensure consistent date format
                   const signalDate = signal.date.includes('T') 
                     ? signal.date.split('T')[0] 
@@ -1015,7 +1015,7 @@ export default function UniversalStrategyChart({ config }: Props) {
         {activeTab === 'signals' && (
           <div className="h-full space-y-4 overflow-y-auto">
             <h4 className="text-lg font-semibold text-theme-text">Current Signal Status</h4>
-            {backtestData.signalTimeline.length === 0 ? (
+            {(backtestData?.signalTimeline?.length ?? 0) === 0 ? (
               <div className="text-center py-8">
                 <div className="text-theme-text-muted mb-4">
                   <Activity className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -1028,7 +1028,7 @@ export default function UniversalStrategyChart({ config }: Props) {
               </div>
             ) : (
               <div className="space-y-2">
-                {backtestData.signalTimeline.map((signal, index) => (
+                {(backtestData?.signalTimeline ?? []).map((signal, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-theme-card-secondary rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className={`px-2 py-1 rounded text-xs font-medium ${
@@ -1068,7 +1068,7 @@ export default function UniversalStrategyChart({ config }: Props) {
         {activeTab === 'performance' && (
           <div className="h-full space-y-4 overflow-y-auto">
             <h4 className="text-lg font-semibold text-theme-text">Trading History</h4>
-            {backtestData.trades.length === 0 ? (
+            {(backtestData?.trades?.length ?? 0) === 0 ? (
               <div className="text-center py-8">
                 <div className="text-theme-text-muted mb-4">
                   <Activity className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -1103,7 +1103,7 @@ export default function UniversalStrategyChart({ config }: Props) {
               </div>
             ) : (
               <div className="space-y-2">
-                {backtestData.trades.map((trade, index) => (
+                {(backtestData?.trades ?? []).map((trade, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-theme-card-secondary rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className={`px-2 py-1 rounded text-xs font-medium ${
@@ -1155,14 +1155,14 @@ export default function UniversalStrategyChart({ config }: Props) {
             </div>
             <div className="space-y-1">
               {config.symbols
-                .filter(symbol => ETF_RISK_CLASSIFICATION[symbol] === 'Risk-On')
+                .filter(symbol => (ETF_RISK_CLASSIFICATION as any)[symbol] === 'Risk-On')
                 .map(symbol => (
                   <div key={symbol} className="flex items-center justify-between text-sm">
                     <span className="font-medium text-green-700">{symbol}</span>
                     <span className="text-xs text-green-600">Solid line</span>
                   </div>
                 ))}
-              {config.symbols.filter(symbol => ETF_RISK_CLASSIFICATION[symbol] === 'Risk-On').length === 0 && (
+              {config.symbols.filter(symbol => (ETF_RISK_CLASSIFICATION as any)[symbol] === 'Risk-On').length === 0 && (
                 <p className="text-sm text-green-600 italic">No Risk-On ETFs selected</p>
               )}
             </div>
@@ -1179,14 +1179,14 @@ export default function UniversalStrategyChart({ config }: Props) {
             </div>
             <div className="space-y-1">
               {config.symbols
-                .filter(symbol => ETF_RISK_CLASSIFICATION[symbol] === 'Risk-Off')
+                .filter(symbol => (ETF_RISK_CLASSIFICATION as any)[symbol] === 'Risk-Off')
                 .map(symbol => (
                   <div key={symbol} className="flex items-center justify-between text-sm">
                     <span className="font-medium text-red-700">{symbol}</span>
                     <span className="text-xs text-red-600">Dashed line</span>
                   </div>
                 ))}
-              {config.symbols.filter(symbol => ETF_RISK_CLASSIFICATION[symbol] === 'Risk-Off').length === 0 && (
+              {config.symbols.filter(symbol => (ETF_RISK_CLASSIFICATION as any)[symbol] === 'Risk-Off').length === 0 && (
                 <p className="text-sm text-red-600 italic">No Risk-Off ETFs selected</p>
               )}
             </div>

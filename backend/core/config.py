@@ -41,22 +41,8 @@ class Settings(BaseSettings):
     @property
     def REDIS_PASSWORD(self) -> Optional[str]:
         return urlparse(self.REDIS_URL).password
-    REDIS_HOST: str = Field(
-        default="localhost",
-        env="REDIS_HOST"
-    )
-    REDIS_PORT: int = Field(
-        default=6379,
-        env="REDIS_PORT"
-    )
-    REDIS_DB: int = Field(
-        default=0,
-        env="REDIS_DB"
-    )
-    REDIS_PASSWORD: Optional[str] = Field(
-        default=None,
-        env="REDIS_PASSWORD"
-    )
+    
+    # Redis settings now handled by @property methods above that parse REDIS_URL
     
     # Authentication settings
     SECRET_KEY: str = Field(
@@ -176,34 +162,8 @@ class Settings(BaseSettings):
         default=1800,  # 30 minutes
         env="CELERY_TASK_TIME_LIMIT"
     )
-    CELERY_TASK_SERIALIZER: str = Field(
-        default="json",
-        env="CELERY_TASK_SERIALIZER"
-    )
-    CELERY_ACCEPT_CONTENT: Union[List[str], str] = Field(
-        default=["json"],
-        env="CELERY_ACCEPT_CONTENT"
-    )
-    CELERY_RESULT_SERIALIZER: str = Field(
-        default="json",
-        env="CELERY_RESULT_SERIALIZER"
-    )
-    CELERY_TIMEZONE: str = Field(
-        default="UTC",
-        env="CELERY_TIMEZONE"
-    )
-    CELERY_ENABLE_UTC: bool = Field(
-        default=True,
-        env="CELERY_ENABLE_UTC"
-    )
-    MAX_WORKERS: int = Field(
-        default=4,
-        env="MAX_WORKERS"
-    )
-    WORKER_TIMEOUT: int = Field(
-        default=3600,  # 1 hour
-        env="WORKER_TIMEOUT"
-    )
+    
+    # Duplicate Celery configuration removed - using definitions above
     
     # Performance settings
     MAX_CONCURRENT_DOWNLOADS: int = Field(
@@ -215,13 +175,13 @@ class Settings(BaseSettings):
         env="MAX_CONCURRENT_TRANSCRIPTIONS"
     )
     
-    # Enhanced performance settings
+    # Worker performance settings (consolidated from duplicates)
     MAX_WORKERS: int = Field(
         default=4,
         env="MAX_WORKERS"
     )
     WORKER_TIMEOUT: int = Field(
-        default=1800,  # 30 minutes
+        default=1800,  # 30 minutes (reduced from 1 hour for better resource management)
         env="WORKER_TIMEOUT"
     )
     

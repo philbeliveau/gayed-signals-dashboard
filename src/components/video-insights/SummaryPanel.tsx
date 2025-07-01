@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { SummaryPanelProps, VideoSummaryRequest } from '../../lib/types/video-insights';
+import { SummaryPanelProps, VideoSummaryRequest } from '../../../lib/types/video-insights';
 import { 
   FileText, 
   RefreshCw, 
