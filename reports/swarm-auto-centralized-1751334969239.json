@@ -1,0 +1,13 @@
+{
+  "objective": "/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/task/issue.md",
+  "strategy": "auto",
+  "mode": "centralized",
+  "maxAgents": 5,
+  "timeout": 60,
+  "parallel": false,
+  "monitor": false,
+  "output": "json",
+  "outputDir": "./reports",
+  "timestamp": "2025-07-01T01:56:09.238Z",
+  "id": "swarm-auto-centralized-1751334969239"
+}

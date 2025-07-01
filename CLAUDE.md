@@ -376,6 +376,35 @@ This configuration ensures optimal use of Claude Code's batch tools for swarm or
 - Context-aware assistance
 - Real-time information retrieval
 
+### 8. **NIA MCP** - Codebase Context & Analysis
+**Purpose**: Advanced codebase analysis and context retrieval using AI
+**Installation**: ✅ Configured with npx
+**API Key**: Uses NIA_API_KEY from your .env file
+
+**Key Features**:
+- Intelligent codebase context retrieval
+- Semantic code search across entire project
+- AI-powered code analysis and understanding
+- Cross-file dependency mapping
+- Natural language code queries
+
+**Key Tools**:
+- `lookup_codebase_context(query)` - Retrieve relevant code snippets and context based on natural language queries
+
+**Usage Examples**:
+```
+"Find all authentication-related code in the project"
+"Show me how user data is validated across the codebase"
+"Locate error handling patterns in the API endpoints"
+"Find database schema definitions and related queries"
+```
+
+**Special Features**:
+- Works with any codebase that's been indexed in Nia
+- Provides contextual understanding beyond simple text search
+- Integrates with your existing development workflow
+- Supports complex multi-file analysis
+
 ## MCP Tool Selection & Planning Algorithm
 
 ### Phase 1: Task Analysis & Tool Selection
@@ -387,6 +416,7 @@ function selectMCPTools(task, context) {
   // Code-related tasks
   if (taskType.includes('code', 'development', 'refactor', 'debug')) {
     selectedTools.push('serena'); // Semantic code analysis
+    selectedTools.push('nia'); // Codebase context retrieval
     if (taskType.includes('web', 'frontend', 'ui')) {
       selectedTools.push('playwright'); // Web automation
       selectedTools.push('browser-tools'); // Browser debugging
@@ -418,8 +448,8 @@ function selectMCPTools(task, context) {
 function determineExecutionOrder(selectedTools, task) {
   const phases = {
     research: ['tavily', 'context7'],           // Information gathering first
-    analysis: ['serena', 'trader'],             // Code/financial analysis
-    implementation: ['serena', 'playwright'],   // Development work
+    analysis: ['serena', 'nia', 'trader'],      // Code/financial analysis
+    implementation: ['serena', 'nia', 'playwright'],   // Development work
     testing: ['playwright', 'browser-tools'],   // Testing and validation
     coordination: ['zen']                       // Multi-AI coordination
   };

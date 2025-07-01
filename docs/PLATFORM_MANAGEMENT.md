@@ -12,7 +12,7 @@ npm run start-platform
 ```
 This single command will:
 - ✅ Start Docker services (PostgreSQL, Redis, Video Insights API)
-- ✅ Start Python Economic Data API on port 8000
+- ✅ Start Python Economic Data API on port 5001
 - ✅ Start Next.js frontend on port 3000
 - ✅ Validate all services are healthy
 - ✅ Ensure correct port configuration
@@ -50,7 +50,7 @@ npm run restart-platform
 |---------|------|-----|--------------|
 | **Frontend** | 3000 | http://localhost:3000 | Main dashboard |
 | **Video Insights** | 8002 | http://localhost:8002 | Docker service |
-| **Economic Data** | 8000 | http://localhost:8000 | Python service |
+| **Economic Data** | 5001 | http://localhost:5001 | Python service |
 | **PostgreSQL** | 5433 | localhost:5433 | Database |
 | **Redis** | 6379 | localhost:6379 | Cache |
 
@@ -71,19 +71,14 @@ npm run restart-platform
 - Validates Docker containers are running
 
 ### Phase 4: Python Backend Services 🐍
-- Starts Economic Data API on port 8000
+- Starts Economic Data API on port 5001
 - Sets environment variables
-- Validates service health
+- Waits for service to be ready
 
 ### Phase 5: Frontend Service ⚛️
 - Starts Next.js on port 3000
 - Waits for frontend to be ready
-- Validates frontend health
-
-### Phase 6: Service Validation 🔍
-- Tests all service endpoints
-- Validates Video Insights authentication
-- Confirms platform is ready
+- Platform is immediately accessible
 
 ## 🔧 Troubleshooting
 
@@ -170,7 +165,7 @@ When `npm run start-platform` completes successfully, you'll see:
 🌐 Service URLs:
    Frontend:         http://localhost:3000
    Video Insights:   http://localhost:8002  
-   Economic Data:    http://localhost:8000
+   Economic Data:    http://localhost:5001
    PostgreSQL:       localhost:5433
    Redis:           localhost:6379
 
@@ -214,7 +209,7 @@ npm run health-check
 The platform will automatically validate you have:
 - ✅ Real API keys (not placeholders) in `.env.local`
 - ✅ Docker Desktop running
-- ✅ Required ports available (3000, 8000, 8002, 5433, 6379)
+- ✅ Required ports available (3000, 5001, 8002, 5433, 6379)
 - ✅ All project dependencies installed
 
 ## 🚀 Ready to Go!

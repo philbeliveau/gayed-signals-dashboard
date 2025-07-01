@@ -50,11 +50,10 @@ pkill -f "node.*3000" 2>/dev/null || echo -e "${YELLOW}⚠️  No Node.js on por
 # Kill all Python processes related to the project
 echo -e "${BLUE}🔄 Killing Python processes...${NC}"
 pkill -f "simple_service" 2>/dev/null || echo -e "${YELLOW}⚠️  No simple_service processes found${NC}"
-pkill -f "python.*8000" 2>/dev/null || echo -e "${YELLOW}⚠️  No Python on port 8000${NC}"
 pkill -f "python.*5001" 2>/dev/null || echo -e "${YELLOW}⚠️  No Python on port 5001${NC}"
 
 # Force kill processes on specific ports
-ports_to_clean=(3000 8000 8001 8002 5001)
+ports_to_clean=(3000 8002 5001)
 for port in "${ports_to_clean[@]}"; do
     if lsof -ti :$port >/dev/null 2>&1; then
         echo -e "${BLUE}🔄 Force killing process on port $port...${NC}"
@@ -93,7 +92,7 @@ echo -e "\n${BLUE}🔍 Phase 4: Verification${NC}"
 echo "-------------------------"
 
 # Verify all target ports are free
-ports_to_verify=(3000 8000 8002 5001 5433 6379)
+ports_to_verify=(3000 8002 5001 5433 6379)
 still_occupied=()
 
 for port in "${ports_to_verify[@]}"; do
@@ -127,7 +126,7 @@ echo "==============="
 
 # Count remaining processes
 remaining_node=$(pgrep -f "(next|npm)" 2>/dev/null | wc -l)
-remaining_python=$(pgrep -f "(simple_service|python.*8000)" 2>/dev/null | wc -l)
+remaining_python=$(pgrep -f "(simple_service|python.*5001)" 2>/dev/null | wc -l)
 remaining_docker=$(docker compose -f docker-compose.backend.yml ps --services --filter "status=running" 2>/dev/null | wc -l)
 
 total_remaining=$((remaining_node + remaining_python + remaining_docker))

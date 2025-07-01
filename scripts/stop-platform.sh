@@ -46,13 +46,9 @@ if [[ -f .pids/economic-api.pid ]] && [[ -n "$ECONOMIC_API_PID" ]]; then
     kill $ECONOMIC_API_PID 2>/dev/null || echo -e "${YELLOW}⚠️  Process already terminated${NC}"
     rm -f .pids/economic-api.pid
 else
-    echo -e "${BLUE}🔄 Stopping any Python services on port 8000...${NC}"
-    lsof -ti :8000 | xargs kill -9 2>/dev/null || echo -e "${YELLOW}⚠️  No process found on port 8000${NC}"
+    echo -e "${BLUE}🔄 Stopping Economic Data API on port 5001...${NC}"
+    lsof -ti :5001 | xargs kill -9 2>/dev/null || echo -e "${YELLOW}⚠️  No process found on port 5001${NC}"
 fi
-
-# Stop Analytics Service if running
-echo -e "${BLUE}🔄 Stopping Analytics Service on port 5001...${NC}"
-lsof -ti :5001 | xargs kill -9 2>/dev/null || echo -e "${YELLOW}⚠️  No process found on port 5001${NC}"
 
 echo -e "${GREEN}✅ Python services stopped${NC}"
 
