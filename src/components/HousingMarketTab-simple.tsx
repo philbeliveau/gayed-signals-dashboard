@@ -34,7 +34,15 @@ export default function HousingMarketTab() {
         throw new Error(result.error);
       }
       
-      setHousingData(result.housingData || []);
+      // Filter out empty data points that only have dates
+      const filteredHousingData = (result.housingData || []).filter(dataPoint => 
+        dataPoint.caseSillerIndex !== undefined || 
+        dataPoint.housingStarts !== undefined || 
+        dataPoint.monthsSupply !== undefined ||
+        dataPoint.newHomeSales !== undefined
+      );
+      
+      setHousingData(filteredHousingData);
       setCurrentMetrics(result.currentMetrics || null);
       setAlerts(result.alerts || []);
       setLastUpdated(new Date());

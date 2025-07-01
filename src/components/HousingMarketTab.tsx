@@ -224,9 +224,17 @@ export default function HousingMarketTab() {
         region: selectedRegion
       })) || [];
       
-      console.log('🏠 Processed', transformedData.length, 'housing data points for charts');
+      // Filter out empty data points that only have dates
+      const filteredData = transformedData.filter(dataPoint => 
+        dataPoint.caseSillerIndex !== undefined || 
+        dataPoint.housingStarts !== undefined || 
+        dataPoint.monthsSupply !== undefined ||
+        dataPoint.newHomeSales !== undefined
+      );
       
-      setHousingData(transformedData);
+      console.log('🏠 Processed', transformedData.length, 'housing data points, filtered to', filteredData.length, 'valid points');
+      
+      setHousingData(filteredData);
       setAlerts(transformedAlerts);
       setLastUpdated(new Date());
 
