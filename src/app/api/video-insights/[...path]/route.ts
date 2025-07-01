@@ -27,7 +27,7 @@ async function validateBackendService() {
       return true;
     }
   } catch (error) {
-    console.error(`❌ Backend service validation failed for ${FASTAPI_BASE_URL}:`, error.message);
+    console.error(`❌ Backend service validation failed for ${FASTAPI_BASE_URL}:`, error instanceof Error ? error.message : String(error));
     console.error(`💡 Check if FASTAPI_BASE_URL environment variable points to the correct service`);
   }
   return false;

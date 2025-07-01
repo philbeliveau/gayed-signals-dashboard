@@ -251,7 +251,36 @@ This configuration ensures optimal use of Claude Code's batch tools for swarm or
 
 ## Available MCP Servers
 
-### 1. **Trader MCP** - Financial Market Analysis
+### 1. **Omnisearch MCP** - Unified Search & AI Processing Hub
+**Purpose**: Multi-provider search, AI responses, and content processing
+**Installation**: ✅ Configured with Node.js
+**API Keys**: Uses multiple optional keys (TAVILY_API_KEY, PERPLEXITY_API_KEY, KAGI_API_KEY, JINA_AI_API_KEY, BRAVE_API_KEY, FIRECRAWL_API_KEY)
+
+**Key Features**:
+- Multiple search engines (Brave, Kagi, Tavily)
+- AI response generation (Perplexity AI, Kagi FastGPT)
+- Content processing (Jina AI Reader, Kagi Summarizer, Firecrawl)
+- Unified interface for diverse search and content needs
+
+**Key Tools**:
+- `brave_search(query)` - Privacy-focused search results
+- `kagi_search(query)` - Premium ad-free search
+- `tavily_search(query)` - Factual search with citations
+- `perplexity_ai(query)` - AI-generated responses with web search
+- `kagi_fastgpt(query)` - Quick AI answers with citations
+- `jina_reader(url)` - Clean content extraction
+- `kagi_summarizer(url)` - URL content summarization
+- `firecrawl(url)` - Advanced web scraping and crawling
+
+**Usage Examples**:
+```
+"Search for React performance optimization across multiple engines"
+"Get AI-generated summary of this technical article"
+"Extract clean content from multiple web pages"
+"Compare search results from Brave, Kagi, and Tavily"
+```
+
+### 2. **Trader MCP** - Financial Market Analysis
 **Purpose**: Technical analysis and trading tools for stocks and crypto
 **Installation**: ✅ Configured with uvx
 **API Key**: Uses TIINGO_API_KEY from your .env file
@@ -272,7 +301,7 @@ This configuration ensures optimal use of Claude Code's batch tools for swarm or
 "Suggest position size for TSLA with $500 risk and $10,000 account"
 ```
 
-### 2. **Serena MCP** - Semantic Code Analysis & Editing
+### 3. **Serena MCP** - Semantic Code Analysis & Editing
 **Purpose**: Advanced coding agent toolkit with semantic retrieval
 **Installation**: ✅ Configured with uvx from GitHub
 **API Key**: None required
@@ -291,7 +320,7 @@ This configuration ensures optimal use of Claude Code's batch tools for swarm or
 "Refactor the payment processing module for better error handling"
 ```
 
-### 3. **Playwright MCP** - Web Automation
+### 4. **Playwright MCP** - Web Automation
 **Purpose**: Browser automation and web testing
 **Installation**: ✅ Configured with npx
 **API Key**: None required
@@ -311,7 +340,7 @@ This configuration ensures optimal use of Claude Code's batch tools for swarm or
 "Monitor network requests during checkout process"
 ```
 
-### 4. **Tavily MCP** - AI-Powered Web Search
+### 5. **Tavily MCP** - AI-Powered Web Search
 **Purpose**: Advanced web search with AI content extraction
 **Installation**: ✅ Configured (requires API key)
 **API Key**: TAVILY_API_KEY (get from https://tavily.com)
@@ -329,7 +358,7 @@ This configuration ensures optimal use of Claude Code's batch tools for swarm or
 "Research competitor pricing strategies"
 ```
 
-### 5. **Zen MCP** - Multi-AI Orchestration
+### 6. **Zen MCP** - Multi-AI Orchestration
 **Purpose**: Coordinate multiple AI models and workflows
 **Installation**: ✅ Configured (requires API keys)
 **API Keys**: OPENAI_API_KEY (configured), OPENROUTER_API_KEY (needed)
@@ -347,7 +376,7 @@ This configuration ensures optimal use of Claude Code's batch tools for swarm or
 "Implement a feature with AI team collaboration"
 ```
 
-### 6. **Browser-Tools MCP** - Advanced Browser Integration
+### 7. **Browser-Tools MCP** - Advanced Browser Integration
 **Purpose**: Deep browser integration with debugging tools
 **Installation**: ✅ Configured (requires Chrome extension)
 **API Key**: None required
@@ -366,7 +395,7 @@ This configuration ensures optimal use of Claude Code's batch tools for swarm or
 "Analyze network performance bottlenecks"
 ```
 
-### 7. **Context7 MCP** - External Context Integration
+### 8. **Context7 MCP** - External Context Integration
 **Purpose**: External context and data integration
 **Installation**: ✅ HTTP-based integration
 **API Key**: None required
@@ -376,7 +405,7 @@ This configuration ensures optimal use of Claude Code's batch tools for swarm or
 - Context-aware assistance
 - Real-time information retrieval
 
-### 8. **NIA MCP** - Codebase Context & Analysis
+### 9. **NIA MCP** - Codebase Context & Analysis
 **Purpose**: Advanced codebase analysis and context retrieval using AI
 **Installation**: ✅ Configured with npx
 **API Key**: Uses NIA_API_KEY from your .env file
