@@ -19,6 +19,7 @@ interface ProcessingResult {
 export default function SimpleYouTubePage() {
   const { theme } = useTheme();
   const [url, setUrl] = useState('');
+  const [context, setContext] = useState('');
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<ProcessingResult | null>(null);
 
@@ -41,7 +42,8 @@ export default function SimpleYouTubePage() {
         },
         body: JSON.stringify({
           youtube_url: url,
-          summary_mode: 'bullet'
+          summary_mode: 'bullet',
+          custom_context: context.trim() || undefined
         }),
       });
 
@@ -155,36 +157,57 @@ export default function SimpleYouTubePage() {
               <label htmlFor="url" className="block text-sm font-medium mb-2">
                 YouTube URL
               </label>
-              <div className="flex space-x-4">
-                <input
-                  id="url"
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  className="flex-1 px-4 py-2 bg-theme-bg border border-theme-border rounded-lg 
-                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-theme-text"
-                  disabled={processing}
-                />
-                <button
-                  type="submit"
-                  disabled={processing || !url.trim()}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 
-                           text-white rounded-lg transition-colors flex items-center space-x-2"
-                >
-                  {processing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4" />
-                      <span>Process Video</span>
-                    </>
-                  )}
-                </button>
-              </div>
+              <input
+                id="url"
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="w-full px-4 py-2 bg-theme-bg border border-theme-border rounded-lg 
+                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-theme-text"
+                disabled={processing}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="context" className="block text-sm font-medium mb-2">
+                Custom Context (Optional)
+              </label>
+              <textarea
+                id="context"
+                value={context}
+                onChange={(e) => setContext(e.target.value)}
+                placeholder="Provide specific instructions or context for the AI summary... 
+For example: 'Focus on investment strategies mentioned' or 'Summarize the key financial metrics discussed' or 'Extract actionable trading tips'"
+                rows={3}
+                className="w-full px-4 py-2 bg-theme-bg border border-theme-border rounded-lg 
+                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-theme-text resize-none"
+                disabled={processing}
+              />
+              <p className="text-xs text-theme-text-muted mt-1">
+                Leave empty for general summary, or provide specific instructions to guide the AI's focus
+              </p>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={processing || !url.trim()}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 
+                         text-white rounded-lg transition-colors flex items-center space-x-2"
+              >
+                {processing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    <span>Process Video</span>
+                  </>
+                )}
+              </button>
             </div>
           </form>
         </div>
@@ -293,9 +316,14 @@ export default function SimpleYouTubePage() {
             <h2 className="text-lg font-semibold mb-4">Quick Start</h2>
             <div className="space-y-2 text-theme-text-muted">
               <p>• Paste any YouTube URL above</p>
+              <p>• Optionally add custom context to guide the AI summary focus</p>
               <p>• Processing typically takes 30-60 seconds</p>
               <p>• Get complete transcript and AI-generated summary</p>
-              <div className="mt-4 text-sm text-green-600 bg-green-50 p-3 rounded border">
+              <div className="mt-4 text-sm text-blue-600 bg-blue-50 p-3 rounded border">
+                💡 <strong>Custom Context Examples:</strong><br/>
+                "Focus on trading strategies" • "Extract key financial metrics" • "Summarize investment advice"
+              </div>
+              <div className="mt-2 text-sm text-green-600 bg-green-50 p-3 rounded border">
                 ✅ Simple, reliable processing - no complex polling or status updates needed
               </div>
             </div>
