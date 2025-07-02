@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Housing Data Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .data-source { 
+            background: #e7f3ff; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 20px 0;
+            border-left: 4px solid #007acc;
+        }
+        .success { 
+            background: #e7ffe7; 
+            border-left-color: #28a745;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .data-table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin: 20px 0;
+        }
+        .data-table th, .data-table td { 
+            border: 1px solid #ddd; 
+            padding: 8px; 
+            text-align: left;
+        }
+        .data-table th { 
+            background-color: #f2f2f2; 
+        }
+        .loading { 
+            color: #666; 
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Housing Data Verification Test</h1>
+    
+    <div id="loading" class="loading">Loading housing data...</div>
+    
+    <div id="dataSource" class="data-source" style="display: none;">
+        <strong>Data Source:</strong> <span id="sourceValue">--</span>
+    </div>
+    
+    <div id="results" style="display: none;">
+        <h2>Current Housing Metrics</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>Expected (Real FRED)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Case-Shiller Index</td>
+                    <td id="caseSiller">--</td>
+                    <td>~325.7</td>
+                    <td id="caseShillerStatus">--</td>
+                </tr>
+                <tr>
+                    <td>Housing Starts</td>
+                    <td id="housingStarts">--</td>
+                    <td>~1265</td>
+                    <td id="housingStartsStatus">--</td>
+                </tr>
+                <tr>
+                    <td>Months Supply</td>
+                    <td id="monthsSupply">--</td>
+                    <td>~7.9</td>
+                    <td id="monthsSupplyStatus">--</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h2>Data Points Summary</h2>
+        <p><strong>Total Data Points:</strong> <span id="totalPoints">--</span></p>
+        <p><strong>Valid Data Points:</strong> <span id="validPoints">--</span></p>
+        <p><strong>Data Quality:</strong> <span id="dataQuality">--</span></p>
+    </div>
+    
+    <div id="error" class="data-source warning" style="display: none;">
+        <strong>Error:</strong> <span id="errorMessage">--</span>
+    </div>
+
+    <script>
+        async function verifyHousingData() {
+            try {
+                console.log('🏠 Fetching housing data...');
+                const response = await fetch('/api/housing?region=national&period=12m&fast=false');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('🏠 Housing data received:', data);
+                
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+                
+                // Show data source
+                const dataSourceDiv = document.getElementById('dataSource');
+                const sourceValue = document.getElementById('sourceValue');
+                dataSourceDiv.style.display = 'block';
+                sourceValue.textContent = data.metadata?.dataSource || 'unknown';
+                
+                // Set data source styling
+                if (data.metadata?.dataSource === 'fred_api') {
+                    dataSourceDiv.className = 'data-source success';
+                } else {
+                    dataSourceDiv.className = 'data-source warning';
+                }
+                
+                // Get latest data point with values
+                const validDataPoints = data.housingData?.filter(point => 
+                    point.caseSillerIndex !== undefined || 
+                    point.housingStarts !== undefined || 
+                    point.monthsSupply !== undefined
+                ) || [];
+                
+                const latestData = validDataPoints[validDataPoints.length - 1] || {};
+                
+                // Update metrics
+                document.getElementById('caseSiller').textContent = latestData.caseSillerIndex || 'N/A';
+                document.getElementById('housingStarts').textContent = latestData.housingStarts || 'N/A';
+                document.getElementById('monthsSupply').textContent = latestData.monthsSupply || 'N/A';
+                
+                // Check status
+                function checkStatus(actual, expected, tolerance = 50) {
+                    if (!actual) return '❌ No Data';
+                    const diff = Math.abs(actual - expected);
+                    return diff <= tolerance ? '✅ Real Data' : '⚠️ Check Values';
+                }
+                
+                document.getElementById('caseShillerStatus').textContent = 
+                    checkStatus(latestData.caseSillerIndex, 325.7, 10);
+                document.getElementById('housingStartsStatus').textContent = 
+                    checkStatus(latestData.housingStarts, 1265, 200);
+                document.getElementById('monthsSupplyStatus').textContent = 
+                    checkStatus(latestData.monthsSupply, 7.9, 2);
+                
+                // Data summary
+                document.getElementById('totalPoints').textContent = data.housingData?.length || 0;
+                document.getElementById('validPoints').textContent = validDataPoints.length;
+                
+                const qualityRatio = validDataPoints.length / (data.housingData?.length || 1);
+                let qualityText = '❌ Poor';
+                if (qualityRatio > 0.5) qualityText = '⚠️ Fair';
+                if (qualityRatio > 0.8) qualityText = '✅ Good';
+                document.getElementById('dataQuality').textContent = qualityText;
+                
+                // Show results
+                document.getElementById('results').style.display = 'block';
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message;
+            }
+        }
+        
+        // Run verification on page load
+        verifyHousingData();
+    </script>
+</body>
+</html>

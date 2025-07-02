@@ -101,9 +101,9 @@ export async function GET(request: NextRequest) {
     try {
       console.log('🏠 Attempting to call Python FRED service for housing market data...');
       
-      // Check if Python backend is available first
-      const backendUrl = process.env.PYTHON_BACKEND_URL || 'http://localhost:8000';
-      const fredResponse = await fetch(`${backendUrl}/api/v1/economic/housing/summary?region=${region}&period=${period}&fast=${fastMode}`, {
+      // Check if FastAPI backend with real FRED data is available first
+      const backendUrl = process.env.FASTAPI_BASE_URL || 'http://localhost:8000';
+      const fredResponse = await fetch(`${backendUrl}/api/v1/economic/housing-market?region=${region}&period=${period}&fast=${fastMode}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -139,10 +139,14 @@ export async function GET(request: NextRequest) {
     }
     
     // Process the data through the housing processor
-    // Handle different data structures from FRED service vs mock data
+    // Handle different data structures from FastAPI backend vs fallback mock data
     let timeSeriesData;
-    if (housingMarketData.time_series) {
-      // Data from FRED service has time_series property
+    if (housingMarketData.housingData && Array.isArray(housingMarketData.housingData)) {
+      // FastAPI backend returns housingData array directly
+      timeSeriesData = housingMarketData.housingData;
+      console.log('✅ Using FastAPI housing data:', timeSeriesData.length, 'data points');
+    } else if (housingMarketData.time_series) {
+      // Alternative data from FRED service has time_series property
       timeSeriesData = housingMarketData.time_series;
     } else if (housingMarketData.timeSeries && typeof housingMarketData.timeSeries === 'object' && housingMarketData.timeSeries.CSUSHPINSA) {
       // Flask service returns nested structure: timeSeries.INDICATOR.data[]
