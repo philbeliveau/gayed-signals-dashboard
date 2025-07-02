@@ -11,7 +11,7 @@ from pathlib import Path
 import tempfile
 import logging
 from datetime import datetime
-import openai
+from openai import OpenAI
 from pydantic import BaseModel
 
 from core.config import settings
@@ -44,7 +44,7 @@ class TranscriptionService:
         if not settings.OPENAI_API_KEY:
             logger.warning("OpenAI API key not configured - transcription will fail")
         
-        openai.api_key = settings.OPENAI_API_KEY
+        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
         self.chunk_size_mb = settings.AUDIO_CHUNK_SIZE_MB
         self.temp_dir = Path(settings.TEMP_DIR)
         self.temp_dir.mkdir(exist_ok=True)
@@ -264,12 +264,13 @@ class TranscriptionService:
             for attempt in range(max_retries):
                 try:
                     response = await asyncio.to_thread(
-                        openai.Audio.transcribe,
+                        self.client.audio.transcriptions.create,
                         model="whisper-1",
                         file=audio_file,
                         response_format="json"
                     )
-                    return response
+                    # Convert response to dict for compatibility
+                    return response.model_dump()
                     
                 except Exception as e:
                     if attempt == max_retries - 1:

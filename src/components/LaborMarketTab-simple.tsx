@@ -382,9 +382,16 @@ export default function LaborMarketTab() {
             <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
             <span className="text-sm text-gray-600">Unemployment Rate</span>
           </div>
-          <div className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold border border-red-300">
-            ⚠️ DEMO DATA - NOT REAL
-          </div>
+          {metadata?.dataSource === 'mock_fallback' && (
+            <div className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold border border-red-300">
+              ⚠️ DEMO DATA - NOT REAL
+            </div>
+          )}
+          {(metadata?.dataSource === 'fred_api' || metadata?.dataSource === 'fred_bls_api') && (
+            <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold border border-green-300">
+              ✅ REAL {metadata?.dataSource === 'fred_bls_api' ? 'FRED+BLS DATA' : 'FRED DATA'}
+            </div>
+          )}
         </div>
 
         {!laborData || !Array.isArray(laborData) || laborData.length === 0 ? (
@@ -535,18 +542,49 @@ export default function LaborMarketTab() {
       </div>
 
       {/* Data Attribution - DEMO WARNING */}
-      <div className="bg-red-50 border border-red-300 rounded-lg p-4">
-        <div className="flex items-center gap-2 text-sm text-red-700 font-semibold mb-2">
-          <AlertTriangle className="w-4 h-4" />
-          <span>DEMO DATA DISCLAIMER</span>
+      {metadata?.dataSource === 'mock_fallback' && (
+        <div className="bg-red-50 border border-red-300 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-sm text-red-700 font-semibold mb-2">
+            <AlertTriangle className="w-4 h-4" />
+            <span>DEMO DATA DISCLAIMER</span>
+          </div>
+          <div className="text-xs text-red-600 space-y-1">
+            <div>• This is SIMULATED data for demonstration purposes only</div>
+            <div>• Data is generated using algorithms and random values - NOT from real sources</div>
+            <div>• Real implementation would use: DOL API, BLS API for authentic labor statistics</div>
+            <div>• Reason: {metadata?.fallbackReason || 'Backend service unavailable'}</div>
+            <div>• Last generated: {lastUpdated ? lastUpdated.toLocaleString() : 'Unknown'}</div>
+          </div>
         </div>
-        <div className="text-xs text-red-600 space-y-1">
-          <div>• This is SIMULATED data for demonstration purposes only</div>
-          <div>• Data is generated using algorithms and random values - NOT from real sources</div>
-          <div>• Real implementation would use: DOL API, BLS API for authentic labor statistics</div>
-          <div>• Last generated: {lastUpdated ? lastUpdated.toLocaleString() : 'Unknown'}</div>
+      )}
+      
+      {/* Real Data Attribution */}
+      {(metadata?.dataSource === 'fred_api' || metadata?.dataSource === 'fred_bls_api') && (
+        <div className="bg-green-50 border border-green-300 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-sm text-green-700 font-semibold mb-2">
+            <span className="text-green-600">✅</span>
+            <span>REAL ECONOMIC DATA</span>
+          </div>
+          <div className="text-xs text-green-600 space-y-1">
+            {metadata?.dataSource === 'fred_bls_api' ? (
+              <>
+                <div>• Enhanced data from Federal Reserve Economic Data (FRED) + Bureau of Labor Statistics (BLS)</div>
+                <div>• Weekly unemployment claims from Department of Labor (DOL)</div>
+                <div>• Monthly employment statistics from Bureau of Labor Statistics (BLS)</div>
+                <div>• JOLTS data (job openings, hires, quits) from BLS</div>
+                <div>• Real-time integration of multiple government data sources</div>
+              </>
+            ) : (
+              <>
+                <div>• Data sourced from Federal Reserve Economic Data (FRED) API</div>
+                <div>• Official labor market statistics from Department of Labor (DOL)</div>
+                <div>• Employment data from Bureau of Labor Statistics (BLS)</div>
+              </>
+            )}
+            <div>• Last updated: {lastUpdated ? lastUpdated.toLocaleString() : 'Unknown'}</div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

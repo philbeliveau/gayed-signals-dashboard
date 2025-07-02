@@ -17,6 +17,7 @@ from core.database import get_db
 from core.security import get_current_user_optional
 from models.database import User
 from services.fred_service import fred_service
+from services.bls_service import bls_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -222,18 +223,38 @@ async def get_labor_market_summary(
                     end_date = datetime.utcnow()
                     start_date = end_date - timedelta(days=days)
                     
-                    # Fetch labor market data from FRED
+                    # Fetch labor market data from both FRED and BLS
                     fred_labor_data = await fred.fetch_labor_market_data(
                         start_date=start_date.strftime('%Y-%m-%d'),
                         end_date=end_date.strftime('%Y-%m-%d'),
                         limit=50 if fast_mode else None
                     )
                     
-                    if fred_labor_data:
-                        logger.info("Successfully retrieved labor data from FRED")
-                        labor_data = convert_fred_to_mock_format(fred_labor_data, "labor")
+                    # Fetch BLS employment data for additional metrics
+                    async with bls_service as bls:
+                        if bls.is_enabled:
+                            logger.info("Fetching additional employment data from BLS...")
+                            bls_employment_data = await bls.fetch_employment_data(
+                                start_year=start_date.year,
+                                end_year=end_date.year,
+                                include_industry_detail=not fast_mode
+                            )
+                            
+                            # Fetch JOLTS data for job openings, hires, quits
+                            bls_jolts_data = await bls.fetch_jolts_data(
+                                start_year=start_date.year,
+                                end_year=end_date.year
+                            )
+                        else:
+                            logger.warning("BLS service not available")
+                            bls_employment_data = {}
+                            bls_jolts_data = {}
+                    
+                    if fred_labor_data or bls_employment_data:
+                        logger.info("Successfully retrieved labor data from FRED and BLS")
+                        labor_data = convert_fred_bls_to_format(fred_labor_data, bls_employment_data, bls_jolts_data, "labor")
                     else:
-                        raise Exception("No data returned from FRED")
+                        raise Exception("No data returned from FRED or BLS")
                 else:
                     raise Exception("FRED service not enabled")
         except Exception as e:
@@ -253,8 +274,10 @@ async def get_labor_market_summary(
                 "user_id": "anonymous",
                 "period": period,
                 "fast_mode": fast_mode,
-                "data_source": "fred_api",
-                "indicators_count": 3 if fast_mode else 8
+                "data_source": "fred_bls_api",
+                "indicators_count": 3 if fast_mode else 8,
+                "data_sources_used": labor_data.get("data_sources", {}),
+                "enhanced_with_bls": True
             }
         )
         
@@ -1401,3 +1424,217 @@ def calculate_correlation_matrix(
                 correlation_matrix[indicator1.value][indicator2.value] = round(correlation, 3)
     
     return correlation_matrix
+
+def convert_fred_bls_to_format(
+    fred_data: Dict[str, List], 
+    bls_employment_data: Dict[str, Any], 
+    bls_jolts_data: Dict[str, Any], 
+    data_type: str
+) -> Dict[str, Any]:
+    """
+    Convert combined FRED and BLS API data format to the expected mock data format.
+    This provides enhanced labor market data with both FRED and BLS sources.
+    """
+    time_series = []
+    
+    if data_type == "labor":
+        # Get all unique dates from FRED data
+        all_dates = set()
+        if fred_data:
+            for series_data in fred_data.values():
+                for data_point in series_data:
+                    all_dates.add(data_point.date)
+        
+        # Add BLS data dates (convert BLS date format)
+        bls_dates = set()
+        if bls_employment_data:
+            for series_name, bls_series in bls_employment_data.items():
+                if hasattr(bls_series, 'data'):
+                    for data_point in bls_series.data:
+                        # Convert BLS year-period to date
+                        year = int(data_point.year)
+                        period = data_point.period
+                        if period.startswith('M'):
+                            month = int(period[1:])
+                            date_str = f"{year}-{month:02d}-01"
+                        elif period == 'A01':
+                            date_str = f"{year}-01-01"
+                        else:
+                            date_str = f"{year}-01-01"
+                        bls_dates.add(date_str)
+        
+        all_dates.update(bls_dates)
+        
+        # Create comprehensive time series
+        for date_str in sorted(all_dates):
+            data_point = {"date": date_str}
+            
+            # FRED data mapping (weekly data like initial claims, continued claims)
+            if fred_data:
+                fred_mapping = {
+                    "INITIAL_CLAIMS": "initialClaims",
+                    "CONTINUED_CLAIMS": "continuedClaims", 
+                    "UNEMPLOYMENT_RATE": "unemploymentRate",
+                    "NONFARM_PAYROLLS": "nonfarmPayrolls",
+                    "LABOR_PARTICIPATION": "laborParticipation",
+                    "JOB_OPENINGS": "jobOpenings"
+                }
+                
+                for fred_series, mock_field in fred_mapping.items():
+                    if fred_series in fred_data:
+                        date_points = [dp for dp in fred_data[fred_series] if dp.date == date_str]
+                        if date_points and date_points[0].value is not None:
+                            value = date_points[0].value
+                            if mock_field in ["initialClaims", "continuedClaims", "nonfarmPayrolls", "jobOpenings"]:
+                                data_point[mock_field] = int(value)
+                            else:
+                                data_point[mock_field] = round(value, 1)
+            
+            # BLS data enhancement (monthly data with more detail)
+            if bls_employment_data:
+                # Extract year and month from date_str for BLS matching
+                year_str = date_str[:4]
+                month_str = date_str[5:7]
+                target_period = f"M{month_str}"
+                
+                # Map BLS employment data
+                bls_employment_mapping = {
+                    "UNEMPLOYMENT_RATE": "unemploymentRate",
+                    "EMPLOYMENT_LEVEL": "employmentLevel",
+                    "LABOR_FORCE": "laborForce",
+                    "PARTICIPATION_RATE": "laborParticipation",
+                    "EMPLOYMENT_POP_RATIO": "employmentPopulationRatio",
+                    "NONFARM_PAYROLLS": "nonfarmPayrolls",
+                    "AVERAGE_HOURLY_EARNINGS": "averageHourlyEarnings",
+                    "AVERAGE_WEEKLY_HOURS": "averageWeeklyHours"
+                }
+                
+                for bls_series_name, mock_field in bls_employment_mapping.items():
+                    if bls_series_name in bls_employment_data:
+                        bls_series = bls_employment_data[bls_series_name]
+                        if hasattr(bls_series, 'data'):
+                            matching_data = [
+                                dp for dp in bls_series.data 
+                                if dp.year == year_str and dp.period == target_period
+                            ]
+                            if matching_data and matching_data[0].value is not None:
+                                value = matching_data[0].value
+                                if isinstance(value, str):
+                                    try:
+                                        value = float(value)
+                                    except ValueError:
+                                        continue
+                                
+                                # Override FRED data with more accurate BLS data for certain fields
+                                if mock_field in ["unemploymentRate", "laborParticipation", "nonfarmPayrolls"]:
+                                    if mock_field == "nonfarmPayrolls":
+                                        data_point[mock_field] = int(value * 1000)  # BLS reports in thousands
+                                    else:
+                                        data_point[mock_field] = round(value, 1)
+                                else:
+                                    # Add new BLS-specific fields
+                                    data_point[mock_field] = round(value, 1) if mock_field not in ["employmentLevel", "laborForce"] else int(value * 1000)
+            
+            # JOLTS data enhancement (quarterly data)
+            if bls_jolts_data:
+                # Map JOLTS data - this is typically quarterly so we'll interpolate for monthly
+                jolts_mapping = {
+                    "JOB_OPENINGS_TOTAL": "jobOpenings",
+                    "HIRES_TOTAL": "hiresTotal",
+                    "QUITS_TOTAL": "quitsTotal",
+                    "LAYOFFS_TOTAL": "layoffsTotal"
+                }
+                
+                for jolts_series_name, mock_field in jolts_mapping.items():
+                    if jolts_series_name in bls_jolts_data:
+                        jolts_series = bls_jolts_data[jolts_series_name]
+                        if hasattr(jolts_series, 'data'):
+                            # Find the most recent quarterly data for this year
+                            matching_data = [
+                                dp for dp in jolts_series.data 
+                                if dp.year == year_str
+                            ]
+                            if matching_data:
+                                # Use the most recent quarterly data
+                                latest_data = max(matching_data, key=lambda x: x.period)
+                                if latest_data.value is not None:
+                                    value = latest_data.value
+                                    if isinstance(value, str):
+                                        try:
+                                            value = float(value)
+                                        except ValueError:
+                                            continue
+                                    
+                                    if mock_field == "jobOpenings":
+                                        # Override FRED job openings with BLS JOLTS data if available
+                                        data_point[mock_field] = int(value * 1000)  # BLS reports in thousands
+                                    else:
+                                        # Add JOLTS-specific metrics
+                                        data_point[mock_field] = int(value * 1000)
+            
+            # Calculate derived fields if we have the base data
+            if len(time_series) > 0 and "initialClaims" in data_point:
+                prev_data = time_series[-1]
+                if "initialClaims" in prev_data and prev_data["initialClaims"] > 0:
+                    data_point["weeklyChangeInitial"] = round(((data_point["initialClaims"] / prev_data["initialClaims"]) - 1) * 100, 1)
+                if "continuedClaims" in data_point and "continuedClaims" in prev_data and prev_data["continuedClaims"] > 0:
+                    data_point["weeklyChangeContinued"] = round(((data_point["continuedClaims"] / prev_data["continuedClaims"]) - 1) * 100, 1)
+            
+            # Calculate 4-week average
+            if len(time_series) >= 3 and "initialClaims" in data_point:
+                recent_claims = [data_point["initialClaims"]] + [ts.get("initialClaims", 0) for ts in time_series[-3:] if ts.get("initialClaims", 0) > 0]
+                if recent_claims:
+                    data_point["claims4Week"] = int(sum(recent_claims) / len(recent_claims))
+                else:
+                    data_point["claims4Week"] = data_point["initialClaims"]
+            
+            # Set defaults for missing fields
+            data_point.setdefault("initialClaims", 0)
+            data_point.setdefault("continuedClaims", 0)
+            data_point.setdefault("unemploymentRate", 0.0)
+            data_point.setdefault("nonfarmPayrolls", 0)
+            data_point.setdefault("laborParticipation", 0.0)
+            data_point.setdefault("jobOpenings", 0)
+            data_point.setdefault("claims4Week", data_point["initialClaims"])
+            data_point.setdefault("weeklyChangeInitial", 0.0)
+            data_point.setdefault("weeklyChangeContinued", 0.0)
+            data_point.setdefault("monthlyChangePayrolls", 0.0)
+            
+            time_series.append(data_point)
+        
+        # Generate enhanced response structure with BLS data
+        current_data = time_series[-1] if time_series else {}
+        return {
+            "current_metrics": {
+                "initial_claims": current_data.get("initialClaims", 0),
+                "continued_claims": current_data.get("continuedClaims", 0),
+                "unemployment_rate": current_data.get("unemploymentRate", 0),
+                "nonfarm_payrolls": current_data.get("nonfarmPayrolls", 0),
+                "labor_participation": current_data.get("laborParticipation", 0),
+                "job_openings": current_data.get("jobOpenings", 0),
+                "claims_4week": current_data.get("claims4Week", 0),
+                "weekly_change_initial": current_data.get("weeklyChangeInitial", 0),
+                "weekly_change_continued": current_data.get("weeklyChangeContinued", 0),
+                "monthly_change_payrolls": current_data.get("monthlyChangePayrolls", 0),
+                # Enhanced BLS metrics
+                "employment_level": current_data.get("employmentLevel", 0),
+                "labor_force": current_data.get("laborForce", 0),
+                "employment_population_ratio": current_data.get("employmentPopulationRatio", 0),
+                "average_hourly_earnings": current_data.get("averageHourlyEarnings", 0),
+                "average_weekly_hours": current_data.get("averageWeeklyHours", 0),
+                "hires_total": current_data.get("hiresTotal", 0),
+                "quits_total": current_data.get("quitsTotal", 0),
+                "layoffs_total": current_data.get("layoffsTotal", 0)
+            },
+            "time_series": time_series,
+            "alerts": [],
+            "historical_comparison": {},
+            "correlation_analysis": {},
+            "data_sources": {
+                "fred": bool(fred_data),
+                "bls_employment": bool(bls_employment_data),
+                "bls_jolts": bool(bls_jolts_data)
+            }
+        }
+    
+    return {}

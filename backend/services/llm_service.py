@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 from enum import Enum
 
-import openai
+from openai import OpenAI
 import anthropic
 from pydantic import BaseModel
 
@@ -54,8 +54,7 @@ class LLMService:
         
         # Initialize OpenAI client
         if settings.OPENAI_API_KEY:
-            openai.api_key = settings.OPENAI_API_KEY
-            self.openai_client = openai
+            self.openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
             logger.info("Initialized OpenAI client")
         else:
             logger.warning("OpenAI API key not configured")
@@ -307,7 +306,7 @@ Include the main topics, key insights, and important details.
         """
         try:
             response = await asyncio.to_thread(
-                openai.ChatCompletion.create,
+                self.openai_client.chat.completions.create,
                 model=model,
                 messages=[
                     {
@@ -375,7 +374,7 @@ Include the main topics, key insights, and important details.
         if self.openai_client:
             try:
                 await asyncio.to_thread(
-                    openai.ChatCompletion.create,
+                    self.openai_client.chat.completions.create,
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "user", "content": "Test"}

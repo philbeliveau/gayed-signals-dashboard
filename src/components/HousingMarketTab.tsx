@@ -19,23 +19,17 @@ import ChartWrapper from './charts/ChartWrapper';
 import { formatDate, formatTooltipDate } from '../utils/dateFormatting';
 import { useChartColors } from '../utils/chartTheme';
 
-// Dynamically import Recharts components to prevent SSR issues
-// @ts-ignore - Suppress TypeScript errors for dynamic Recharts imports
-const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false });
-// @ts-ignore
-const Line = dynamic(() => import('recharts').then(mod => mod.Line), { ssr: false });
-// @ts-ignore
-const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
-// @ts-ignore
-const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
-// @ts-ignore
-const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
-// @ts-ignore
-const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
-// @ts-ignore
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
-// @ts-ignore
-const ReferenceLine = dynamic(() => import('recharts').then(mod => mod.ReferenceLine), { ssr: false });
+// Import Recharts components directly to fix chart rendering issues
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  ReferenceLine 
+} from 'recharts';
 
 interface HousingDataPoint {
   date: string;
@@ -534,66 +528,73 @@ export default function HousingMarketTab() {
       </div>
 
       {/* Price Trends Chart */}
-      <ChartWrapper
-        height={400}
-        loading={loading}
-        error={error}
-        title="Housing Price Trends"
-        description={`Case-Shiller Index trends for ${selectedRegionData?.name} region`}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: chartColors.primary }}></div>
-              <span className="text-sm text-theme-text-muted">Case-Shiller Index</span>
-            </div>
+      <div className="bg-theme-card border border-theme-border rounded-xl p-6">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-theme-text mb-1">
+            Housing Price Trends
+          </h3>
+          <p className="text-sm text-theme-text-muted">
+            Case-Shiller Index trends for {selectedRegionData?.name} region
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: chartColors.primary }}></div>
+            <span className="text-sm text-theme-text-muted">Case-Shiller Index</span>
           </div>
         </div>
 
         {housingData.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-96">
             <span className="text-theme-text-muted">No housing market data available</span>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={housingData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
-                tick={{ fontSize: 12 }}
-                tickFormatter={(value) => formatDate(value, 'chart')}
-              />
-              <YAxis 
-                tick={{ fontSize: 12 }}
-                domain={['dataMin - 10', 'dataMax + 10']}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Line 
-                type="monotone" 
-                dataKey="caseSillerIndex" 
-                stroke={chartColors.primary}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, stroke: chartColors.primary, strokeWidth: 2, fill: chartColors.primary }}
-              />
-              {/* Add reference line for historical average */}
-              {housingData.length > 0 && (
-                <ReferenceLine 
-                  y={housingData.reduce((sum, d) => sum + d.caseSillerIndex, 0) / housingData.length} 
-                  stroke={chartColors.textLight}
-                  strokeDasharray="5 5" 
-                  label={{ value: "Average", position: "right" }}
-                />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
+          <div style={{ width: '100%', height: 400 }}>
+            <NoSSRWrapper fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div></div>}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={housingData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid || '#e5e7eb'} />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => formatDate(value, 'chart')}
+                    stroke={chartColors.textMuted || '#6b7280'}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                    domain={['dataMin - 10', 'dataMax + 10']}
+                    stroke={chartColors.textMuted || '#6b7280'}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="caseSillerIndex" 
+                    stroke={chartColors.primary || '#8B5CF6'}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4, stroke: chartColors.primary || '#8B5CF6', strokeWidth: 2, fill: chartColors.primary || '#8B5CF6' }}
+                  />
+                  {/* Add reference line for historical average */}
+                  {housingData.length > 0 && (
+                    <ReferenceLine 
+                      y={housingData.reduce((sum, d) => sum + d.caseSillerIndex, 0) / housingData.length} 
+                      stroke={chartColors.textLight || '#6b7280'}
+                      strokeDasharray="5 5" 
+                      label={{ value: "Average", position: "right" }}
+                    />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </NoSSRWrapper>
+          </div>
         )}
         
         <div className="mt-4 text-xs text-theme-text-muted">
           Chart shows Case-Shiller Home Price Index trends with historical average reference line. 
           Data updates monthly from Federal Reserve Economic Data (FRED).
         </div>
-      </ChartWrapper>
+      </div>
 
       {/* Supply & Demand Analysis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

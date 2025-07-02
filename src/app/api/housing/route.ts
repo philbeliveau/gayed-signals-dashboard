@@ -144,8 +144,13 @@ export async function GET(request: NextRequest) {
     if (housingMarketData.time_series) {
       // Data from FRED service has time_series property
       timeSeriesData = housingMarketData.time_series;
-    } else if (housingMarketData.timeSeries) {
-      // Fallback for different naming convention
+    } else if (housingMarketData.timeSeries && typeof housingMarketData.timeSeries === 'object' && housingMarketData.timeSeries.CSUSHPINSA) {
+      // Flask service returns nested structure: timeSeries.INDICATOR.data[]
+      console.log('🔄 Transforming Flask service nested data structure...');
+      timeSeriesData = transformFlaskDataToTimeSeriesArray(housingMarketData.timeSeries);
+      console.log(`✅ Transformed Flask data into ${timeSeriesData.length} time series points`);
+    } else if (Array.isArray(housingMarketData.timeSeries)) {
+      // Fallback for array format
       timeSeriesData = housingMarketData.timeSeries;
     } else if (Array.isArray(housingMarketData)) {
       // Mock data returns array directly
@@ -350,6 +355,97 @@ export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
 }
 
 // Helper functions
+
+/**
+ * Transform Flask service nested data structure to flat time series array
+ */
+function transformFlaskDataToTimeSeriesArray(flaskTimeSeries: any): any[] {
+  // Flask returns: { CSUSHPINSA: { data: [...] }, HOUST: { data: [...] } }
+  // We need: [{ date, caseSillerIndex, housingStarts, ... }, ...]
+  
+  const dateMap = new Map<string, any>();
+  
+  // Process each indicator
+  Object.entries(flaskTimeSeries).forEach(([indicator, indicatorData]: [string, any]) => {
+    if (indicatorData && indicatorData.data && Array.isArray(indicatorData.data)) {
+      indicatorData.data.forEach((dataPoint: any) => {
+        const date = dataPoint.date;
+        const value = dataPoint.value;
+        
+        // Initialize date entry if it doesn't exist
+        if (!dateMap.has(date)) {
+          dateMap.set(date, { date });
+        }
+        
+        // Map Flask indicator names to frontend field names
+        const dateEntry = dateMap.get(date);
+        switch (indicator) {
+          case 'CSUSHPINSA':
+            dateEntry.caseSillerIndex = value;
+            break;
+          case 'HOUST':
+            dateEntry.housingStarts = Math.round(value);
+            break;
+          case 'MSACSR':
+            dateEntry.monthsSupply = value;
+            break;
+          case 'HSN1F':
+            dateEntry.newHomeSales = Math.round(value);
+            break;
+          case 'EXHOSLUSM156S':
+            dateEntry.existingHomeSales = Math.round(value);
+            break;
+          case 'PERMIT':
+            dateEntry.buildingPermits = Math.round(value);
+            break;
+          case 'USSTHPI':
+            dateEntry.housePriceIndex = value;
+            break;
+          default:
+            // Handle unknown indicators
+            dateEntry[indicator.toLowerCase()] = value;
+        }
+      });
+    }
+  });
+  
+  // Convert map to array and sort by date
+  const timeSeriesArray = Array.from(dateMap.values()).sort((a, b) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+  
+  // Calculate derived fields
+  timeSeriesArray.forEach((dataPoint, index) => {
+    // Calculate price changes if Case-Shiller data exists
+    if (dataPoint.caseSillerIndex !== undefined) {
+      // Monthly change
+      if (index > 0 && timeSeriesArray[index - 1].caseSillerIndex !== undefined) {
+        const prevValue = timeSeriesArray[index - 1].caseSillerIndex;
+        dataPoint.priceChangeMonthly = ((dataPoint.caseSillerIndex / prevValue - 1) * 100);
+      } else {
+        dataPoint.priceChangeMonthly = 0;
+      }
+      
+      // Yearly change (if we have data from 12 months ago)
+      if (index >= 12 && timeSeriesArray[index - 12].caseSillerIndex !== undefined) {
+        const yearAgoValue = timeSeriesArray[index - 12].caseSillerIndex;
+        dataPoint.priceChangeYearly = ((dataPoint.caseSillerIndex / yearAgoValue - 1) * 100);
+      } else {
+        dataPoint.priceChangeYearly = 0;
+      }
+    }
+    
+    // Set default values for missing fields to ensure chart compatibility
+    dataPoint.caseSillerIndex = dataPoint.caseSillerIndex || 0;
+    dataPoint.housingStarts = dataPoint.housingStarts || 0;
+    dataPoint.monthsSupply = dataPoint.monthsSupply || 0;
+    dataPoint.newHomeSales = dataPoint.newHomeSales || 0;
+    dataPoint.priceChangeMonthly = Math.round((dataPoint.priceChangeMonthly || 0) * 10) / 10;
+    dataPoint.priceChangeYearly = Math.round((dataPoint.priceChangeYearly || 0) * 10) / 10;
+  });
+  
+  return timeSeriesArray;
+}
 
 function generateMockHousingData(region: string, period: string) {
   // IMPROVED Mock data generation for reliable chart rendering

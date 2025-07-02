@@ -13,7 +13,7 @@ from pathlib import Path
 import tempfile
 import logging
 from datetime import datetime
-import openai
+from openai import OpenAI
 from pydantic import BaseModel
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
@@ -52,7 +52,7 @@ class OptimizedTranscriptionService:
         if not settings.OPENAI_API_KEY:
             logger.warning("OpenAI API key not configured - transcription will fail")
         
-        openai.api_key = settings.OPENAI_API_KEY
+        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
         self.base_chunk_size_mb = settings.AUDIO_CHUNK_SIZE_MB
         self.temp_dir = Path(settings.TEMP_DIR)
         self.temp_dir.mkdir(exist_ok=True)
@@ -400,33 +400,32 @@ class OptimizedTranscriptionService:
             for attempt in range(max_retries):
                 try:
                     response = await asyncio.to_thread(
-                        openai.Audio.transcribe,
+                        self.client.audio.transcriptions.create,
                         model="whisper-1",
                         file=audio_file,
                         response_format="json",
                         language="en"  # Optimize for English
                     )
-                    return response
-                    
-                except openai.error.RateLimitError as e:
-                    if attempt == max_retries - 1:
-                        raise
-                    delay = base_delay * (2 ** attempt) + 1  # Extra second for rate limits
-                    logger.warning(f"Rate limited, retrying in {delay}s (attempt {attempt + 1})")
-                    await asyncio.sleep(delay)
-                    
-                except openai.error.APIError as e:
-                    if attempt == max_retries - 1:
-                        raise
-                    delay = base_delay * (2 ** attempt)
-                    logger.warning(f"API error, retrying in {delay}s: {e}")
-                    await asyncio.sleep(delay)
+                    # Convert response to dict for compatibility
+                    return response.model_dump()
                     
                 except Exception as e:
-                    if attempt == max_retries - 1:
-                        raise
-                    logger.warning(f"Whisper API attempt {attempt + 1} failed: {e}")
-                    await asyncio.sleep(base_delay * (2 ** attempt))
+                    # Check if it's a rate limit error by looking at the error message or type
+                    if "rate limit" in str(e).lower() or "429" in str(e):
+                        if attempt == max_retries - 1:
+                            raise
+                        delay = base_delay * (2 ** attempt) + 1  # Extra second for rate limits
+                        logger.warning(f"Rate limited, retrying in {delay}s (attempt {attempt + 1})")
+                        await asyncio.sleep(delay)
+                    elif "api" in str(e).lower() and attempt < max_retries - 1:
+                        delay = base_delay * (2 ** attempt)
+                        logger.warning(f"API error, retrying in {delay}s: {e}")
+                        await asyncio.sleep(delay)
+                    else:
+                        if attempt == max_retries - 1:
+                            raise
+                        logger.warning(f"Whisper API attempt {attempt + 1} failed: {e}")
+                        await asyncio.sleep(base_delay * (2 ** attempt))
             
         except Exception as e:
             logger.error(f"Whisper API call failed completely: {e}")

@@ -98,18 +98,17 @@ export async function GET(request: NextRequest) {
     // Call the Python backend FRED service for real labor market data
     let laborMarketData;
     try {
-      console.log('🔄 Calling Python FRED service for labor market data...');
+      console.log('🔄 Calling FastAPI FRED service for real labor market data...');
       
-      // Try the new FastAPI backend first (video-insights backend)
-      const backendUrl = process.env.FASTAPI_BASE_URL || 'http://localhost:8002';
-      console.log(`🔗 Attempting to connect to FastAPI backend: ${backendUrl}`);
+      // Call the FastAPI backend with real FRED integration
+      const backendUrl = process.env.FASTAPI_BASE_URL || 'http://localhost:8000';
+      console.log(`🔗 Connecting to FastAPI backend for real FRED data: ${backendUrl}`);
       
       const fredResponse = await fetch(`${backendUrl}/api/v1/economic/labor-market?period=${period}&fast=${fastMode}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer dev-token' // Development auth token
+          'Accept': 'application/json'
         },
         // Add timeout for the request
         signal: AbortSignal.timeout(30000) // 30 second timeout
@@ -134,8 +133,9 @@ export async function GET(request: NextRequest) {
         laborData: mockData, // Support backward compatibility
         metadata: {
           dataSource: 'mock_fallback',
-          reason: fredError instanceof Error ? fredError.message : 'FastAPI backend unavailable',
-          dataPoints: mockData.length
+          reason: `FRED API service unavailable: ${fredError instanceof Error ? fredError.message : 'FastAPI backend connection failed'}`,
+          dataPoints: mockData.length,
+          expectedSource: 'fred_api'
         }
       };
     }
@@ -202,7 +202,9 @@ export async function GET(request: NextRequest) {
         indicatorCount: laborSymbols.length,
         fastMode,
         period,
-        fallbackReason: laborMarketData?.metadata?.reason
+        fallbackReason: laborMarketData?.metadata?.reason,
+        isRealData: laborMarketData?.metadata?.dataSource === 'fred_api' || !laborMarketData?.metadata?.dataSource,
+        apiEndpoint: `${process.env.FASTAPI_BASE_URL || 'http://localhost:8000'}/api/v1/economic/labor-market`
       }
     };
     
