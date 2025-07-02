@@ -1,0 +1,16 @@
+# Requirements for YouTube Video Processing Test
+
+# Core dependencies
+yt-dlp>=2023.12.30          # YouTube video/audio downloader
+openai>=1.54.0              # OpenAI API (Whisper + GPT)
+python-dotenv>=1.0.0        # Environment variable management
+
+# Optional but recommended
+requests>=2.31.0            # HTTP requests (dependency of yt-dlp)
+urllib3>=2.0.0             # URL handling (dependency of yt-dlp)
+
+# Audio processing (required by yt-dlp for audio extraction)
+# Note: You may also need to install ffmpeg separately:
+# - macOS: brew install ffmpeg
+# - Ubuntu/Debian: sudo apt install ffmpeg
+# - Windows: Download from https://ffmpeg.org/
