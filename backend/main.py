@@ -22,7 +22,7 @@ from sqlalchemy import text
 from core.config import settings
 from core.database import engine, create_db_and_tables
 from core.security import get_current_user_optional
-from api.routes import videos, folders, prompts, economic_data
+from api.routes import videos, folders, prompts, economic_data, simple_youtube
 from models.database import Base
 
 # Configure logging
@@ -79,6 +79,13 @@ app.include_router(
     economic_data.router,
     prefix="/api/v1/economic",
     tags=["economic-data"]
+)
+
+app.include_router(
+    simple_youtube.router,
+    prefix="/api/v1/youtube",
+    tags=["simple-youtube"],
+    dependencies=[Depends(get_current_user_optional)]
 )
 
 
