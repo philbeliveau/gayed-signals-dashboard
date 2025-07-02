@@ -220,7 +220,7 @@ async function proxyToFastAPI(
 
     // Handle timeout
     if (error instanceof Error && error.name === 'AbortError') {
-      console.error(`❌ Request timeout after ${timeout}ms for ${method} ${targetUrl}`);
+      console.error(`❌ Request timeout after ${timeout}ms for ${method} request`);
       return NextResponse.json(
         {
           status: 'error',

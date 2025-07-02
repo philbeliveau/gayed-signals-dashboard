@@ -3,9 +3,10 @@ Database configuration and session management for PostgreSQL.
 """
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 from sqlalchemy.pool import NullPool, QueuePool
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Generator
 import logging
 
 from .config import settings
@@ -49,6 +50,23 @@ async_session_maker = async_sessionmaker(
     autoflush=False,  # Manual flush for better control
 )
 
+# Create synchronous database engine for Celery workers
+sync_database_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+sync_engine = create_engine(
+    sync_database_url,
+    poolclass=poolclass,
+    echo=False,
+    **pool_kwargs
+)
+
+# Synchronous session factory for Celery workers
+sync_session_maker = sessionmaker(
+    sync_engine,
+    class_=Session,
+    expire_on_commit=False,
+    autoflush=False,
+)
+
 
 class Base(DeclarativeBase):
     """Base class for all database models."""
@@ -71,6 +89,24 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             await session.close()
+
+
+def get_sync_db() -> Generator[Session, None, None]:
+    """
+    Synchronous dependency to get database session for Celery workers.
+    
+    Yields:
+        Session: Synchronous database session
+    """
+    session = sync_session_maker()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 async def create_db_and_tables():

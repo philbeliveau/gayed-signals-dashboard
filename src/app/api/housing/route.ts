@@ -477,8 +477,8 @@ function generateMockHousingData(region: string, period: string) {
     const noise = (Math.random() - 0.5) * 0.01;
     
     const currentCaseSiller = Math.round((baseValues.caseSiller * (1 + trend + seasonality + noise)) * 100) / 100;
-    const monthlyChange = i > 0 ? ((currentCaseSiller / previousCaseSiller - 1) * 100) : 0;
-    const yearlyChange = i >= 12 ? ((currentCaseSiller / data[i-12]?.caseSillerIndex - 1) * 100) : Math.random() * 4 - 1;
+    const monthlyChange: number = i > 0 ? ((currentCaseSiller / previousCaseSiller - 1) * 100) : 0;
+    const yearlyChange: number = i >= 12 ? ((currentCaseSiller / (data[i-12]?.caseSillerIndex || currentCaseSiller) - 1) * 100) : Math.random() * 4 - 1;
     
     data.push({
       date: currentDate.toISOString().split('T')[0],

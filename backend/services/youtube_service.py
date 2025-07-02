@@ -25,7 +25,7 @@ class YouTubeService:
         self.temp_dir = Path(settings.TEMP_DIR)
         self.temp_dir.mkdir(exist_ok=True)
         
-        # Configure yt-dlp with optimized settings
+        # Configure yt-dlp with optimized settings and anti-blocking measures
         self.ydl_opts = {
             'format': 'bestaudio[ext=m4a]/bestaudio/best',
             'outtmpl': str(self.temp_dir / '%(id)s.%(ext)s'),
@@ -42,6 +42,25 @@ class YouTubeService:
             'no_warnings': False,
             'quiet': True,
             'extract_flat': False,
+            # Anti-blocking measures to prevent YouTube 403 errors
+            'extractor_retries': 3,
+            'fragment_retries': 3,
+            'retry_sleep_functions': {'http': lambda n: 2**n, 'fragment': lambda n: 2**n},
+            'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'referer': 'https://www.youtube.com/',
+            'headers': {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+            },
+            # Try different extraction methods for better compatibility
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web'],
+                    'player_skip': ['webpage', 'configs'],
+                    'innertube_host': ['studio.youtube.com', 'youtubei.googleapis.com'],
+                }
+            }
         }
     
     def is_valid_youtube_url(self, url: str) -> bool:
@@ -96,12 +115,28 @@ class YouTubeService:
             Exception: If metadata extraction fails
         """
         try:
-            # Configure yt-dlp for metadata extraction only
+            # Configure yt-dlp for metadata extraction only with anti-blocking measures
             ydl_opts = {
                 'quiet': True,
                 'no_warnings': True,
                 'extract_flat': False,
                 'skip_download': True,
+                # Anti-blocking measures for metadata extraction
+                'extractor_retries': 3,
+                'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'referer': 'https://www.youtube.com/',
+                'headers': {
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-us,en;q=0.5',
+                    'Sec-Fetch-Mode': 'navigate',
+                },
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android', 'web'],
+                        'player_skip': ['webpage', 'configs'],
+                        'innertube_host': ['studio.youtube.com', 'youtubei.googleapis.com'],
+                    }
+                }
             }
             
             def run_ydl():

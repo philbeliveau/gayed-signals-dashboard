@@ -9,9 +9,10 @@ from uuid import UUID
 import yt_dlp
 from celery import Task, current_task
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from core.celery_app import celery_app
-from core.database import async_session_maker
+from core.database import async_session_maker, sync_session_maker
 from services.youtube_service import youtube_service
 from services.transcription_service import transcription_service
 from services.llm_service import llm_service
@@ -91,15 +92,22 @@ def process_youtube_video(
             metadata = get_metadata_sync()
             
             # Update database with metadata
-            asyncio.run(
-                update_video_metadata(video_id, metadata)
-            )
+            update_video_metadata_sync(video_id, metadata)
             
             # Step 2: Extract audio (10%)
             self.update_progress(2, 20, "Extracting audio")
-            audio_path = asyncio.run(
-                youtube_service.download_audio(youtube_url, metadata['youtube_id'])
-            )
+            
+            def download_audio_sync():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(
+                        youtube_service.download_audio(youtube_url, metadata['youtube_id'])
+                    )
+                finally:
+                    loop.close()
+            
+            audio_path = download_audio_sync()
             
             if not audio_path or not os.path.exists(audio_path):
                 raise Exception("Failed to extract audio from video")
@@ -107,9 +115,17 @@ def process_youtube_video(
             # Step 3: Transcribe audio (60%)
             self.update_progress(4, 20, "Transcribing audio")
             
-            transcription_result = asyncio.run(
-                transcription_service.transcribe_audio(audio_path)
-            )
+            def transcribe_audio_sync():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(
+                        transcription_service.transcribe_audio(audio_path)
+                    )
+                finally:
+                    loop.close()
+            
+            transcription_result = transcribe_audio_sync()
             
             full_transcript = transcription_result.full_text
             transcript_chunks = [chunk.dict() for chunk in transcription_result.chunks]
@@ -117,48 +133,66 @@ def process_youtube_video(
             # Step 4: Save transcript to database (70%)
             self.update_progress(16, 20, "Saving transcript")
             
-            transcript_id = asyncio.run(
-                save_transcript(video_id, full_transcript, transcript_chunks)
-            )
+            transcript_id = save_transcript_sync(video_id, full_transcript, transcript_chunks)
             
             # Step 5: Generate summary with LLM (85%)
             self.update_progress(17, 20, "Generating summary")
             
-            summary_response = asyncio.run(
-                llm_service.generate_summary(
-                    transcript=full_transcript,
-                    metadata=metadata,
-                    mode=summary_mode,
-                    user_prompt=user_prompt
-                )
-            )
+            def generate_summary_sync():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(
+                        llm_service.generate_summary(
+                            transcript=full_transcript,
+                            metadata=metadata,
+                            mode=summary_mode,
+                            user_prompt=user_prompt
+                        )
+                    )
+                finally:
+                    loop.close()
+            
+            summary_response = generate_summary_sync()
             
             summary_text = summary_response.summary_text
             
             # Step 6: Save summary to database (95%)
             self.update_progress(19, 20, "Saving summary")
             
-            summary_id = asyncio.run(
-                save_summary(video_id, summary_text, summary_mode, user_prompt)
-            )
+            summary_id = save_summary_sync(video_id, summary_text, summary_mode, user_prompt)
             
             # Step 7: Cache results and cleanup (100%)
             self.update_progress(20, 20, "Finalizing")
             
             # Cache transcript chunks for fast retrieval
-            asyncio.run(
-                cache_service.cache_transcript_chunks(video_id, transcript_chunks)
-            )
+            def cache_transcript_sync():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(
+                        cache_service.cache_transcript_chunks(video_id, transcript_chunks)
+                    )
+                finally:
+                    loop.close()
+            
+            cache_transcript_sync()
             
             # Cache video metadata
-            asyncio.run(
-                cache_service.cache_video_metadata(youtube_url, metadata)
-            )
+            def cache_metadata_sync():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(
+                        cache_service.cache_video_metadata(youtube_url, metadata)
+                    )
+                finally:
+                    loop.close()
+            
+            cache_metadata_sync()
             
             # Update video status to complete
-            asyncio.run(
-                update_video_status(video_id, "complete")
-            )
+            update_video_status_sync(video_id, "complete")
             
             # Cleanup temporary audio files
             cleanup_temp_files([audio_path])
@@ -179,9 +213,7 @@ def process_youtube_video(
             
             # Update video status to error
             try:
-                asyncio.run(
-                    update_video_status(video_id, "error", error_message=str(e))
-                )
+                update_video_status_sync(video_id, "error", error_message=str(e))
             except Exception as db_error:
                 logger.error(f"Failed to update error status: {db_error}")
             
@@ -195,9 +227,7 @@ def process_youtube_video(
         
         # Update video status to error
         try:
-            asyncio.run(
-                update_video_status(video_id, "error", error_message=str(e))
-            )
+            update_video_status_sync(video_id, "error", error_message=str(e))
         except Exception as db_error:
             logger.error(f"Failed to update error status: {db_error}")
         
@@ -366,8 +396,9 @@ async def save_transcript(
                 video_id=UUID(video_id),
                 full_text=full_text,
                 chunks=chunks,
-                word_count=len(full_text.split()),
-                language="en"  # Default to English
+                language="en",  # Default to English
+                chunk_count=len(chunks),
+                confidence_score=None  # Will be calculated from chunks if available
             )
             
             session.add(transcript)
@@ -397,7 +428,7 @@ async def save_summary(
                 summary_text=summary_text,
                 mode=mode,
                 user_prompt=user_prompt,
-                word_count=len(summary_text.split())
+                token_count=len(summary_text.split())  # Use token_count instead of word_count
             )
             
             session.add(summary)
@@ -488,3 +519,99 @@ def cleanup_temp_files(file_paths: Optional[list] = None) -> None:
                             logger.info(f"Cleaned up old temp file: {file_path}")
     except Exception as e:
         logger.error(f"Error cleaning up temp files: {e}")
+
+
+# Synchronous database functions for Celery workers
+
+def update_video_metadata_sync(video_id: str, metadata: dict) -> None:
+    """Update video with extracted metadata synchronously."""
+    with sync_session_maker() as session:
+        try:
+            video = session.get(Video, UUID(video_id))
+            if video:
+                video.title = metadata.get('title', '')
+                video.channel_name = metadata.get('uploader', '')
+                video.duration = metadata.get('duration', 0)
+                video.published_at = metadata.get('upload_date', '')
+                video.thumbnail_url = metadata.get('thumbnail', '')
+                video.description = metadata.get('description', '')
+                
+                session.commit()
+                logger.info(f"Updated metadata for video {video_id}")
+            else:
+                logger.error(f"Video {video_id} not found in database")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to update video metadata: {e}")
+            raise
+
+
+def save_transcript_sync(video_id: str, full_text: str, chunks: list) -> str:
+    """Save transcript to database synchronously."""
+    with sync_session_maker() as session:
+        try:
+            transcript = Transcript(
+                video_id=UUID(video_id),
+                full_text=full_text,
+                chunks=chunks,
+                language="en",  # Default to English
+                chunk_count=len(chunks),
+                confidence_score=None  # Will be calculated from chunks if available
+            )
+            
+            session.add(transcript)
+            session.commit()
+            session.refresh(transcript)
+            
+            logger.info(f"Saved transcript for video {video_id}")
+            return str(transcript.id)
+            
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to save transcript: {e}")
+            raise
+
+
+def save_summary_sync(video_id: str, summary_text: str, mode: str, user_prompt: Optional[str] = None) -> str:
+    """Save summary to database synchronously."""
+    with sync_session_maker() as session:
+        try:
+            summary = Summary(
+                video_id=UUID(video_id),
+                summary_text=summary_text,
+                mode=mode,
+                user_prompt=user_prompt,
+                token_count=len(summary_text.split())  # Use token_count instead of word_count
+            )
+            
+            session.add(summary)
+            session.commit()
+            session.refresh(summary)
+            
+            logger.info(f"Saved summary for video {video_id}")
+            return str(summary.id)
+            
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to save summary: {e}")
+            raise
+
+
+def update_video_status_sync(video_id: str, status: str, error_message: Optional[str] = None) -> None:
+    """Update video processing status synchronously."""
+    with sync_session_maker() as session:
+        try:
+            video = session.get(Video, UUID(video_id))
+            if video:
+                video.status = status
+                if error_message:
+                    video.error_message = error_message
+                
+                session.commit()
+                logger.info(f"Updated video {video_id} status to {status}")
+            else:
+                logger.error(f"Video {video_id} not found in database")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to update video status: {e}")
+            raise
