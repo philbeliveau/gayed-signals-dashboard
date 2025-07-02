@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Youtube, Play, Clock, FileText, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Youtube, Play, Clock, FileText, CheckCircle, XCircle, Loader2, RefreshCw, Activity, LineChart, Home, Users } from 'lucide-react';
+import Link from 'next/link';
+import { useTheme } from '../../contexts/ThemeContext';
+import ThemeToggle from '../../components/ThemeToggle';
 
 interface ProcessingResult {
   success: boolean;
@@ -14,6 +17,7 @@ interface ProcessingResult {
 }
 
 export default function SimpleYouTubePage() {
+  const { theme } = useTheme();
   const [url, setUrl] = useState('');
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<ProcessingResult | null>(null);
@@ -63,18 +67,84 @@ export default function SimpleYouTubePage() {
   };
 
   return (
-    <div className="min-h-screen bg-theme-bg text-theme-text p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-4 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-              <Youtube className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-theme-bg text-theme-text trading-background-subtle">
+      {/* Enhanced Header */}
+      <header className="border-b border-theme-border bg-theme-card/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">G</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-theme-text">Gayed Signal Dashboard</h1>
+                <p className="text-theme-text-muted text-sm">Professional Market Regime Analysis</p>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold text-theme-text">Simple YouTube Processor</h1>
+            
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-theme-success rounded-full animate-pulse"></div>
+                <span className="text-sm text-theme-success font-medium">Live</span>
+              </div>
+              
+              <ThemeToggle />
+            </div>
           </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="max-w-7xl mx-auto px-6 pb-4">
+          <div className="flex space-x-1 bg-theme-bg p-1 rounded-xl border border-theme-border overflow-x-auto">
+            <Link 
+              href="/" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
+            >
+              <Activity className="w-4 h-4" />
+              <span>Live Signals</span>
+            </Link>
+            <Link 
+              href="/strategies" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
+            >
+              <span className="text-lg">📊</span>
+              <span>Strategy Dashboard</span>
+            </Link>
+            <Link 
+              href="/backtrader" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
+            >
+              <LineChart className="w-4 h-4" />
+              <span>Backtrader Analysis</span>
+            </Link>
+            <Link 
+              href="/housing" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
+            >
+              <Home className="w-4 h-4" />
+              <span>Housing Market</span>
+            </Link>
+            <Link 
+              href="/labor" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
+            >
+              <Users className="w-4 h-4" />
+              <span>Labor Market</span>
+            </Link>
+            <div className="flex items-center space-x-2 px-4 py-3 rounded-lg bg-theme-primary text-white whitespace-nowrap">
+              <Youtube className="w-4 h-4" />
+              <span>YouTube Processor</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-theme-text mb-2">YouTube Processor</h2>
           <p className="text-theme-text-muted">
-            Process YouTube videos synchronously - just like the working test script!
+            Fast, synchronous YouTube video processing with AI transcription and summarization
           </p>
         </div>
 
@@ -220,14 +290,14 @@ export default function SimpleYouTubePage() {
         {/* Instructions */}
         {!processing && !result && (
           <div className="bg-theme-card rounded-lg p-6 border border-theme-border">
-            <h2 className="text-lg font-semibold mb-4">How to Use</h2>
+            <h2 className="text-lg font-semibold mb-4">Quick Start</h2>
             <div className="space-y-2 text-theme-text-muted">
-              <p>1. Paste any YouTube URL in the input field above</p>
-              <p>2. Click "Process Video" and wait (usually 30-60 seconds)</p>
-              <p>3. Get complete results with transcript and AI summary</p>
-              <p className="text-sm text-green-600 mt-4">
-                ✅ This works synchronously like the test script - no complex polling!
-              </p>
+              <p>• Paste any YouTube URL above</p>
+              <p>• Processing typically takes 30-60 seconds</p>
+              <p>• Get complete transcript and AI-generated summary</p>
+              <div className="mt-4 text-sm text-green-600 bg-green-50 p-3 rounded border">
+                ✅ Simple, reliable processing - no complex polling or status updates needed
+              </div>
             </div>
           </div>
         )}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, BarChart3, Activity, LineChart, Video, Users, Home } from 'lucide-react';
+import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, Activity, LineChart, Users, Home, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -814,13 +814,6 @@ export default function Dashboard() {
               <span>Strategy Dashboard</span>
             </Link>
             <Link 
-              href="/backtest" 
-              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span>Backtesting Lab</span>
-            </Link>
-            <Link 
               href="/backtrader" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
             >
@@ -842,11 +835,11 @@ export default function Dashboard() {
               <span>Labor Market</span>
             </Link>
             <Link 
-              href="/video-insights" 
+              href="/simple-youtube" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
             >
-              <Video className="w-4 h-4" />
-              <span>Video Insights</span>
+              <Youtube className="w-4 h-4" />
+              <span>YouTube Processor</span>
             </Link>
           </div>
         </div>
