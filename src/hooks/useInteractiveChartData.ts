@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { SeriesConfig, DataPoint } from '../components/charts/InteractiveEconomicChart';
 
 // FRED Series definitions with metadata
@@ -268,7 +268,12 @@ export function useInteractiveChartData({
     lastUpdated: null
   });
 
-  // Create combined series configuration
+  // Create combined series configuration with stable dependencies
+  const defaultVisibleSeriesString = useMemo(() => 
+    defaultVisibleSeries.sort().join(','), 
+    [defaultVisibleSeries]
+  );
+
   const allSeriesConfig = useMemo(() => {
     let baseConfig: Omit<SeriesConfig, 'visible' | 'focused'>[] = [];
     
@@ -292,7 +297,7 @@ export function useInteractiveChartData({
           : true,
       focused: false
     }));
-  }, [category, defaultVisibleSeries, autoSelectFrequency]);
+  }, [category, defaultVisibleSeriesString, autoSelectFrequency]);
 
   // Initialize series configuration
   useEffect(() => {
@@ -302,10 +307,12 @@ export function useInteractiveChartData({
     }));
   }, [allSeriesConfig]);
 
-  // Mock data generator for development/testing
+  // Mock data generator for development/testing - moved outside to prevent re-creation
   const generateMockData = useCallback((days: number = 365): DataPoint[] => {
     const data: DataPoint[] = [];
-    const startDate = new Date();
+    const baseDate = new Date();
+    baseDate.setHours(0, 0, 0, 0); // Normalize to prevent time-based re-renders
+    const startDate = new Date(baseDate);
     startDate.setDate(startDate.getDate() - days);
 
     for (let i = 0; i < days; i++) {
@@ -316,41 +323,50 @@ export function useInteractiveChartData({
         date: date.toISOString().split('T')[0],
       };
 
+      // Generate deterministic mock data to prevent random re-renders
+      const seed = i * 12345; // Fixed seed for consistent data
+      const random = (Math.sin(seed) + 1) / 2; // Deterministic "random" value
+
       // Generate mock housing data
-      point.caseSillerIndex = 280 + Math.sin(i / 30) * 20 + (Math.random() - 0.5) * 10;
-      point.housingStarts = 1200 + Math.sin(i / 45) * 200 + (Math.random() - 0.5) * 100;
-      point.monthsSupply = 4.5 + Math.sin(i / 60) * 1.5 + (Math.random() - 0.5) * 0.5;
-      point.newHomeSales = 600 + Math.sin(i / 35) * 100 + (Math.random() - 0.5) * 50;
-      point.existingHomeSales = 5.2 + Math.sin(i / 40) * 0.8 + (Math.random() - 0.5) * 0.3;
-      point.housingPermits = 1300 + Math.sin(i / 50) * 150 + (Math.random() - 0.5) * 75;
-      point.mortgageRates = 6.5 + Math.sin(i / 90) * 1.0 + (Math.random() - 0.5) * 0.3;
-      point.housePriceIndex = 320 + Math.sin(i / 120) * 30 + (Math.random() - 0.5) * 15;
+      point.caseSillerIndex = 280 + Math.sin(i / 30) * 20 + (random - 0.5) * 10;
+      point.housingStarts = 1200 + Math.sin(i / 45) * 200 + (random - 0.5) * 100;
+      point.monthsSupply = 4.5 + Math.sin(i / 60) * 1.5 + (random - 0.5) * 0.5;
+      point.newHomeSales = 600 + Math.sin(i / 35) * 100 + (random - 0.5) * 50;
+      point.existingHomeSales = 5.2 + Math.sin(i / 40) * 0.8 + (random - 0.5) * 0.3;
+      point.housingPermits = 1300 + Math.sin(i / 50) * 150 + (random - 0.5) * 75;
+      point.mortgageRates = 6.5 + Math.sin(i / 90) * 1.0 + (random - 0.5) * 0.3;
+      point.housePriceIndex = 320 + Math.sin(i / 120) * 30 + (random - 0.5) * 15;
 
       // Generate mock labor data
-      point.unemploymentRate = 3.8 + Math.sin(i / 180) * 1.2 + (Math.random() - 0.5) * 0.3;
-      point.nonfarmPayrolls = 155000 + Math.sin(i / 60) * 5000 + (Math.random() - 0.5) * 2000;
-      point.initialClaims = 220000 + Math.sin(i / 14) * 50000 + (Math.random() - 0.5) * 20000;
-      point.continuedClaims = 1700000 + Math.sin(i / 21) * 300000 + (Math.random() - 0.5) * 100000;
-      point.claims4Week = 225000 + Math.sin(i / 28) * 40000 + (Math.random() - 0.5) * 15000;
-      point.laborParticipation = 63.2 + Math.sin(i / 365) * 1.0 + (Math.random() - 0.5) * 0.2;
-      point.employmentPopulation = 60.1 + Math.sin(i / 365) * 1.5 + (Math.random() - 0.5) * 0.3;
-      point.unemployed = 6200 + Math.sin(i / 180) * 800 + (Math.random() - 0.5) * 300;
-      point.jobOpenings = 10500 + Math.sin(i / 90) * 1500 + (Math.random() - 0.5) * 500;
-      point.quitsRate = 2.3 + Math.sin(i / 120) * 0.5 + (Math.random() - 0.5) * 0.2;
+      point.unemploymentRate = 3.8 + Math.sin(i / 180) * 1.2 + (random - 0.5) * 0.3;
+      point.nonfarmPayrolls = 155000 + Math.sin(i / 60) * 5000 + (random - 0.5) * 2000;
+      point.initialClaims = 220000 + Math.sin(i / 14) * 50000 + (random - 0.5) * 20000;
+      point.continuedClaims = 1700000 + Math.sin(i / 21) * 300000 + (random - 0.5) * 100000;
+      point.claims4Week = 225000 + Math.sin(i / 28) * 40000 + (random - 0.5) * 15000;
+      point.laborParticipation = 63.2 + Math.sin(i / 365) * 1.0 + (random - 0.5) * 0.2;
+      point.employmentPopulation = 60.1 + Math.sin(i / 365) * 1.5 + (random - 0.5) * 0.3;
+      point.unemployed = 6200 + Math.sin(i / 180) * 800 + (random - 0.5) * 300;
+      point.jobOpenings = 10500 + Math.sin(i / 90) * 1500 + (random - 0.5) * 500;
+      point.quitsRate = 2.3 + Math.sin(i / 120) * 0.5 + (random - 0.5) * 0.2;
 
       data.push(point);
     }
 
     return data;
-  }, []);
+  }, []); // Empty dependency array - function is now deterministic
 
-  // Fetch real data from API
+  // Fetch real data from API with stable dependencies
   const fetchData = useCallback(async (startDate?: string, endDate?: string) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
+      // Calculate days based on date range or default to 365
+      const days = startDate && endDate 
+        ? Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24))
+        : 365;
+      
       // For now, use mock data - replace with actual API calls
-      const mockData = generateMockData(365);
+      const mockData = generateMockData(Math.max(days, 30)); // Minimum 30 days
       
       // TODO: Replace with actual API calls
       // const housingResponse = await fetch('/api/housing');
@@ -373,10 +389,15 @@ export function useInteractiveChartData({
     }
   }, [generateMockData]);
 
-  // Load initial data
+  // Load initial data only once to prevent infinite re-renders
+  const initialLoadRef = useRef(false);
+  
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!initialLoadRef.current) {
+      initialLoadRef.current = true;
+      fetchData();
+    }
+  }, []); // Empty dependency array - only run once on mount
 
   // Series management functions
   const toggleSeries = useCallback((seriesId: string) => {

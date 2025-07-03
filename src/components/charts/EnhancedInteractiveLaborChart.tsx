@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Users, Calendar, TrendingUp, TrendingDown, Filter, AlertTriangle, Activity, Download, Share2 } from 'lucide-react';
 import InteractiveEconomicChart from './InteractiveEconomicChart';
 import { useInteractiveChartData } from '../../hooks/useInteractiveChartData';
@@ -122,7 +122,7 @@ export default function EnhancedInteractiveLaborChart({
   const finalLoading = externalLoading || dataLoading;
   const finalError = externalError || dataError;
 
-  // Handle period changes
+  // Handle period changes with stable dependencies
   const handlePeriodChange = useCallback((period: string) => {
     const option = PERIOD_OPTIONS.find(p => p.value === period);
     if (option) {
@@ -139,18 +139,25 @@ export default function EnhancedInteractiveLaborChart({
     }
   }, [onPeriodChange]);
 
-  // Initialize time range based on selected period
+  // Initialize time range based on selected period - with ref to prevent re-runs
+  const initializedPeriodRef = useRef<string | null>(null);
+  
   useEffect(() => {
-    const option = PERIOD_OPTIONS.find(p => p.value === selectedPeriod);
-    if (option) {
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(endDate.getDate() - (option.weeks * 7));
+    // Only run if selectedPeriod actually changed
+    if (initializedPeriodRef.current !== selectedPeriod) {
+      initializedPeriodRef.current = selectedPeriod;
       
-      setTimeRange([
-        startDate.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0]
-      ]);
+      const option = PERIOD_OPTIONS.find(p => p.value === selectedPeriod);
+      if (option) {
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(endDate.getDate() - (option.weeks * 7));
+        
+        setTimeRange([
+          startDate.toISOString().split('T')[0],
+          endDate.toISOString().split('T')[0]
+        ]);
+      }
     }
   }, [selectedPeriod]);
 
@@ -168,11 +175,10 @@ export default function EnhancedInteractiveLaborChart({
     }
   }, [showOnlySeries, filterByFrequency]);
 
-  // Update stress level when data changes
-  useEffect(() => {
+  // Update stress level when data changes - optimized to prevent excessive re-renders
+  const stressCalculation = useMemo(() => {
     if (!finalData.length) {
-      setStressLevel('low');
-      return;
+      return 'low';
     }
     
     const latest = finalData[finalData.length - 1];
@@ -185,18 +191,26 @@ export default function EnhancedInteractiveLaborChart({
     if (alerts.some(a => a.severity === 'critical')) stressFactors++;
     
     if (stressFactors >= 3) {
-      setStressLevel('high');
+      return 'high';
     } else if (stressFactors >= 1) {
-      setStressLevel('medium');
+      return 'medium';
     } else {
-      setStressLevel('low');
+      return 'low';
     }
-  }, [finalData, alerts]);
+  }, [finalData.length, alerts.length]); // Only depend on length to avoid deep comparisons
 
-  // Handle data refresh
+  useEffect(() => {
+    setStressLevel(stressCalculation);
+  }, [stressCalculation]);
+
+  // Handle data refresh with stable dependencies
   const handleRefresh = useCallback(() => {
-    fetchData(timeRange?.[0], timeRange?.[1]);
-  }, [fetchData, timeRange]);
+    if (timeRange) {
+      fetchData(timeRange[0], timeRange[1]);
+    } else {
+      fetchData();
+    }
+  }, [fetchData, timeRange?.join(',')]); // Use join to create stable dependency
 
   // Export functionality
   const handleExport = useCallback((format: 'csv' | 'json' | 'png') => {
