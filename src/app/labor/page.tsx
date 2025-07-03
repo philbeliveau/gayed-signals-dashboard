@@ -84,11 +84,13 @@ export default function LaborMarketPage() {
 
       {/* Labor Market Tab Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <EnhancedInteractiveLaborChart
-          height={700}
-          selectedPeriod="12m"
-          alerts={[]}
-        />
+        <div style={{ minHeight: '1200px', height: 'auto' }}>
+          <EnhancedInteractiveLaborChart
+            height={1000}
+            selectedPeriod="12m"
+            alerts={[]}
+          />
+        </div>
       </main>
     </div>
   );

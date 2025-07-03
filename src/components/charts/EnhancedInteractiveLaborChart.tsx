@@ -476,7 +476,14 @@ export default function EnhancedInteractiveLaborChart({
       </div>
 
       {/* Interactive Chart */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div 
+        className="bg-white border border-gray-200 rounded-xl" 
+        style={{ 
+          minHeight: '800px', 
+          height: 'auto',
+          overflow: 'visible'
+        }}
+      >
         <InteractiveEconomicChart
           data={finalData}
           seriesConfig={seriesConfig}

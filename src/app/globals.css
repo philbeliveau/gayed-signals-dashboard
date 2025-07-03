@@ -445,3 +445,65 @@ body {
 .chart-grid-color { stroke: var(--theme-border) !important; }
 .chart-axis-color { stroke: var(--theme-text-muted) !important; }
 .chart-text-color { fill: var(--theme-text-muted) !important; }
+
+/* CHART VISIBILITY FIXES - Ensure charts are not hidden */
+.chart-container {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 700px !important;
+}
+
+.chart-responsive-wrapper {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 700px !important;
+}
+
+/* Ensure ResponsiveContainer doesn't get hidden */
+.recharts-responsive-container {
+  overflow: visible !important;
+  height: 600px !important;
+  min-height: 600px !important;
+}
+
+/* Fix any potential layout issues with chart pages */
+.chart-page-container {
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+/* Ensure main containers don't restrict chart height */
+main {
+  overflow: visible !important;
+}
+
+/* Responsive chart containers */
+@media (max-width: 768px) {
+  .chart-container {
+    min-height: 500px !important;
+  }
+  
+  .chart-responsive-wrapper {
+    min-height: 500px !important;
+  }
+  
+  .recharts-responsive-container {
+    height: 400px !important;
+    min-height: 400px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .chart-container {
+    min-height: 400px !important;
+  }
+  
+  .chart-responsive-wrapper {
+    min-height: 400px !important;
+  }
+  
+  .recharts-responsive-container {
+    height: 350px !important;
+    min-height: 350px !important;
+  }
+}

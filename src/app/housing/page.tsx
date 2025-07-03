@@ -84,11 +84,13 @@ export default function HousingMarketPage() {
 
       {/* Housing Market Tab Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <EnhancedInteractiveHousingChart
-          height={700}
-          selectedPeriod="12m"
-          region="United States"
-        />
+        <div style={{ minHeight: '1200px', height: 'auto' }}>
+          <EnhancedInteractiveHousingChart
+            height={1000}
+            selectedPeriod="12m"
+            region="United States"
+          />
+        </div>
       </main>
     </div>
   );

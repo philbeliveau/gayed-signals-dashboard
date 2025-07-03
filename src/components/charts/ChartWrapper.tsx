@@ -87,9 +87,13 @@ export default function ChartWrapper({
       {/* Chart Container */}
       <div 
         className="chart-container relative"
-        style={{ height, minHeight: height, width: '100%' }}
+        style={{ 
+          height: '700px', 
+          minHeight: '700px', 
+          width: '100%' 
+        }}
       >
-        <div className="chart-responsive-wrapper h-full w-full">
+        <div className="chart-responsive-wrapper h-full w-full" style={{ height: '700px', minHeight: '700px' }}>
           {children}
         </div>
       </div>
