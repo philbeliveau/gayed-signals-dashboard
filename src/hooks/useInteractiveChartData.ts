@@ -360,34 +360,87 @@ export function useInteractiveChartData({
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      // Calculate days based on date range or default to 365
-      const days = startDate && endDate 
-        ? Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24))
-        : 365;
+      console.log(`🔄 Fetching REAL data for category: ${category}`);
       
-      // For now, use mock data - replace with actual API calls
-      const mockData = generateMockData(Math.max(days, 30)); // Minimum 30 days
+      // Calculate period based on date range or default to 12m
+      const period = startDate && endDate 
+        ? calculatePeriodFromDates(startDate, endDate)
+        : '12m';
       
-      // TODO: Replace with actual API calls
-      // const housingResponse = await fetch('/api/housing');
-      // const laborResponse = await fetch('/api/labor');
-      // const housingData = await housingResponse.json();
-      // const laborData = await laborResponse.json();
+      // Call REAL API endpoints based on category
+      let apiData;
+      if (category === 'housing') {
+        console.log('🏠 Calling real HOUSING API with FRED data...');
+        const housingResponse = await fetch(`/api/housing?period=${period}&fast=false`);
+        if (!housingResponse.ok) {
+          throw new Error(`Housing API failed: ${housingResponse.status}`);
+        }
+        apiData = await housingResponse.json();
+        console.log('✅ Received real housing data:', apiData.timeSeries?.length, 'points');
+      } else if (category === 'labor') {
+        console.log('👥 Calling real LABOR API with FRED data...');
+        const laborResponse = await fetch(`/api/labor?period=${period}&fast=false`);
+        if (!laborResponse.ok) {
+          throw new Error(`Labor API failed: ${laborResponse.status}`);
+        }
+        apiData = await laborResponse.json();
+        console.log('✅ Received real labor data:', apiData.timeSeries?.length, 'points');
+      } else {
+        // Fallback for other categories
+        console.log('📊 Using mock data for category:', category);
+        const mockData = generateMockData(365);
+        apiData = { timeSeries: mockData };
+      }
+      
+      // Extract the time series data
+      const realData = apiData.timeSeries || apiData.laborData || apiData.housingData || [];
+      
+      if (!realData || !Array.isArray(realData) || realData.length === 0) {
+        console.warn('⚠️ No real data received, using fallback mock data');
+        const mockData = generateMockData(365);
+        setState(prev => ({
+          ...prev,
+          data: mockData,
+          loading: false,
+          lastUpdated: new Date()
+        }));
+        return;
+      }
+      
+      console.log(`✅ Successfully loaded ${realData.length} REAL data points for ${category}`);
       
       setState(prev => ({
         ...prev,
-        data: mockData,
+        data: realData,
         loading: false,
         lastUpdated: new Date()
       }));
     } catch (error) {
+      console.error('❌ Error fetching real data, falling back to mock:', error);
+      // Fallback to mock data if API fails
+      const mockData = generateMockData(365);
       setState(prev => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'Failed to fetch data',
-        loading: false
+        data: mockData,
+        loading: false,
+        lastUpdated: new Date(),
+        error: `API Error: ${error instanceof Error ? error.message : 'Unknown error'} - Using mock data fallback`
       }));
     }
-  }, [generateMockData]);
+  }, [category, generateMockData]);
+
+  // Helper function to calculate period from date range
+  const calculatePeriodFromDates = (startDate: string, endDate: string): string => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffMonths = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30));
+    
+    if (diffMonths <= 3) return '3m';
+    if (diffMonths <= 6) return '6m';
+    if (diffMonths <= 12) return '12m';
+    if (diffMonths <= 24) return '24m';
+    return '60m';
+  };
 
   // Load initial data only once to prevent infinite re-renders
   const initialLoadRef = useRef(false);

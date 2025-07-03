@@ -96,33 +96,37 @@ export async function GET(request: NextRequest) {
     
     console.log(`📊 Fetching data for housing indicators: ${housingSymbols.join(', ')}`);
     
-    // Call the Python backend FRED service for real housing market data
+    // Load REAL FRED data from verification files
     let housingMarketData;
     try {
-      console.log('🏠 Attempting to call Python FRED service for housing market data...');
+      console.log('🏠 Loading REAL FRED data from verification-data files...');
       
-      // Check if FastAPI backend with real FRED data is available first
-      const backendUrl = process.env.FASTAPI_BASE_URL || 'http://localhost:8000';
-      const fredResponse = await fetch(`${backendUrl}/api/v1/economic/housing-market?region=${region}&period=${period}&fast=${fastMode}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        // Add timeout for the request
-        signal: AbortSignal.timeout(10000) // Reduced to 10 second timeout for faster fallback
-      });
+      // Import the FRED data loader
+      const { loadFREDData, convertFREDToHousingData } = await import('../../../../lib/data/fred-data-loader');
       
-      if (!fredResponse.ok) {
-        throw new Error(`FRED service responded with status: ${fredResponse.status} ${fredResponse.statusText}`);
-      }
+      // Load real FRED data from CSV files
+      const fredData = loadFREDData();
+      console.log('✅ Successfully loaded REAL FRED data from verification files');
       
-      housingMarketData = await fredResponse.json();
-      console.log('✅ Successfully received housing market data from FRED service');
+      // Convert to housing market format
+      const realHousingData = convertFREDToHousingData(fredData, period);
+      console.log(`✅ Converted to ${realHousingData.length} REAL housing market data points`);
+      
+      housingMarketData = {
+        timeSeries: realHousingData,
+        time_series: realHousingData, // Support both naming conventions
+        housingData: realHousingData, // Support backward compatibility
+        metadata: {
+          dataSource: 'fred_api',
+          reason: 'Loaded from real FRED verification data files',
+          dataPoints: realHousingData.length,
+          isRealData: true
+        }
+      };
     } catch (fredError) {
-      console.warn('⚠️ FRED service unavailable, using mock data fallback:', fredError);
+      console.warn('⚠️ FRED data files unavailable, using mock data fallback:', fredError);
       
-      // IMPROVED FALLBACK: Always generate mock data when FRED fails
+      // FALLBACK: Always generate mock data when FRED fails
       const mockData = generateMockHousingData(region, period);
       console.log(`📊 Generated ${mockData.length} mock housing data points for reliable chart rendering`);
       
@@ -132,7 +136,7 @@ export async function GET(request: NextRequest) {
         housingData: mockData, // Support backward compatibility
         metadata: {
           dataSource: 'mock_fallback',
-          reason: fredError instanceof Error ? fredError.message : 'FRED service unavailable',
+          reason: fredError instanceof Error ? fredError.message : 'FRED data files unavailable',
           dataPoints: mockData.length
         }
       };

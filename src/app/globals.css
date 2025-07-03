@@ -450,20 +450,34 @@ body {
 .chart-container {
   overflow: visible !important;
   height: auto !important;
-  min-height: 700px !important;
+  min-height: 800px !important;
 }
 
 .chart-responsive-wrapper {
   overflow: visible !important;
   height: auto !important;
-  min-height: 700px !important;
+  min-height: 800px !important;
 }
 
 /* Ensure ResponsiveContainer doesn't get hidden */
 .recharts-responsive-container {
   overflow: visible !important;
-  height: 600px !important;
-  min-height: 600px !important;
+  height: auto !important;
+  min-height: 700px !important;
+}
+
+/* Fix any containers that might clip charts */
+.bg-white.border.rounded-xl {
+  overflow: visible !important;
+}
+
+/* Remove any clipping from page containers */
+.max-w-7xl {
+  overflow: visible !important;
+}
+
+main {
+  overflow: visible !important;
 }
 
 /* Fix any potential layout issues with chart pages */

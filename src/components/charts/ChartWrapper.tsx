@@ -71,7 +71,7 @@ export default function ChartWrapper({
   }
 
   return (
-    <div className={`bg-theme-card border border-theme-border rounded-xl p-6 ${className}`}>
+    <div className={`bg-theme-card border border-theme-border rounded-xl p-6 ${className}`} style={{ overflow: 'visible' }}>
       {/* Header */}
       {(title || description) && (
         <div className="mb-4">
@@ -88,12 +88,20 @@ export default function ChartWrapper({
       <div 
         className="chart-container relative"
         style={{ 
-          height: '700px', 
-          minHeight: '700px', 
-          width: '100%' 
+          height: 'auto', 
+          minHeight: '800px', 
+          width: '100%',
+          overflow: 'visible'
         }}
       >
-        <div className="chart-responsive-wrapper h-full w-full" style={{ height: '700px', minHeight: '700px' }}>
+        <div 
+          className="chart-responsive-wrapper h-full w-full" 
+          style={{ 
+            height: 'auto', 
+            minHeight: '800px',
+            overflow: 'visible'
+          }}
+        >
           {children}
         </div>
       </div>

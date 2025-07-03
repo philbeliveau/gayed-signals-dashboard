@@ -281,7 +281,7 @@ export default function InteractiveEconomicChart({
   const getChartComponent = useCallback(() => {
     if (!isClient || filteredData.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center space-y-3" style={{ height: '600px', minHeight: '600px' }}>
+        <div className="flex flex-col items-center justify-center space-y-3" style={{ height: '700px', minHeight: '700px', overflow: 'visible' }}>
           <BarChart3 className="w-12 h-12 text-gray-300" />
           <span className="text-gray-500 font-medium">No data available</span>
           <span className="text-sm text-gray-400">Try adjusting your time range or series selection</span>
@@ -293,7 +293,7 @@ export default function InteractiveEconomicChart({
                           chartType === 'composed' ? ComposedChart : LineChart;
 
     return (
-      <ResponsiveContainer width="100%" height={600} minHeight={600}>
+      <ResponsiveContainer width="100%" height="100%" aspect={2}>
         <ChartComponent 
           data={filteredData} 
           margin={{ top: 20, right: 30, left: 20, bottom: showBrush ? 60 : 20 }}
@@ -627,13 +627,13 @@ export default function InteractiveEconomicChart({
       </div>
 
       {/* Chart Container */}
-      <div className="relative">
+      <div className="relative" style={{ overflow: 'visible' }}>
         <div 
           className="h-full w-full" 
           style={{ 
-            height: '600px', 
-            minHeight: '600px',
-            maxHeight: 'none'
+            height: 'auto', 
+            minHeight: '700px',
+            overflow: 'visible'
           }}
         >
           {getChartComponent()}
