@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Home, Calendar, TrendingUp, Filter, Download, Share2 } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Home, Calendar, TrendingUp, TrendingDown, Filter, Download, Share2 } from 'lucide-react';
 import InteractiveEconomicChart from './InteractiveEconomicChart';
 import { useInteractiveChartData } from '../../hooks/useInteractiveChartData';
 import { formatDate } from '../../utils/dateFormatting';
@@ -127,8 +127,18 @@ export default function EnhancedInteractiveHousingChart({
 
   // Initialize time range based on selected period
   useEffect(() => {
-    handlePeriodChange(selectedPeriod);
-  }, [selectedPeriod, handlePeriodChange]);
+    const option = PERIOD_OPTIONS.find(p => p.value === selectedPeriod);
+    if (option) {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setMonth(endDate.getMonth() - option.months);
+      
+      setTimeRange([
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0]
+      ]);
+    }
+  }, [selectedPeriod]);
 
   // Handle quick filters
   const handleQuickFilter = useCallback((filterId: string) => {
@@ -157,7 +167,7 @@ export default function EnhancedInteractiveHousingChart({
   }, []);
 
   // Calculate summary statistics
-  const getHousingSummary = useCallback(() => {
+  const summary = useMemo(() => {
     if (!finalData.length) return null;
     
     const latest = finalData[finalData.length - 1];
@@ -182,8 +192,6 @@ export default function EnhancedInteractiveHousingChart({
       currentRate: latest.mortgageRates
     };
   }, [finalData]);
-
-  const summary = getHousingSummary();
 
   return (
     <div className="space-y-6">
@@ -391,11 +399,9 @@ export default function EnhancedInteractiveHousingChart({
           data={finalData}
           seriesConfig={seriesConfig}
           loading={finalLoading}
-          error={finalError}
+          error={finalError || undefined}
           height={height}
           title={`${region} Housing Market Data`}
-          onSeriesToggle={toggleSeries}
-          onSeriesFocus={focusSeries}
           onTimeRangeChange={setTimeRange}
           selectedTimeRange={timeRange}
           showBrush={true}

@@ -118,7 +118,7 @@ export default function VideoInsightsPage() {
       const status = await videoInsightsAPI.getProcessingStatus(state.processingStatus.task_id);
       setState(prev => ({ ...prev, processingStatus: status }));
 
-      if (status.status === 'complete' || status.status === 'error') {
+      if (status.status === 'completed' || status.status === 'failed') {
         // Refresh video list to get the completed video
         await refreshVideoList();
         setState(prev => ({ 

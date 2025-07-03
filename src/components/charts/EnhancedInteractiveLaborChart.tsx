@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Users, Calendar, TrendingUp, TrendingDown, Filter, AlertTriangle, Activity, Download, Share2 } from 'lucide-react';
 import InteractiveEconomicChart from './InteractiveEconomicChart';
 import { useInteractiveChartData } from '../../hooks/useInteractiveChartData';
@@ -141,8 +141,18 @@ export default function EnhancedInteractiveLaborChart({
 
   // Initialize time range based on selected period
   useEffect(() => {
-    handlePeriodChange(selectedPeriod);
-  }, [selectedPeriod, handlePeriodChange]);
+    const option = PERIOD_OPTIONS.find(p => p.value === selectedPeriod);
+    if (option) {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - (option.weeks * 7));
+      
+      setTimeRange([
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0]
+      ]);
+    }
+  }, [selectedPeriod]);
 
   // Handle quick filters
   const handleQuickFilter = useCallback((filterId: string) => {
@@ -158,9 +168,12 @@ export default function EnhancedInteractiveLaborChart({
     }
   }, [showOnlySeries, filterByFrequency]);
 
-  // Calculate labor market stress level
-  const calculateStressLevel = useCallback(() => {
-    if (!finalData.length) return 'low';
+  // Update stress level when data changes
+  useEffect(() => {
+    if (!finalData.length) {
+      setStressLevel('low');
+      return;
+    }
     
     const latest = finalData[finalData.length - 1];
     let stressFactors = 0;
@@ -171,15 +184,14 @@ export default function EnhancedInteractiveLaborChart({
     if (latest.laborParticipation < STRESS_THRESHOLDS.labor_participation) stressFactors++;
     if (alerts.some(a => a.severity === 'critical')) stressFactors++;
     
-    if (stressFactors >= 3) return 'high';
-    if (stressFactors >= 1) return 'medium';
-    return 'low';
+    if (stressFactors >= 3) {
+      setStressLevel('high');
+    } else if (stressFactors >= 1) {
+      setStressLevel('medium');
+    } else {
+      setStressLevel('low');
+    }
   }, [finalData, alerts]);
-
-  // Update stress level when data changes
-  useEffect(() => {
-    setStressLevel(calculateStressLevel());
-  }, [calculateStressLevel]);
 
   // Handle data refresh
   const handleRefresh = useCallback(() => {
@@ -193,7 +205,7 @@ export default function EnhancedInteractiveLaborChart({
   }, []);
 
   // Calculate labor market summary
-  const getLaborSummary = useCallback(() => {
+  const summary = useMemo(() => {
     if (!finalData.length) return null;
     
     const latest = finalData[finalData.length - 1];
@@ -218,8 +230,6 @@ export default function EnhancedInteractiveLaborChart({
       currentPayrolls: latest.nonfarmPayrolls
     };
   }, [finalData]);
-
-  const summary = getLaborSummary();
 
   const getStressColor = (level: string) => {
     switch (level) {
@@ -457,11 +467,9 @@ export default function EnhancedInteractiveLaborChart({
           data={finalData}
           seriesConfig={seriesConfig}
           loading={finalLoading}
-          error={finalError}
+          error={finalError || undefined}
           height={height}
           title="Labor Market Indicators"
-          onSeriesToggle={toggleSeries}
-          onSeriesFocus={focusSeries}
           onTimeRangeChange={setTimeRange}
           selectedTimeRange={timeRange}
           showBrush={true}

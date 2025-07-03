@@ -4,7 +4,7 @@ import { Users, Activity, BarChart3, LineChart, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../../components/ThemeToggle';
-import LaborMarketTab from '../../components/LaborMarketTab-simple';
+import EnhancedInteractiveLaborChart from '../../components/charts/EnhancedInteractiveLaborChart';
 
 export default function LaborMarketPage() {
   const { theme } = useTheme();
@@ -83,8 +83,12 @@ export default function LaborMarketPage() {
       </header>
 
       {/* Labor Market Tab Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <LaborMarketTab />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <EnhancedInteractiveLaborChart
+          height={700}
+          selectedPeriod="12m"
+          alerts={[]}
+        />
       </main>
     </div>
   );

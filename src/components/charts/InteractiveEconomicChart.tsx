@@ -22,19 +22,21 @@ import { useChartColors } from '../../utils/chartTheme';
 import { formatDate } from '../../utils/dateFormatting';
 import ChartWrapper from './ChartWrapper';
 
-// Dynamically import Recharts components to prevent SSR issues
-const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false });
-const AreaChart = dynamic(() => import('recharts').then(mod => mod.AreaChart), { ssr: false });
-const ComposedChart = dynamic(() => import('recharts').then(mod => mod.ComposedChart), { ssr: false });
-const Line = dynamic(() => import('recharts').then(mod => mod.Line), { ssr: false });
-const Area = dynamic(() => import('recharts').then(mod => mod.Area), { ssr: false });
-const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
-const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
-const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
-const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
-const ReferenceLine = dynamic(() => import('recharts').then(mod => mod.ReferenceLine), { ssr: false });
-const Brush = dynamic(() => import('recharts').then(mod => mod.Brush), { ssr: false });
+// Import Recharts components
+import {
+  LineChart,
+  AreaChart,
+  ComposedChart,
+  Line,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+  Brush
+} from 'recharts';
 
 // Data types and interfaces
 interface DataPoint {
@@ -197,16 +199,14 @@ export default function InteractiveEconomicChart({
         ? { ...series, visible: !series.visible }
         : series
     ));
-    onSeriesToggle?.(seriesId);
-  }, [onSeriesToggle]);
+  }, []);
 
   const handleSeriesFocus = useCallback((seriesId: string) => {
     setLocalSeriesConfig(prev => prev.map(series => ({
       ...series,
       focused: series.id === seriesId ? !series.focused : false
     })));
-    onSeriesFocus?.(seriesId);
-  }, [onSeriesFocus]);
+  }, []);
 
   const handleResetView = useCallback(() => {
     setLocalSeriesConfig(prev => prev.map(series => ({
@@ -219,7 +219,7 @@ export default function InteractiveEconomicChart({
   }, []);
 
   // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = useCallback(({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
 
     const date = new Date(label);
@@ -232,7 +232,7 @@ export default function InteractiveEconomicChart({
         <div className="flex items-center gap-2 mb-3 border-b border-gray-100 pb-2">
           <Calendar className="w-4 h-4 text-gray-500" />
           <p className="font-semibold text-gray-900">
-            {formatDate(label, 'full')}
+            {formatDate(label, 'long')}
           </p>
         </div>
         
@@ -275,10 +275,10 @@ export default function InteractiveEconomicChart({
         )}
       </div>
     );
-  };
+  }, [displayedSeries, localSeriesConfig, formatDate]);
 
   // Chart component renderer
-  const getChartComponent = () => {
+  const getChartComponent = useCallback(() => {
     if (!isClient || filteredData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center h-full space-y-3">
@@ -338,40 +338,62 @@ export default function InteractiveEconomicChart({
           
           {/* Render series based on chart type */}
           {displayedSeries.map((series) => {
-            const SeriesComponent = chartType === 'area' ? Area : Line;
             const isHovered = hoveredSeries === series.id;
             const isFocused = series.focused;
             const baseOpacity = viewMode === 'focused' && !isFocused ? 0.2 : 1;
             
-            return (
-              <SeriesComponent
-                key={series.id}
-                yAxisId={allowMultipleYAxes ? (series.yAxisId || series.id) : undefined}
-                type="monotone"
-                dataKey={series.dataKey}
-                stroke={series.color}
-                strokeWidth={isFocused ? 3 : isHovered ? 2.5 : (series.strokeWidth || 2)}
-                strokeDasharray={series.strokeDashArray}
-                fill={chartType === 'area' ? `${series.color}30` : 'none'}
-                fillOpacity={chartType === 'area' ? (series.fillOpacity || 0.3) * baseOpacity : 0}
-                dot={series.showDots ? { r: 2, fill: series.color } : false}
-                activeDot={{ 
-                  r: isFocused ? 6 : 4, 
-                  stroke: series.color, 
-                  strokeWidth: 2, 
-                  fill: 'white',
-                  filter: isFocused ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' : 'none'
-                }}
-                opacity={baseOpacity}
-                onMouseEnter={() => setHoveredSeries(series.id)}
-                onMouseLeave={() => setHoveredSeries(null)}
-                onClick={() => handleSeriesFocus(series.id)}
-                style={{ 
-                  cursor: 'pointer',
-                  transition: `all ${CHART_ANIMATIONS.duration}ms ${CHART_ANIMATIONS.easing}`
-                }}
-              />
-            );
+            if (chartType === 'area') {
+              return (
+                <Area
+                  key={series.id}
+                  yAxisId={allowMultipleYAxes ? (series.yAxisId || series.id) : undefined}
+                  type="monotone"
+                  dataKey={series.dataKey}
+                  stroke={series.color}
+                  strokeWidth={isFocused ? 3 : isHovered ? 2.5 : (series.strokeWidth || 2)}
+                  strokeDasharray={series.strokeDashArray}
+                  fill={`${series.color}30`}
+                  fillOpacity={(series.fillOpacity || 0.3) * baseOpacity}
+                  dot={series.showDots ? { r: 2, fill: series.color } : false}
+                  activeDot={{ 
+                    r: isFocused ? 6 : 4, 
+                    stroke: series.color,
+                    strokeWidth: 2,
+                    fill: 'white'
+                  }}
+                  strokeOpacity={baseOpacity}
+                />
+              );
+            } else {
+              return (
+                <Line
+                  key={series.id}
+                  yAxisId={allowMultipleYAxes ? (series.yAxisId || series.id) : undefined}
+                  type="monotone"
+                  dataKey={series.dataKey}
+                  stroke={series.color}
+                  strokeWidth={isFocused ? 3 : isHovered ? 2.5 : (series.strokeWidth || 2)}
+                  strokeDasharray={series.strokeDashArray}
+                  fill="none"
+                  dot={series.showDots ? { r: 2, fill: series.color } : false}
+                  activeDot={{ 
+                    r: isFocused ? 6 : 4, 
+                    stroke: series.color, 
+                    strokeWidth: 2, 
+                    fill: 'white',
+                    filter: isFocused ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' : 'none'
+                  }}
+                  opacity={baseOpacity}
+                  onMouseEnter={() => setHoveredSeries(series.id)}
+                  onMouseLeave={() => setHoveredSeries(null)}
+                  onClick={() => handleSeriesFocus(series.id)}
+                  style={{ 
+                    cursor: 'pointer',
+                    transition: `all ${CHART_ANIMATIONS.duration}ms ${CHART_ANIMATIONS.easing}`
+                  }}
+                />
+              );
+            }
           })}
           
           {/* Time range brush */}
@@ -396,7 +418,19 @@ export default function InteractiveEconomicChart({
         </ChartComponent>
       </ResponsiveContainer>
     );
-  };
+  }, [
+    isClient,
+    filteredData,
+    chartType,
+    showBrush,
+    chartColors,
+    allowMultipleYAxes,
+    displayedSeries,
+    hoveredSeries,
+    viewMode,
+    onTimeRangeChange,
+    formatDate
+  ]);
 
   return (
     <ChartWrapper
