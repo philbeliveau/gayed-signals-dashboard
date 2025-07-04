@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { UserPreferencesProvider } from "../contexts/UserPreferencesContext";
+import { AuthProvider } from "../contexts/AuthContext";
+import AuthNavigation from "../components/navigation/AuthNavigation";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,7 +48,12 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <UserPreferencesProvider>
-            {children}
+            <AuthProvider>
+              <AuthNavigation />
+              <main>
+                {children}
+              </main>
+            </AuthProvider>
           </UserPreferencesProvider>
         </ThemeProvider>
       </body>

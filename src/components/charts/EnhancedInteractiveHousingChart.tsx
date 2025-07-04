@@ -168,8 +168,8 @@ export default function EnhancedInteractiveHousingChart({
 
   // Handle data refresh
   const handleRefresh = useCallback(() => {
-    fetchData(timeRange?.[0], timeRange?.[1]);
-  }, [fetchData, timeRange]);
+    fetchData();
+  }, [fetchData]);
 
   // Export functionality
   const handleExport = useCallback((format: 'csv' | 'json' | 'png') => {

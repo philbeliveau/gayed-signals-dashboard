@@ -4,10 +4,10 @@ const FASTAPI_BASE_URL = process.env.FASTAPI_URL || 'http://localhost:8002';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { folderId: string } }
+  { params }: { params: Promise<{ folderId: string }> }
 ) {
   try {
-    const { folderId } = params;
+    const { folderId } = await params;
     console.log('🔄 Fetching folder details:', folderId);
     
     const response = await fetch(`${FASTAPI_BASE_URL}/api/v1/folders/${folderId}`, {
@@ -42,10 +42,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { folderId: string } }
+  { params }: { params: Promise<{ folderId: string }> }
 ) {
   try {
-    const { folderId } = params;
+    const { folderId } = await params;
     const body = await request.json();
     console.log('🔄 Updating folder:', folderId);
     
@@ -82,10 +82,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { folderId: string } }
+  { params }: { params: Promise<{ folderId: string }> }
 ) {
   try {
-    const { folderId } = params;
+    const { folderId } = await params;
     const url = new URL(request.url);
     const force = url.searchParams.get('force') === 'true';
     

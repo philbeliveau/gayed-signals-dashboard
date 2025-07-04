@@ -22,7 +22,7 @@ from sqlalchemy import text
 from core.config import settings
 from core.database import engine, create_db_and_tables
 from core.security import get_current_user_optional
-from api.routes import videos, folders, prompts, economic_data, simple_youtube
+from api.routes import videos, folders, prompts, economic_data, simple_youtube, auth, users
 from models.database import Base
 
 # Configure logging
@@ -86,6 +86,20 @@ app.include_router(
     prefix="/api/v1/youtube",
     tags=["simple-youtube"],
     dependencies=[Depends(get_current_user_optional)]
+)
+
+# Authentication routes
+app.include_router(
+    auth.router,
+    prefix="/api/auth",
+    tags=["authentication"]
+)
+
+# User management routes
+app.include_router(
+    users.router,
+    prefix="/api/users",
+    tags=["users"]
 )
 
 

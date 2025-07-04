@@ -218,12 +218,8 @@ export default function EnhancedInteractiveLaborChart({
 
   // Handle data refresh with stable dependencies
   const handleRefresh = useCallback(() => {
-    if (timeRange) {
-      fetchData(timeRange[0], timeRange[1]);
-    } else {
-      fetchData();
-    }
-  }, [fetchData, timeRange?.join(',')]); // Use join to create stable dependency
+    fetchData();
+  }, [fetchData]);
 
   // Export functionality
   const handleExport = useCallback((format: 'csv' | 'json' | 'png') => {

@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
     } else if (housingMarketData.time_series) {
       // Alternative data from FRED service has time_series property
       timeSeriesData = housingMarketData.time_series;
-    } else if (housingMarketData.timeSeries && typeof housingMarketData.timeSeries === 'object' && housingMarketData.timeSeries.CSUSHPINSA) {
+    } else if (housingMarketData.timeSeries && typeof housingMarketData.timeSeries === 'object' && 'CSUSHPINSA' in housingMarketData.timeSeries) {
       // Flask service returns nested structure: timeSeries.INDICATOR.data[]
       console.log('🔄 Transforming Flask service nested data structure...');
       timeSeriesData = transformFlaskDataToTimeSeriesArray(housingMarketData.timeSeries);

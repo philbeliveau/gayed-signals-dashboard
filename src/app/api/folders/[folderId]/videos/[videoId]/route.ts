@@ -4,10 +4,10 @@ const FASTAPI_BASE_URL = process.env.FASTAPI_URL || 'http://localhost:8002';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { folderId: string; videoId: string } }
+  { params }: { params: Promise<{ folderId: string; videoId: string }> }
 ) {
   try {
-    const { folderId, videoId } = params;
+    const { folderId, videoId } = await params;
     console.log('🔄 Adding video to folder:', videoId, '->', folderId);
     
     const response = await fetch(`${FASTAPI_BASE_URL}/api/v1/folders/${folderId}/videos/${videoId}`, {
@@ -42,10 +42,10 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { folderId: string; videoId: string } }
+  { params }: { params: Promise<{ folderId: string; videoId: string }> }
 ) {
   try {
-    const { folderId, videoId } = params;
+    const { folderId, videoId } = await params;
     console.log('🔄 Removing video from folder:', videoId, 'from', folderId);
     
     const response = await fetch(`${FASTAPI_BASE_URL}/api/v1/folders/${folderId}/videos/${videoId}`, {
