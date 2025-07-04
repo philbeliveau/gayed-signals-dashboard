@@ -144,7 +144,7 @@ export const routeDefinitions: RouteDefinition[] = [
     requireAuth: true,
     displayName: 'Strategies',
     icon: 'trending-up',
-    showInNavigation: true
+    showInNavigation: false
   },
   {
     path: '/backtest',
