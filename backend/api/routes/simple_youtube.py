@@ -1,11 +1,14 @@
 """
 Simple YouTube processing endpoint that works synchronously like the test script.
 This bypasses all the complex async polling and returns results immediately.
+Now supports saving to folders and database persistence.
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, HttpUrl
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 import logging
 import tempfile
 import os
@@ -13,6 +16,14 @@ import sys
 import time
 from pathlib import Path
 import shutil
+from typing import Optional
+from uuid import UUID
+import uuid
+from datetime import datetime
+
+from core.database import get_db
+from core.security import get_current_user_optional
+from models.database import User, Video, Transcript, Summary, Folder
 
 # Import the same libraries as the working test script
 try:
@@ -33,6 +44,9 @@ router = APIRouter()
 class SimpleVideoRequest(BaseModel):
     youtube_url: HttpUrl
     summary_mode: str = "bullet"
+    custom_context: Optional[str] = None
+    folder_id: Optional[UUID] = None
+    save_to_database: bool = False
 
 class SimpleVideoResponse(BaseModel):
     success: bool
@@ -42,6 +56,8 @@ class SimpleVideoResponse(BaseModel):
     summary: str = ""
     processing_time: float = 0
     error: str = ""
+    video_id: Optional[str] = None
+    folder_name: Optional[str] = None
 
 class SimpleYouTubeProcessor:
     """Direct copy of the working test script logic"""
@@ -134,11 +150,19 @@ class SimpleYouTubeProcessor:
         logger.info(f"✅ Transcription completed: {len(transcript)} characters")
         return transcript
     
-    def generate_summary(self, transcript, mode="bullet"):
-        """Generate summary - copied from working test script"""
+    def generate_summary(self, transcript, mode="bullet", custom_context=None):
+        """Generate summary - now supports custom context"""
         logger.info("🤖 Starting summary generation...")
         
-        if mode == "bullet":
+        # Custom context takes precedence
+        if custom_context:
+            prompt = f"""Please provide a comprehensive summary of the following video transcript based on this specific context: {custom_context}
+
+Transcript:
+{transcript}
+
+Summary:"""
+        elif mode == "bullet":
             prompt = f"""Please provide a comprehensive summary of the following video transcript in bullet point format.
 
 Structure your summary as follows:
@@ -198,8 +222,8 @@ Summary:"""
         except Exception as e:
             logger.warning(f"⚠️  Could not remove temporary directory: {e}")
     
-    def process_video(self, url, summary_mode="bullet"):
-        """Complete processing pipeline - copied from working test script"""
+    def process_video(self, url, summary_mode="bullet", custom_context=None):
+        """Complete processing pipeline - now supports custom context"""
         logger.info("🚀 Starting YouTube video processing...")
         start_time = time.time()
         url_str = str(url)  # Convert Pydantic URL to string
@@ -212,7 +236,7 @@ Summary:"""
             transcript = self.transcribe_audio(audio_file)
             
             # Step 3: Generate summary
-            summary = self.generate_summary(transcript, summary_mode)
+            summary = self.generate_summary(transcript, summary_mode, custom_context)
             
             processing_time = time.time() - start_time
             logger.info(f"✅ Processing completed in {processing_time:.1f} seconds")
@@ -244,15 +268,135 @@ Summary:"""
         finally:
             self.cleanup()
 
+async def save_video_to_database(
+    db: AsyncSession, 
+    user: User,
+    url: str, 
+    title: str, 
+    transcript: str, 
+    summary: str, 
+    folder_id: Optional[UUID] = None
+) -> tuple[str, Optional[str]]:
+    """Save processed video to database and return video_id and folder_name"""
+    try:
+        # Verify folder exists and belongs to user if folder_id provided
+        folder_name = None
+        if folder_id:
+            folder_result = await db.execute(
+                select(Folder).where(
+                    Folder.id == folder_id,
+                    Folder.user_id == user.id
+                )
+            )
+            folder = folder_result.scalar_one_or_none()
+            if not folder:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Folder not found or access denied"
+                )
+            folder_name = folder.name
+        
+        # Extract YouTube ID from URL
+        youtube_id = None
+        if "watch?v=" in url:
+            youtube_id = url.split("watch?v=")[1].split("&")[0]
+        elif "youtu.be/" in url:
+            youtube_id = url.split("youtu.be/")[1].split("?")[0]
+        
+        # Create video record
+        video = Video(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            folder_id=folder_id,
+            youtube_url=url,
+            youtube_id=youtube_id,
+            title=title,
+            status="completed",
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        db.add(video)
+        await db.flush()  # Get the video ID
+        
+        # Create transcript record
+        transcript_record = Transcript(
+            id=uuid.uuid4(),
+            video_id=video.id,
+            full_text=transcript,
+            chunks=[],  # Simple processor doesn't provide chunks
+            processing_duration=0,
+            created_at=datetime.utcnow()
+        )
+        db.add(transcript_record)
+        
+        # Create summary record
+        summary_record = Summary(
+            id=uuid.uuid4(),
+            video_id=video.id,
+            content=summary,
+            summary_type="bullet",
+            llm_model="gpt-3.5-turbo",
+            llm_provider="openai",
+            created_at=datetime.utcnow()
+        )
+        db.add(summary_record)
+        
+        await db.commit()
+        
+        logger.info(f"✅ Saved video to database: {video.id} in folder: {folder_name or 'Root'}")
+        return str(video.id), folder_name
+        
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"❌ Failed to save video to database: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save video: {str(e)}"
+        )
+
 @router.post("/simple-process", response_model=SimpleVideoResponse)
-async def simple_process_video(request: SimpleVideoRequest):
+async def simple_process_video(
+    request: SimpleVideoRequest,
+    current_user: User = Depends(get_current_user_optional),
+    db: AsyncSession = Depends(get_db)
+):
     """
     Simple synchronous YouTube processing that works like the test script.
     Returns complete results immediately - no polling needed!
+    Now supports saving to folders and database persistence.
     """
     try:
         processor = SimpleYouTubeProcessor()
-        result = processor.process_video(request.youtube_url, request.summary_mode)
+        result = processor.process_video(
+            request.youtube_url, 
+            request.summary_mode, 
+            request.custom_context
+        )
+        
+        video_id = None
+        folder_name = None
+        
+        # Save to database if requested and processing was successful
+        if request.save_to_database and result['success'] and current_user:
+            try:
+                video_id, folder_name = await save_video_to_database(
+                    db=db,
+                    user=current_user,
+                    url=result['url'],
+                    title=result['title'],
+                    transcript=result['transcript'],
+                    summary=result['summary'],
+                    folder_id=request.folder_id
+                )
+                logger.info(f"✅ Video saved to database: {video_id}")
+            except Exception as save_error:
+                logger.error(f"⚠️  Processing succeeded but failed to save to database: {save_error}")
+                # Don't fail the request, just log the error
+                result['error'] = f"Processing succeeded but saving failed: {str(save_error)}"
+        
+        # Add database info to response
+        result['video_id'] = video_id
+        result['folder_name'] = folder_name
         
         return SimpleVideoResponse(**result)
         

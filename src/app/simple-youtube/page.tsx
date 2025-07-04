@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Youtube, Play, Clock, FileText, CheckCircle, XCircle, Loader2, RefreshCw, Activity, LineChart, Home, Users } from 'lucide-react';
+import { Youtube, Play, Clock, FileText, CheckCircle, XCircle, Loader2, RefreshCw, Activity, LineChart, Home, Users, Save, Folder } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../../components/ThemeToggle';
+import FolderManager from '../../components/FolderManager';
 
 interface ProcessingResult {
   success: boolean;
@@ -14,6 +15,8 @@ interface ProcessingResult {
   summary: string;
   processing_time: number;
   error: string;
+  video_id?: string;
+  folder_name?: string;
 }
 
 export default function SimpleYouTubePage() {
@@ -22,6 +25,9 @@ export default function SimpleYouTubePage() {
   const [context, setContext] = useState('');
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<ProcessingResult | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<string | undefined>(undefined);
+  const [selectedFolderName, setSelectedFolderName] = useState<string>('Root');
+  const [saveToDatabase, setSaveToDatabase] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,12 +49,19 @@ export default function SimpleYouTubePage() {
         body: JSON.stringify({
           youtube_url: url,
           summary_mode: 'bullet',
-          custom_context: context.trim() || undefined
+          custom_context: context.trim() || undefined,
+          folder_id: selectedFolder || undefined,
+          save_to_database: saveToDatabase
         }),
       });
 
       const data = await response.json();
       setResult(data);
+      
+      // Show success message if saved to database
+      if (data.success && data.video_id && saveToDatabase) {
+        console.log(`✅ Video saved to ${data.folder_name || 'Root'} folder`);
+      }
     } catch (error) {
       setResult({
         success: false,
@@ -62,6 +75,11 @@ export default function SimpleYouTubePage() {
     } finally {
       setProcessing(false);
     }
+  };
+
+  const handleFolderSelect = (folderId: string | undefined, folderName?: string) => {
+    setSelectedFolder(folderId);
+    setSelectedFolderName(folderName || 'Root');
   };
 
   const formatTime = (seconds: number) => {
@@ -141,17 +159,28 @@ export default function SimpleYouTubePage() {
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-theme-text mb-2">YouTube Processor</h2>
           <p className="text-theme-text-muted">
-            Fast, synchronous YouTube video processing with AI transcription and summarization
+            Fast, synchronous YouTube video processing with AI transcription and summarization with folder organization
           </p>
         </div>
 
-        {/* Input Form */}
-        <div className="bg-theme-card rounded-lg p-6 mb-8 border border-theme-border">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Folder Manager */}
+          <div className="lg:col-span-1">
+            <FolderManager
+              selectedFolder={selectedFolder}
+              onFolderSelect={handleFolderSelect}
+              className="sticky top-6"
+            />
+          </div>
+
+          {/* Input Form */}
+          <div className="lg:col-span-2">
+            <div className="bg-theme-card rounded-lg p-6 border border-theme-border">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="url" className="block text-sm font-medium mb-2">
@@ -189,6 +218,34 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
               </p>
             </div>
 
+            {/* Save to Database Option */}
+            <div className="border-t border-theme-border pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={saveToDatabase}
+                    onChange={(e) => setSaveToDatabase(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-theme-border rounded focus:ring-blue-500"
+                    disabled={processing}
+                  />
+                  <span className="text-sm font-medium text-theme-text">Save to Database</span>
+                </label>
+                {saveToDatabase && (
+                  <div className="flex items-center space-x-2 text-sm text-theme-text-muted">
+                    <Folder className="w-4 h-4" />
+                    <span>Saving to: {selectedFolderName}</span>
+                  </div>
+                )}
+              </div>
+              
+              {saveToDatabase && (
+                <div className="text-sm text-theme-text-muted mb-4">
+                  ✅ Video summary will be saved persistently and can be accessed later
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-end">
               <button
                 type="submit"
@@ -210,6 +267,8 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
               </button>
             </div>
           </form>
+            </div>
+          </div>
         </div>
 
         {/* Processing Status */}
@@ -234,19 +293,36 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
                 ? 'bg-green-50 border-green-200 text-green-800' 
                 : 'bg-red-50 border-red-200 text-red-800'
             }`}>
-              <div className="flex items-center space-x-2">
-                {result.success ? (
-                  <CheckCircle className="w-5 h-5" />
-                ) : (
-                  <XCircle className="w-5 h-5" />
-                )}
-                <span className="font-medium">
-                  {result.success ? 'Processing Completed Successfully!' : 'Processing Failed'}
-                </span>
-                <div className="flex items-center space-x-1 text-sm">
-                  <Clock className="w-4 h-4" />
-                  <span>{formatTime(result.processing_time)}</span>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  {result.success ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : (
+                    <XCircle className="w-5 h-5" />
+                  )}
+                  <span className="font-medium">
+                    {result.success ? 'Processing Completed Successfully!' : 'Processing Failed'}
+                  </span>
+                  <div className="flex items-center space-x-1 text-sm">
+                    <Clock className="w-4 h-4" />
+                    <span>{formatTime(result.processing_time)}</span>
+                  </div>
                 </div>
+                
+                {/* Database save status */}
+                {result.success && result.video_id && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Save className="w-4 h-4" />
+                    <span>✅ Saved to database</span>
+                    {result.folder_name && (
+                      <>
+                        <span>•</span>
+                        <Folder className="w-4 h-4" />
+                        <span>Folder: {result.folder_name}</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
