@@ -248,28 +248,35 @@ function handlePageRouteProtection(
 }
 
 /**
- * Main middleware function
+ * Main middleware function - TEMPORARILY DISABLED AUTHENTICATION
  */
 export async function middleware(request: NextRequest) {
   try {
-    // Extract token from request
-    const token = extractToken(request);
-    
-    // Verify token and get user context
-    let userContext: UserContext | null = null;
-    if (token) {
-      userContext = await verifyToken(token);
-    }
+    // TEMPORARY: Skip authentication and create mock user context
+    const mockUserContext: UserContext = {
+      id: 'temp-user-123',
+      email: 'temp@example.com',
+      isAuthenticated: true,
+      isAdmin: false
+    };
 
-    // Handle route protection
-    return await handleRouteProtection(request, userContext);
+    // Allow all routes to pass through with mock user context
+    const response = NextResponse.next();
+    return createResponseWithUserContext(response, mockUserContext);
     
   } catch (error) {
     console.error('Middleware error:', error);
     
-    // On error, allow the request to proceed but without user context
+    // On error, still allow the request to proceed with mock context
+    const mockUserContext: UserContext = {
+      id: 'temp-user-123',
+      email: 'temp@example.com',
+      isAuthenticated: true,
+      isAdmin: false
+    };
+    
     const response = NextResponse.next();
-    return createResponseWithUserContext(response, null);
+    return createResponseWithUserContext(response, mockUserContext);
   }
 }
 
