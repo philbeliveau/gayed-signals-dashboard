@@ -28,7 +28,10 @@ const PERIOD_OPTIONS: PeriodOption[] = [
   { value: '6m', label: '6M', description: '6 Months', months: 6 },
   { value: '12m', label: '1Y', description: '1 Year', months: 12 },
   { value: '24m', label: '2Y', description: '2 Years', months: 24 },
-  { value: '60m', label: '5Y', description: '5 Years', months: 60 }
+  { value: '5y', label: '5Y', description: '5 Years', months: 60 },
+  { value: '10y', label: '10Y', description: '10 Years', months: 120 },
+  { value: '20y', label: '20Y', description: '20 Years', months: 240 },
+  { value: 'max', label: 'MAX', description: 'All Available (1987+)', months: 456 }
 ];
 
 const QUICK_FILTERS = [
@@ -89,6 +92,7 @@ export default function EnhancedInteractiveHousingChart({
     loading: dataLoading,
     error: dataError,
     lastUpdated,
+    currentPeriod,
     visibleSeries,
     focusedSeries,
     toggleSeries,
@@ -96,11 +100,13 @@ export default function EnhancedInteractiveHousingChart({
     showOnlySeries,
     resetVisibility,
     filterByFrequency,
-    fetchData
+    fetchData,
+    changePeriod
   } = useInteractiveChartData({
     category: 'housing',
     defaultVisibleSeries: ['case_shiller', 'housing_starts', 'months_supply', 'mortgage_rates'],
-    autoSelectFrequency: true
+    autoSelectFrequency: true,
+    initialPeriod: selectedPeriod
   });
 
   // Use external data if provided, otherwise use hook data
@@ -110,20 +116,10 @@ export default function EnhancedInteractiveHousingChart({
 
   // Handle period changes
   const handlePeriodChange = useCallback((period: string) => {
-    const option = PERIOD_OPTIONS.find(p => p.value === period);
-    if (option) {
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setMonth(endDate.getMonth() - option.months);
-      
-      setTimeRange([
-        startDate.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0]
-      ]);
-      
-      onPeriodChange?.(period);
-    }
-  }, [onPeriodChange]);
+    console.log('🏠 Housing period changed to:', period);
+    changePeriod(period);
+    onPeriodChange?.(period);
+  }, [changePeriod, onPeriodChange]);
 
   // Initialize time range based on selected period
   useEffect(() => {
@@ -131,7 +127,23 @@ export default function EnhancedInteractiveHousingChart({
     if (option) {
       const endDate = new Date();
       const startDate = new Date();
-      startDate.setMonth(endDate.getMonth() - option.months);
+      
+      // Handle different period types (same logic as handlePeriodChange)
+      if (selectedPeriod === 'max' || selectedPeriod === 'all') {
+        // For max period, go back to 1987 (start of Case-Shiller data)
+        startDate.setFullYear(1987, 0, 1);
+      } else if (selectedPeriod.endsWith('y')) {
+        // Year-based periods (5y, 10y, 20y)
+        const years = parseInt(selectedPeriod) || 1;
+        startDate.setFullYear(endDate.getFullYear() - years);
+      } else if (selectedPeriod.endsWith('m')) {
+        // Month-based periods (3m, 6m, 12m, 24m)
+        const months = parseInt(selectedPeriod) || 12;
+        startDate.setMonth(endDate.getMonth() - months);
+      } else {
+        // Legacy month-based calculation for backwards compatibility
+        startDate.setMonth(endDate.getMonth() - option.months);
+      }
       
       setTimeRange([
         startDate.toISOString().split('T')[0],
@@ -330,7 +342,7 @@ export default function EnhancedInteractiveHousingChart({
                 key={period.value}
                 onClick={() => handlePeriodChange(period.value)}
                 className={`px-3 py-1.5 text-sm rounded transition-all ${
-                  selectedPeriod === period.value
+                  currentPeriod === period.value
                     ? 'bg-white text-blue-600 shadow-sm font-medium'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}

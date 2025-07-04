@@ -245,6 +245,7 @@ interface UseInteractiveChartDataProps {
   category?: 'housing' | 'labor' | 'all';
   defaultVisibleSeries?: string[];
   autoSelectFrequency?: boolean;
+  initialPeriod?: string;
 }
 
 interface ChartDataState {
@@ -253,19 +254,22 @@ interface ChartDataState {
   loading: boolean;
   error: string | null;
   lastUpdated: Date | null;
+  currentPeriod: string;
 }
 
 export function useInteractiveChartData({
   category = 'all',
   defaultVisibleSeries = [],
-  autoSelectFrequency = true
+  autoSelectFrequency = true,
+  initialPeriod = '12m'
 }: UseInteractiveChartDataProps = {}) {
   const [state, setState] = useState<ChartDataState>({
     data: [],
     seriesConfig: [],
     loading: false,
     error: null,
-    lastUpdated: null
+    lastUpdated: null,
+    currentPeriod: initialPeriod
   });
 
   // Create combined series configuration with stable dependencies
@@ -356,17 +360,18 @@ export function useInteractiveChartData({
   }, []); // Empty dependency array - function is now deterministic
 
   // Fetch real data from API with stable dependencies
-  const fetchData = useCallback(async (startDate?: string, endDate?: string) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
+  const fetchData = useCallback(async (periodOverride?: string) => {
+    const period = periodOverride || initialPeriod;
+    console.log(`🔄 Fetching REAL data for category: ${category}, period: ${period}`);
+    
+    setState(prev => ({ 
+      ...prev, 
+      loading: true, 
+      error: null,
+      currentPeriod: period
+    }));
 
     try {
-      console.log(`🔄 Fetching REAL data for category: ${category}`);
-      
-      // Calculate period based on date range or default to 12m
-      const period = startDate && endDate 
-        ? calculatePeriodFromDates(startDate, endDate)
-        : '12m';
-      
       // Call REAL API endpoints based on category
       let apiData;
       if (category === 'housing') {
@@ -427,20 +432,31 @@ export function useInteractiveChartData({
         error: `API Error: ${error instanceof Error ? error.message : 'Unknown error'} - Using mock data fallback`
       }));
     }
-  }, [category, generateMockData]);
+  }, [category, generateMockData, initialPeriod]);
 
-  // Helper function to calculate period from date range
+  // Helper function to calculate period from date range - now supports extended periods
   const calculatePeriodFromDates = (startDate: string, endDate: string): string => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffMonths = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30));
+    const diffYears = Math.ceil(diffMonths / 12);
     
     if (diffMonths <= 3) return '3m';
     if (diffMonths <= 6) return '6m';
     if (diffMonths <= 12) return '12m';
     if (diffMonths <= 24) return '24m';
-    return '60m';
+    if (diffYears <= 5) return '5y';
+    if (diffYears <= 10) return '10y';
+    if (diffYears <= 20) return '20y';
+    if (diffYears <= 50) return '50y';
+    return 'max';
   };
+
+  // Add function to change period directly
+  const changePeriod = useCallback((newPeriod: string) => {
+    console.log(`🔄 Changing period to: ${newPeriod}`);
+    fetchData(newPeriod);
+  }, [fetchData]);
 
   // Load initial data only once to prevent infinite re-renders
   const initialLoadRef = useRef(false);
@@ -546,6 +562,7 @@ export function useInteractiveChartData({
     loading: state.loading,
     error: state.error,
     lastUpdated: state.lastUpdated,
+    currentPeriod: state.currentPeriod,
 
     // Computed
     visibleSeries,
@@ -554,6 +571,7 @@ export function useInteractiveChartData({
 
     // Actions
     fetchData,
+    changePeriod,
     toggleSeries,
     focusSeries,
     showOnlySeries,

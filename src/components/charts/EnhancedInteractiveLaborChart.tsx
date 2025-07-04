@@ -28,7 +28,11 @@ const PERIOD_OPTIONS: PeriodOption[] = [
   { value: '6m', label: '6M', description: '6 Months', weeks: 26 },
   { value: '12m', label: '1Y', description: '1 Year', weeks: 52 },
   { value: '24m', label: '2Y', description: '2 Years', weeks: 104 },
-  { value: '60m', label: '5Y', description: '5 Years', weeks: 260 }
+  { value: '5y', label: '5Y', description: '5 Years', weeks: 260 },
+  { value: '10y', label: '10Y', description: '10 Years', weeks: 520 },
+  { value: '20y', label: '20Y', description: '20 Years', weeks: 1040 },
+  { value: '50y', label: '50Y', description: '50 Years', weeks: 2600 },
+  { value: 'max', label: 'MAX', description: 'All Available (1948+)', weeks: 4000 }
 ];
 
 const QUICK_FILTERS = [
@@ -103,6 +107,7 @@ export default function EnhancedInteractiveLaborChart({
     loading: dataLoading,
     error: dataError,
     lastUpdated,
+    currentPeriod,
     visibleSeries,
     focusedSeries,
     toggleSeries,
@@ -110,11 +115,13 @@ export default function EnhancedInteractiveLaborChart({
     showOnlySeries,
     resetVisibility,
     filterByFrequency,
-    fetchData
+    fetchData,
+    changePeriod
   } = useInteractiveChartData({
     category: 'labor',
     defaultVisibleSeries: ['unemployment_rate', 'nonfarm_payrolls', 'initial_claims', 'labor_participation'],
-    autoSelectFrequency: true
+    autoSelectFrequency: true,
+    initialPeriod: selectedPeriod
   });
 
   // Use external data if provided, otherwise use hook data
@@ -124,20 +131,10 @@ export default function EnhancedInteractiveLaborChart({
 
   // Handle period changes with stable dependencies
   const handlePeriodChange = useCallback((period: string) => {
-    const option = PERIOD_OPTIONS.find(p => p.value === period);
-    if (option) {
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(endDate.getDate() - (option.weeks * 7));
-      
-      setTimeRange([
-        startDate.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0]
-      ]);
-      
-      onPeriodChange?.(period);
-    }
-  }, [onPeriodChange]);
+    console.log('🔄 Labor period changed to:', period);
+    changePeriod(period);
+    onPeriodChange?.(period);
+  }, [changePeriod, onPeriodChange]);
 
   // Initialize time range based on selected period - with ref to prevent re-runs
   const initializedPeriodRef = useRef<string | null>(null);
@@ -151,7 +148,23 @@ export default function EnhancedInteractiveLaborChart({
       if (option) {
         const endDate = new Date();
         const startDate = new Date();
-        startDate.setDate(endDate.getDate() - (option.weeks * 7));
+        
+        // Handle different period types (same logic as handlePeriodChange)
+        if (selectedPeriod === 'max' || selectedPeriod === 'all') {
+          // For max period, go back to 1948 (start of unemployment data)
+          startDate.setFullYear(1948, 0, 1);
+        } else if (selectedPeriod.endsWith('y')) {
+          // Year-based periods (5y, 10y, 20y, 50y)
+          const years = parseInt(selectedPeriod) || 1;
+          startDate.setFullYear(endDate.getFullYear() - years);
+        } else if (selectedPeriod.endsWith('m')) {
+          // Month-based periods (3m, 6m, 12m, 24m)
+          const months = parseInt(selectedPeriod) || 12;
+          startDate.setMonth(endDate.getMonth() - months);
+        } else {
+          // Legacy week-based calculation for backwards compatibility
+          startDate.setDate(endDate.getDate() - (option.weeks * 7));
+        }
         
         setTimeRange([
           startDate.toISOString().split('T')[0],
@@ -409,7 +422,7 @@ export default function EnhancedInteractiveLaborChart({
                 key={period.value}
                 onClick={() => handlePeriodChange(period.value)}
                 className={`px-3 py-1.5 text-sm rounded transition-all ${
-                  selectedPeriod === period.value
+                  currentPeriod === period.value
                     ? 'bg-white text-blue-600 shadow-sm font-medium'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
