@@ -151,7 +151,7 @@ export const routeDefinitions: RouteDefinition[] = [
     requireAuth: true,
     displayName: 'Backtest',
     icon: 'activity',
-    showInNavigation: true
+    showInNavigation: false
   },
   {
     path: '/backtrader',
@@ -165,21 +165,21 @@ export const routeDefinitions: RouteDefinition[] = [
     requireAuth: true,
     displayName: 'Video Insights',
     icon: 'video',
-    showInNavigation: true
+    showInNavigation: false
   },
   {
     path: '/housing',
     requireAuth: true,
     displayName: 'Housing Market',
     icon: 'home',
-    showInNavigation: true
+    showInNavigation: false
   },
   {
     path: '/labor',
     requireAuth: true,
     displayName: 'Labor Market',
     icon: 'users',
-    showInNavigation: true
+    showInNavigation: false
   },
   {
     path: '/interactive-charts',
