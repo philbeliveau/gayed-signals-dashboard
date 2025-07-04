@@ -359,6 +359,38 @@ export function useInteractiveChartData({
     return data;
   }, []); // Empty dependency array - function is now deterministic
 
+  // Data downsampling function to handle large datasets for chart performance
+  const downsampleData = useCallback((data: DataPoint[], maxPoints: number = 500): DataPoint[] => {
+    if (!data || data.length <= maxPoints) {
+      return data;
+    }
+    
+    console.log(`📉 Downsampling ${data.length} data points to ${maxPoints} for chart performance`);
+    
+    // Sort data by date to ensure proper sampling
+    const sortedData = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    // Calculate sampling interval
+    const step = Math.floor(sortedData.length / maxPoints);
+    const sampledData: DataPoint[] = [];
+    
+    // Always include the first data point
+    sampledData.push(sortedData[0]);
+    
+    // Sample data points at regular intervals
+    for (let i = step; i < sortedData.length - step; i += step) {
+      sampledData.push(sortedData[i]);
+    }
+    
+    // Always include the last data point
+    if (sortedData.length > 1) {
+      sampledData.push(sortedData[sortedData.length - 1]);
+    }
+    
+    console.log(`✅ Downsampled to ${sampledData.length} data points for optimal chart rendering`);
+    return sampledData;
+  }, []);
+
   // Fetch real data from API with stable dependencies
   const fetchData = useCallback(async (periodOverride?: string) => {
     const period = periodOverride || initialPeriod;
@@ -414,9 +446,12 @@ export function useInteractiveChartData({
       
       console.log(`✅ Successfully loaded ${realData.length} REAL data points for ${category}`);
       
+      // Apply downsampling for large datasets to improve chart performance
+      const processedData = downsampleData(realData);
+      
       setState(prev => ({
         ...prev,
-        data: realData,
+        data: processedData,
         loading: false,
         lastUpdated: new Date()
       }));
@@ -432,7 +467,7 @@ export function useInteractiveChartData({
         error: `API Error: ${error instanceof Error ? error.message : 'Unknown error'} - Using mock data fallback`
       }));
     }
-  }, [category, generateMockData, initialPeriod]);
+  }, [category, generateMockData, initialPeriod, downsampleData]);
 
   // Helper function to calculate period from date range - now supports extended periods
   const calculatePeriodFromDates = (startDate: string, endDate: string): string => {
