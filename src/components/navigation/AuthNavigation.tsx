@@ -17,7 +17,7 @@ import {
   Settings,
   Shield
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuthContext } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/useAuth';
 import { getNavigationRoutes } from '../../config/routes';
 import UserMenu from './UserMenu';
@@ -41,7 +41,7 @@ export default function AuthNavigation({
   showThemeToggle = true,
 }: AuthNavigationProps) {
   const pathname = usePathname();
-  const auth = useAuth();
+  const auth = useAuthContext();
   const { isAdmin } = usePermissions();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -239,7 +239,7 @@ export function MobileNavigation({
 }: { 
   className?: string; 
 }) {
-  const auth = useAuth();
+  const auth = useAuthContext();
   const [isOpen, setIsOpen] = useState(false);
 
   if (!auth.state.isAuthenticated) {
@@ -275,7 +275,7 @@ export function AuthBreadcrumb({
   className?: string;
 }) {
   const pathname = usePathname();
-  const auth = useAuth();
+  const auth = useAuthContext();
   const { isAdmin } = usePermissions();
 
   // Generate breadcrumb items based on current path and auth status

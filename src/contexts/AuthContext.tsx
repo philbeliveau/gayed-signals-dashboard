@@ -451,11 +451,11 @@ export function AuthProvider({ children, service = authService }: AuthProviderPr
 }
 
 // Custom hook to use authentication context
-export function useAuth(): AuthContextValue {
+export function useAuthContext(): AuthContextValue {
   const context = useContext(AuthContext);
   
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuthContext must be used within an AuthProvider');
   }
   
   return context;

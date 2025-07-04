@@ -17,7 +17,7 @@ export interface RouteGuardProps {
   loadingComponent?: ReactNode;
 }
 
-export function RouteGuard({
+function RouteGuard({
   children,
   requireAuth = true,
   requireSuperuser = false,
@@ -92,4 +92,5 @@ export function withRouteGuard<P extends object>(
   };
 }
 
+export { RouteGuard };
 export default RouteGuard;

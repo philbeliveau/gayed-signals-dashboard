@@ -691,7 +691,7 @@ describe('AuthService', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith('/auth/verify-email', {
         token: 'valid-token'
       })
-      expect(result.message).toBe('Email verified successfully'
+      expect(result.message).toBe('Email verified successfully')
     })
 
     test('validates token is provided', async () => {

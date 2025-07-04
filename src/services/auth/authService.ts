@@ -67,7 +67,8 @@ export class FastAPIAuthService implements AuthService {
         email: userData.email,
         username: userData.username,
         password: userData.password,
-        full_name: userData.full_name
+        full_name: userData.full_name,
+        terms_accepted: userData.terms_accepted
       });
 
       console.log('Registration successful for:', userData.email);

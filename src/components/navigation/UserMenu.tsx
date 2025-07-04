@@ -13,7 +13,7 @@ import {
   Bell,
   HelpCircle
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuthContext } from '../../contexts/AuthContext';
 import { InlineSpinner } from '../auth/LoadingSpinner';
 
 export interface UserMenuProps {
@@ -34,7 +34,7 @@ export default function UserMenu({
   showFullName = true,
   onLogout,
 }: UserMenuProps) {
-  const auth = useAuth();
+  const auth = useAuthContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);

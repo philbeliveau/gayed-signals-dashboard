@@ -5,7 +5,6 @@
 
 import { 
   APIResponse, 
-  APIError, 
   AuthResponse, 
   LoginCredentials, 
   RegisterData, 
@@ -41,10 +40,15 @@ export class FastAPIAuthClient {
     const accessToken = this.tokenManager.getAccessToken();
 
     // Default headers
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
     };
+
+    // Merge options headers if present
+    if (options.headers) {
+      const optionHeaders = options.headers as Record<string, string>;
+      Object.assign(headers, optionHeaders);
+    }
 
     // Add authorization header if token exists
     if (accessToken) {
@@ -76,17 +80,17 @@ export class FastAPIAuthClient {
           }
         }
         
-        throw await this.createAPIError(response);
+        throw await this.createAuthAPIError(response);
       }
 
       return this.parseResponse<T>(response);
     } catch (error) {
-      if (error instanceof APIError) {
+      if (error instanceof AuthAPIError) {
         throw error;
       }
       
       console.error('API request failed:', error);
-      throw new APIError(
+      throw new AuthAPIError(
         error instanceof Error ? error.message : 'Network request failed',
         0,
         'NETWORK_ERROR'
@@ -287,7 +291,7 @@ export class FastAPIAuthClient {
     };
   }
 
-  private async createAPIError(response: Response): Promise<APIError> {
+  private async createAuthAPIError(response: Response): Promise<AuthAPIError> {
     let errorData: any;
     
     try {
@@ -296,23 +300,23 @@ export class FastAPIAuthClient {
       errorData = { message: response.statusText };
     }
 
-    return new APIError(
+    return new AuthAPIError(
       errorData.detail || errorData.message || `Request failed with status ${response.status}`,
       response.status,
       errorData.code || `HTTP_${response.status}`
     );
   }
 
-  private normalizeAuthError(error: any): APIError {
-    if (error instanceof APIError) {
+  private normalizeAuthError(error: any): AuthAPIError {
+    if (error instanceof AuthAPIError) {
       return error;
     }
     
     if (error instanceof Error) {
-      return new APIError(error.message, 0, 'CLIENT_ERROR');
+      return new AuthAPIError(error.message, 0, 'CLIENT_ERROR');
     }
     
-    return new APIError('An unknown error occurred', 0, 'UNKNOWN_ERROR');
+    return new AuthAPIError('An unknown error occurred', 0, 'UNKNOWN_ERROR');
   }
 
   private delay(ms: number): Promise<void> {
@@ -330,7 +334,7 @@ export class FastAPIAuthClient {
 }
 
 // API Error class
-export class APIError extends Error {
+export class AuthAPIError extends Error {
   constructor(
     message: string,
     public status: number,
@@ -342,5 +346,6 @@ export class APIError extends Error {
   }
 }
 
+// Default export
 // Default export
 export const authApiClient = new FastAPIAuthClient();

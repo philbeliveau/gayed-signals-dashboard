@@ -12,14 +12,14 @@ export interface ErrorAlertProps {
   className?: string;
 }
 
-export const ErrorAlert: React.FC<ErrorAlertProps> = ({
+function ErrorAlert({
   message,
   type = 'error',
   onDismiss,
   autoDismiss = false,
   autoDismissTime = 5000,
   className = ''
-}) => {
+}: ErrorAlertProps) {
   const [isVisible, setIsVisible] = React.useState(true);
 
   React.useEffect(() => {
@@ -95,6 +95,7 @@ export const ErrorAlert: React.FC<ErrorAlertProps> = ({
       )}
     </div>
   );
-};
+}
 
+export { ErrorAlert };
 export default ErrorAlert;

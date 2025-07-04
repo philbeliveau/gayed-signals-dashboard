@@ -75,7 +75,7 @@ export const PermissionGroups = {
  * Role to permissions mapping
  */
 export const RolePermissions: Record<Role, Permission[]> = {
-  [Role.USER]: PermissionGroups.BASIC,
+  [Role.USER]: [...PermissionGroups.BASIC],
   
   [Role.MODERATOR]: [
     ...PermissionGroups.BASIC,
@@ -95,15 +95,24 @@ export const RolePermissions: Record<Role, Permission[]> = {
   ],
   
   // ⚠️ DANGEROUS - Can bypass ALL security measures
-  [Role.SYSTEM_OVERRIDE]: PermissionGroups.SUPER_ADMIN,
+  [Role.SYSTEM_OVERRIDE]: [...PermissionGroups.SUPER_ADMIN],
 };
 
 /**
  * Check if a permission is dangerous
  */
 export function isDangerousPermission(permission: Permission): boolean {
-  return PermissionGroups.DANGEROUS.includes(permission) || 
-         permission === Permission.SUPER_ADMIN;
+  const dangerousPermissions = [
+    Permission.DANGEROUS_SKIP_AUTH,
+    Permission.DANGEROUS_SKIP_VALIDATION, 
+    Permission.DANGEROUS_SKIP_RATE_LIMIT,
+    Permission.DANGEROUS_BYPASS_SECURITY,
+    Permission.DANGEROUS_SYSTEM_ACCESS,
+    Permission.DANGEROUS_DATA_EXPORT,
+    Permission.DANGEROUS_USER_IMPERSONATE,
+    Permission.SUPER_ADMIN
+  ];
+  return dangerousPermissions.includes(permission);
 }
 
 /**

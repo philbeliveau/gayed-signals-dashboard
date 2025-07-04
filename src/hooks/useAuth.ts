@@ -18,7 +18,7 @@ import {
   User,
   AuthError
 } from '@/types/auth';
-import { useAuth as useAuthContext } from '@/contexts/AuthContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 /**
  * Main authentication hook

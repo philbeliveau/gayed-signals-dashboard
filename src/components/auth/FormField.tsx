@@ -12,14 +12,14 @@ export interface FormFieldProps {
   className?: string;
 }
 
-export const FormField: React.FC<FormFieldProps> = ({
+function FormField({
   label,
   error,
   required = false,
   helpText,
   children,
   className = ''
-}) => {
+}: FormFieldProps) {
   const fieldId = React.useId();
   const errorId = `${fieldId}-error`;
   const helpId = `${fieldId}-help`;
@@ -74,6 +74,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       )}
     </div>
   );
-};
+}
 
+export { FormField };
 export default FormField;

@@ -52,14 +52,14 @@ const checkUsernameAvailability = async (username: string): Promise<boolean> => 
   return !unavailableUsernames.includes(username.toLowerCase());
 };
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({
+function RegisterForm({
   onSuccess,
   onError,
   redirectTo = '/dashboard',
   showLoginLink = true,
   requireTerms = true,
   className = ''
-}) => {
+}: RegisterFormProps) {
   const router = useRouter();
   const { handleRegister, isSubmitting, formError, clearFormError } = useAuthForm();
   const [state, setState] = useState<RegisterFormState>({
@@ -235,7 +235,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         email: state.email,
         username: state.username,
         password: state.password,
-        full_name: state.fullName || null,
+        full_name: state.fullName || undefined,
         terms_accepted: state.termsAccepted
       };
 
@@ -533,6 +533,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       </form>
     </div>
   );
-};
+}
 
+export { RegisterForm };
 export default RegisterForm;

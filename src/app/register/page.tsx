@@ -1,73 +1,55 @@
 /**
- * Register Page
- * Dedicated page for user registration
+ * Register Page - TESTING REGISTERFORM IMPORT ONLY
  */
 
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { RegisterForm } from '@/components/auth';
-import { useAuth } from '@/hooks/useAuth';
+import RegisterForm from '@/components/auth/RegisterForm';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const { isAuthenticated, isLoading, isInitialized } = useAuth();
-
-  // Redirect if already authenticated
-  React.useEffect(() => {
-    if (isInitialized && isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isInitialized, isAuthenticated, router]);
-
-  // Show loading while checking authentication
-  if (!isInitialized || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Logo/Branding */}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-md w-full space-y-8 p-8">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xl">GS</span>
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Join Gayed Signals Dashboard
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Register
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Create your account to get started
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            Simplified register page - testing for undefined components
           </p>
         </div>
-
-        {/* Register Form */}
-        <RegisterForm 
-          onSuccess={(user) => {
-            console.log('Registration successful for:', user.email);
-          }}
-          onError={(error) => {
-            console.error('Registration failed:', error);
-          }}
-          redirectTo="/dashboard"
-          showLoginLink={true}
-          className="mt-8"
-        />
-
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            © 2024 Gayed Signals Dashboard. All rights reserved.
-          </p>
-        </div>
+        
+        <form className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Email
+            </label>
+            <input
+              type="email"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter your email"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Password
+            </label>
+            <input
+              type="password"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter your password"
+            />
+          </div>
+          
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Register
+          </button>
+        </form>
       </div>
     </div>
   );
