@@ -259,7 +259,7 @@ export default function EnhancedInteractiveHousingChart({
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Case-Shiller Index</p>
+                <p className="text-sm text-gray-600">Case-Shiller Index <span className="text-xs text-gray-400">(CSUSHPINSA)</span></p>
                 <p className="text-2xl font-bold text-gray-900">
                   {summary.currentPrice?.toFixed(1)}
                 </p>
@@ -282,7 +282,7 @@ export default function EnhancedInteractiveHousingChart({
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Housing Starts</p>
+                <p className="text-sm text-gray-600">Housing Starts <span className="text-xs text-gray-400">(HOUST)</span></p>
                 <p className="text-2xl font-bold text-gray-900">
                   {summary.currentStarts?.toFixed(0)}K
                 </p>
@@ -304,7 +304,7 @@ export default function EnhancedInteractiveHousingChart({
           
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <div>
-              <p className="text-sm text-gray-600">Months Supply</p>
+              <p className="text-sm text-gray-600">Months Supply <span className="text-xs text-gray-400">(MSACSR)</span></p>
               <p className="text-2xl font-bold text-gray-900">
                 {summary.currentSupply?.toFixed(1)}
               </p>

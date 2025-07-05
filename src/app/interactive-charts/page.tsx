@@ -89,45 +89,22 @@ export default function InteractiveChartsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl">
+              {/* <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl">
                 <BarChart3 className="w-8 h-8" />
-              </div>
-              <h1 className="text-4xl font-bold text-gray-900">
+              </div> */}
+              {/* <h1 className="text-4xl font-bold text-gray-900">
                 Interactive Economic Charts
-              </h1>
+              </h1> */}
             </div>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            {/* <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Experience the next generation of economic data visualization with clickable series selection, 
               automatic granularity adjustment, and modern interactive design.
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Features Overview */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Key Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <div key={index} className="bg-white border border-gray-200 rounded-xl p-6 text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
-                    <feature.icon className="w-6 h-6" />
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Chart Type Selection */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Select Chart Type</h2>
@@ -165,25 +142,6 @@ export default function InteractiveChartsPage() {
           </div>
         </div>
 
-        {/* Instructions */}
-        <div className="mb-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-600 mt-1 shrink-0" />
-            <div>
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                How to Use Interactive Charts
-              </h3>
-              <div className="space-y-2 text-sm text-blue-800">
-                <p><strong>Click</strong> on any series legend item to show/hide that data series</p>
-                <p><strong>Double-click</strong> on a series to focus and isolate just that indicator</p>
-                <p><strong>Use Quick Filters</strong> to instantly switch between related data groupings</p>
-                <p><strong>Adjust Time Period</strong> to see data at different granularities automatically</p>
-                <p><strong>Hover over data points</strong> for detailed contextual information</p>
-                <p><strong>Use the brush</strong> at the bottom to zoom into specific time ranges</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Chart Display */}
         <div className="space-y-8">
