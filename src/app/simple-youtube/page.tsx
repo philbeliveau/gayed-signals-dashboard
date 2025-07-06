@@ -124,32 +124,11 @@ export default function SimpleYouTubePage() {
               <span>Live Signals</span>
             </Link>
             <Link 
-              href="/strategies" 
-              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
-            >
-              <span className="text-lg">📊</span>
-              <span>Strategy Dashboard</span>
-            </Link>
-            <Link 
               href="/backtrader" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
             >
               <LineChart className="w-4 h-4" />
               <span>Backtrader Analysis</span>
-            </Link>
-            <Link 
-              href="/housing" 
-              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
-            >
-              <Home className="w-4 h-4" />
-              <span>Housing Market</span>
-            </Link>
-            <Link 
-              href="/labor" 
-              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover transition-colors whitespace-nowrap"
-            >
-              <Users className="w-4 h-4" />
-              <span>Labor Market</span>
             </Link>
             <div className="flex items-center space-x-2 px-4 py-3 rounded-lg bg-theme-primary text-white whitespace-nowrap">
               <Youtube className="w-4 h-4" />

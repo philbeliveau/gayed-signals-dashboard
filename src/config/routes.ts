@@ -53,12 +53,7 @@ export const routeConfig: RouteConfig = {
     '/dashboard',
     '/profile',
     '/settings',
-    '/strategies',
-    '/backtest',
     '/backtrader',
-    '/video-insights',
-    '/housing',
-    '/labor',
     '/interactive-charts',
     '/simple-youtube'
   ],
@@ -81,17 +76,13 @@ export const routeConfig: RouteConfig = {
       '/api/auth/reset-password',
       '/api/signals',
       '/api/chart',
-      '/api/backtest',
-      '/api/backtrader',
-      '/api/housing',
-      '/api/labor'
+      '/api/backtrader'
     ],
     protected: [
       '/api/auth/me',
       '/api/auth/refresh',
       '/api/auth/logout',
       '/api/users/profile',
-      '/api/video-insights',
       '/api/simple-youtube',
       '/api/folders',
       '/api/prompts',
@@ -140,46 +131,11 @@ export const routeDefinitions: RouteDefinition[] = [
     showInNavigation: true
   },
   {
-    path: '/strategies',
-    requireAuth: true,
-    displayName: 'Strategies',
-    icon: 'trending-up',
-    showInNavigation: false
-  },
-  {
-    path: '/backtest',
-    requireAuth: true,
-    displayName: 'Backtest',
-    icon: 'activity',
-    showInNavigation: false
-  },
-  {
     path: '/backtrader',
     requireAuth: true,
     displayName: 'Backtrader Analysis',
     icon: 'line-chart',
     showInNavigation: true
-  },
-  {
-    path: '/video-insights',
-    requireAuth: true,
-    displayName: 'Video Insights',
-    icon: 'video',
-    showInNavigation: false
-  },
-  {
-    path: '/housing',
-    requireAuth: true,
-    displayName: 'Housing Market',
-    icon: 'home',
-    showInNavigation: false
-  },
-  {
-    path: '/labor',
-    requireAuth: true,
-    displayName: 'Labor Market',
-    icon: 'users',
-    showInNavigation: false
   },
   {
     path: '/interactive-charts',
