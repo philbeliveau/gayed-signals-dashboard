@@ -403,14 +403,15 @@ export default function Dashboard() {
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
   const [showETFModal, setShowETFModal] = useState(false);
   const [loadingMode, setLoadingMode] = useState<'fast' | 'full' | null>(null);
+  const [isFullMode, setIsFullMode] = useState(true);
 
-  const fetchSignals = useCallback(async (fast = true) => {
+  const fetchSignals = useCallback(async (fast = false) => {
     try {
       if (!loading) setRefreshing(true);
       setError(null);
       setLoadingMode(fast ? 'fast' : 'full');
       
-      // Use fast mode by default for quicker page loads
+      // Use full mode by default for home page to show all 5 signals
       const apiUrl = fast ? '/api/signals?fast=true' : '/api/signals';
       const startTime = Date.now();
       const response = await fetch(apiUrl);
@@ -449,8 +450,8 @@ export default function Dashboard() {
   }, [loading]);
 
   useEffect(() => {
-    fetchSignals();
-  }, [fetchSignals]);
+    fetchSignals(!isFullMode);
+  }, [fetchSignals, isFullMode]);
 
   const getSignalColor = (signal: string) => {
     switch (signal) {
@@ -716,16 +717,29 @@ export default function Dashboard() {
           <div className="text-theme-danger text-5xl mb-4">⚠</div>
           <div className="text-xl font-semibold text-theme-danger mb-4">Error Loading Signals</div>
           <div className="text-theme-text-muted mb-6">{error}</div>
-          <button 
-            onClick={() => {
-              setLoading(true);
-              setError(null);
-              fetchSignals();
-            }}
-            className="px-6 py-3 bg-theme-danger-bg border border-theme-danger-border rounded-lg text-theme-danger hover:bg-theme-danger-bg/80 transition-colors duration-200"
-          >
-            Try Again
-          </button>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => {
+                setLoading(true);
+                setError(null);
+                fetchSignals(!isFullMode);
+              }}
+              className="px-6 py-3 bg-theme-danger-bg border border-theme-danger-border rounded-lg text-theme-danger hover:bg-theme-danger-bg/80 transition-colors duration-200"
+            >
+              Try Again
+            </button>
+            <button 
+              onClick={() => {
+                setLoading(true);
+                setError(null);
+                setIsFullMode(false);
+                fetchSignals(true);
+              }}
+              className="px-6 py-3 bg-theme-warning-bg border border-theme-warning-border rounded-lg text-theme-warning hover:bg-theme-warning-bg/80 transition-colors duration-200"
+            >
+              Try Fast Mode
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -739,6 +753,84 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-theme-bg text-theme-text trading-background-subtle">
       <div className="max-w-7xl mx-auto px-6 pt-8 pb-8 space-y-8">
+        {/* Header Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-theme-text mb-2">Market Signals Dashboard</h1>
+            <p className="text-theme-text-muted">Real-time analysis of Gayed market regime indicators</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {/* Mode Toggle */}
+            <div className="flex items-center gap-2 bg-theme-card border border-theme-border rounded-lg p-1">
+              <button
+                onClick={() => setIsFullMode(true)}
+                className={`px-3 py-1.5 text-sm rounded transition-all ${
+                  isFullMode
+                    ? 'bg-theme-primary text-white'
+                    : 'text-theme-text-muted hover:text-theme-text'
+                }`}
+              >
+                All 5 Signals
+              </button>
+              <button
+                onClick={() => setIsFullMode(false)}
+                className={`px-3 py-1.5 text-sm rounded transition-all ${
+                  !isFullMode
+                    ? 'bg-theme-primary text-white'
+                    : 'text-theme-text-muted hover:text-theme-text'
+                }`}
+              >
+                Fast Mode
+              </button>
+            </div>
+            
+            {/* Refresh Button */}
+            <button
+              onClick={() => fetchSignals(!isFullMode)}
+              disabled={refreshing}
+              className="flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border rounded-lg hover:border-theme-border-hover hover:bg-theme-card-hover transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </button>
+            
+            {/* Navigation Links */}
+            <div className="flex items-center gap-2">
+              <Link
+                href="/interactive-charts"
+                className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
+              >
+                <LineChart className="w-4 h-4" />
+                <span>View Charts</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+        
+        {/* Status Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-4 py-3 bg-theme-card border border-theme-border rounded-lg">
+          <div className="flex items-center gap-4 text-sm text-theme-text-muted">
+            <span>
+              Mode: <strong className="text-theme-text">{isFullMode ? 'Full Analysis' : 'Fast Mode'}</strong>
+            </span>
+            <span>
+              Signals: <strong className="text-theme-text">{signals.length}</strong>
+            </span>
+            {loadingMode && (
+              <span className="text-theme-primary">
+                {loadingMode === 'fast' ? 'Fast loading...' : 'Full analysis...'}
+              </span>
+            )}
+          </div>
+          
+          {lastUpdated && (
+            <div className="text-sm text-theme-text-muted">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </div>
+          )}
+        </div>
+
         {/* Market Overview Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-theme-card border border-theme-border rounded-xl p-6 hover:border-theme-border-hover hover:shadow-lg transition-all duration-200">
