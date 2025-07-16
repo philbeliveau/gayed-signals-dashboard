@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { BarChart3, Users, Home, TrendingUp, Info, Sparkles } from 'lucide-react';
+import { BarChart3, Users, Home, TrendingUp, Info, Sparkles, Activity } from 'lucide-react';
 import EnhancedInteractiveHousingChart from '../../components/charts/EnhancedInteractiveHousingChart';
 import EnhancedInteractiveLaborChart from '../../components/charts/EnhancedInteractiveLaborChart';
+import EnhancedSignalsChart from '../../components/charts/EnhancedSignalsChart';
 
-type ChartType = 'housing' | 'labor' | 'combined';
+type ChartType = 'housing' | 'labor' | 'signals' | 'combined';
 
 /**
  * Interactive Charts Demo Page
@@ -17,23 +18,30 @@ type ChartType = 'housing' | 'labor' | 'combined';
  * - Real-time data integration
  */
 export default function InteractiveChartsPage() {
-  const [activeChart, setActiveChart] = useState<ChartType>('housing');
+  const [activeChart, setActiveChart] = useState<ChartType>('signals');
   const [selectedPeriod, setSelectedPeriod] = useState('12m');
 
   const chartTypes = [
+    {
+      id: 'signals' as ChartType,
+      name: 'Gayed Market Signals',
+      description: 'All 5 market regime signals: Utilities/SPY, Lumber/Gold, Treasury Curve, VIX Defensive, S&P 500 MA',
+      icon: Activity,
+      color: 'blue'
+    },
     {
       id: 'housing' as ChartType,
       name: 'Housing Market',
       description: 'Interactive housing market indicators with price trends, supply metrics, and mortgage rates',
       icon: Home,
-      color: 'blue'
+      color: 'green'
     },
     {
       id: 'labor' as ChartType,
       name: 'Labor Market',
       description: 'Employment data with unemployment rates, job claims, and participation metrics',
       icon: Users,
-      color: 'green'
+      color: 'orange'
     },
     {
       id: 'combined' as ChartType,
@@ -75,6 +83,9 @@ export default function InteractiveChartsPage() {
       green: isActive 
         ? 'bg-green-50 border-green-200 text-green-700' 
         : 'bg-white border-gray-200 text-gray-700 hover:border-green-200 hover:text-green-600',
+      orange: isActive 
+        ? 'bg-orange-50 border-orange-200 text-orange-700' 
+        : 'bg-white border-gray-200 text-gray-700 hover:border-orange-200 hover:text-orange-600',
       purple: isActive 
         ? 'bg-purple-50 border-purple-200 text-purple-700' 
         : 'bg-white border-gray-200 text-gray-700 hover:border-purple-200 hover:text-purple-600'
@@ -145,6 +156,15 @@ export default function InteractiveChartsPage() {
 
         {/* Chart Display */}
         <div className="space-y-8">
+          {activeChart === 'signals' && (
+            <EnhancedSignalsChart
+              height={700}
+              selectedPeriod={selectedPeriod}
+              onPeriodChange={setSelectedPeriod}
+              showAllSignals={true}
+            />
+          )}
+
           {activeChart === 'housing' && (
             <EnhancedInteractiveHousingChart
               height={700}
