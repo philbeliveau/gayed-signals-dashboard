@@ -1,0 +1,23 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "python-services/backtrader-analysis/Dockerfile"
+  },
+  "deploy": {
+    "startCommand": "cd python-services/backtrader-analysis && python start_service.py",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 300,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "NODE_ENV": "production",
+        "ENVIRONMENT": "production",
+        "PORT": "5001"
+      }
+    }
+  }
+}

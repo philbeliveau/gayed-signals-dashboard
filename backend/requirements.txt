@@ -45,6 +45,8 @@ pandas>=1.5.0
 # Utilities
 python-dotenv==1.0.0
 typing-extensions>=4.11
+six>=1.16.0
+tzdata>=2022.7
 
 # Development dependencies
 pytest==7.4.3
