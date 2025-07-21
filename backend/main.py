@@ -173,11 +173,12 @@ async def global_exception_handler(request, exc):
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("FASTAPI_PORT", 8000))
+    # Use Railway's PORT variable, fallback to FASTAPI_PORT, then 8000
+    port = int(os.getenv("PORT", os.getenv("FASTAPI_PORT", "8000")))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
-        reload=True,
+        reload=False,  # Disable reload in production
         log_level="info"
     )

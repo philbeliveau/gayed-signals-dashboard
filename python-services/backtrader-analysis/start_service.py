@@ -21,7 +21,8 @@ def setup_environment():
     
     # Set default environment variables
     os.environ.setdefault('FLASK_ENV', 'development')
-    os.environ.setdefault('FLASK_PORT', '5000')
+    # Use Railway's PORT if available, otherwise fallback to FLASK_PORT, then 5000
+    os.environ.setdefault('FLASK_PORT', os.environ.get('PORT', '5000'))
     os.environ.setdefault('LOG_LEVEL', 'INFO')
     
     # Create necessary directories
@@ -174,8 +175,9 @@ Examples:
         """
     )
     
-    parser.add_argument('--port', type=int, default=5000,
-                       help='Port to run the server on (default: 5000)')
+    parser.add_argument('--port', type=int, 
+                       default=int(os.environ.get('PORT', os.environ.get('FLASK_PORT', '5000'))),
+                       help='Port to run the server on (default: Railway PORT or 5000)')
     parser.add_argument('--production', action='store_true',
                        help='Start production server with gunicorn')
     parser.add_argument('--workers', type=int, default=4,

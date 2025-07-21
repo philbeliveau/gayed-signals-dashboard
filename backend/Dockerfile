@@ -31,12 +31,12 @@ RUN mkdir -p temp data logs
 # Set permissions
 RUN chmod +x main.py
 
-# Expose port
-EXPOSE 8002
+# Expose port (Railway will override this)
+EXPOSE ${PORT:-8002}
 
-# Health check
+# Health check - Use PORT environment variable
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8002/health', timeout=5)"
+    CMD python -c "import requests, os; requests.get(f'http://localhost:{os.environ.get(\"PORT\", \"8002\")}/health', timeout=5)"
 
-# Default command
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002", "--workers", "1"]
+# Default command - Use Railway's PORT environment variable
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8002} --workers 1

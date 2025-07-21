@@ -41,12 +41,12 @@ ENV FLASK_PORT=5000
 ENV LOG_LEVEL=INFO
 ENV PYTHONPATH=/app/src
 
-# Expose port
-EXPOSE 5000
+# Expose port (Railway will override this)
+EXPOSE ${PORT:-5000}
 
-# Health check
+# Health check - Use PORT environment variable
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:5000/health', timeout=5)"
+    CMD python -c "import requests, os; requests.get(f'http://localhost:{os.environ.get(\"PORT\", \"5000\")}/health', timeout=5)"
 
-# Start the service
-CMD ["python", "start_service.py", "--production", "--port", "5000"]
+# Start the service - Use Railway's PORT environment variable
+CMD python start_service.py --production --port ${PORT:-5000}
