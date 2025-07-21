@@ -48,5 +48,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests, os; requests.get(f'http://localhost:{os.environ.get(\"PORT\", \"5000\")}/health', timeout=5)"
 
-# Start the service - Railway will provide PORT env var
-CMD ["sh", "-c", "python start_service.py --production --port ${PORT:-5000}"]
+# Default command - Railway will override this with custom start command  
+CMD ["python", "start_service.py", "--production", "--port", "5000"]
