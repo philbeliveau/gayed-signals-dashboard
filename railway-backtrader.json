@@ -5,7 +5,7 @@
     "dockerfilePath": "python-services/backtrader-analysis/Dockerfile"
   },
   "deploy": {
-    "startCommand": "cd python-services/backtrader-analysis && python start_service.py",
+    "startCommand": "python start_service.py --production --port $PORT",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
@@ -14,9 +14,9 @@
   "environments": {
     "production": {
       "variables": {
-        "NODE_ENV": "production",
-        "ENVIRONMENT": "production",
-        "PORT": "5001"
+        "FLASK_ENV": "production",
+        "FLASK_HOST": "0.0.0.0",
+        "LOG_LEVEL": "INFO"
       }
     }
   }
