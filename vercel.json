@@ -53,13 +53,7 @@
       ]
     }
   ],
-  "redirects": [
-    {
-      "source": "/backtrader",
-      "destination": "/interactive-charts",
-      "permanent": false
-    }
-  ],
+  "redirects": [],
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm ci",

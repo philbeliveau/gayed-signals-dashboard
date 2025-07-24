@@ -5,6 +5,11 @@ import { BarChart3, Users, Home, TrendingUp, Info, Sparkles, Activity } from 'lu
 import EnhancedInteractiveHousingChart from '../../components/charts/EnhancedInteractiveHousingChart';
 import EnhancedInteractiveLaborChart from '../../components/charts/EnhancedInteractiveLaborChart';
 import EnhancedSignalsChart from '../../components/charts/EnhancedSignalsChart';
+import UtilitiesSpySignal from '../../components/charts/signals/UtilitiesSpySignal';
+import LumberGoldSignal from '../../components/charts/signals/LumberGoldSignal';
+import TreasuryCurveSignal from '../../components/charts/signals/TreasuryCurveSignal';
+import VixDefensiveSignal from '../../components/charts/signals/VixDefensiveSignal';
+import SP500MASignal from '../../components/charts/signals/SP500MASignal';
 
 type ChartType = 'housing' | 'labor' | 'signals' | 'combined';
 
@@ -190,26 +195,89 @@ export default function InteractiveChartsPage() {
             <div className="space-y-8">
               <div className="text-center py-8">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Combined Economic Analysis
+                  Combined Analysis
                 </h3>
                 <p className="text-gray-600">
-                  Side-by-side comparison of housing and labor market indicators
+                  Side-by-side comparison of housing and labor market indicators, plus all 5 Gayed Market Signals
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                <EnhancedInteractiveHousingChart
-                  height={500}
-                  selectedPeriod={selectedPeriod}
-                  onPeriodChange={setSelectedPeriod}
-                  region="US Housing"
-                />
-                
-                <EnhancedInteractiveLaborChart
-                  height={500}
-                  selectedPeriod={selectedPeriod}
-                  onPeriodChange={setSelectedPeriod}
-                />
+              {/* Housing and Labor Market Comparison */}
+              <div className="mb-12">
+                <h4 className="text-lg font-semibold text-gray-900 mb-6 text-center">
+                  Housing & Labor Market Indicators
+                </h4>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                  <EnhancedInteractiveHousingChart
+                    height={500}
+                    selectedPeriod={selectedPeriod}
+                    onPeriodChange={setSelectedPeriod}
+                    region="US Housing"
+                  />
+                  
+                  <EnhancedInteractiveLaborChart
+                    height={500}
+                    selectedPeriod={selectedPeriod}
+                    onPeriodChange={setSelectedPeriod}
+                  />
+                </div>
+              </div>
+
+              {/* All 5 Gayed Market Signals */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-6 text-center">
+                  Gayed Market Regime Signals
+                </h4>
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <UtilitiesSpySignal
+                    height={350}
+                    selectedPeriod={selectedPeriod}
+                    onPeriodChange={setSelectedPeriod}
+                  />
+                  
+                  <LumberGoldSignal
+                    height={350}
+                    selectedPeriod={selectedPeriod}
+                    onPeriodChange={setSelectedPeriod}
+                  />
+                  
+                  <TreasuryCurveSignal
+                    height={350}
+                    selectedPeriod={selectedPeriod}
+                    onPeriodChange={setSelectedPeriod}
+                  />
+                  
+                  <VixDefensiveSignal
+                    height={350}
+                    selectedPeriod={selectedPeriod}
+                    onPeriodChange={setSelectedPeriod}
+                  />
+                  
+                  <SP500MASignal
+                    height={350}
+                    selectedPeriod={selectedPeriod}
+                    onPeriodChange={setSelectedPeriod}
+                  />
+
+                  {/* Consensus Summary Card */}
+                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6 flex flex-col justify-center items-center">
+                    <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl mb-4">
+                      <Activity className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">
+                      Market Consensus
+                    </h3>
+                    <p className="text-sm text-gray-600 text-center mb-4">
+                      Aggregate view of all 5 signals combined with detailed analysis
+                    </p>
+                    <button 
+                      onClick={() => setActiveChart('signals')}
+                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all text-sm font-medium"
+                    >
+                      View Full Analysis
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
