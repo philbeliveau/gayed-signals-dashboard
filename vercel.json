@@ -60,20 +60,6 @@
       "permanent": false
     }
   ],
-  "rewrites": [
-    {
-      "source": "/python-api/(.*)",
-      "destination": "https://backend-production-0a4c.up.railway.app/$1"
-    },
-    {
-      "source": "/fastapi/(.*)",
-      "destination": "https://backend-production-0a4c.up.railway.app/$1"
-    },
-    {
-      "source": "/backtrader-api/(.*)",
-      "destination": "https://backtrader-production.up.railway.app/$1"
-    }
-  ],
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm ci",
