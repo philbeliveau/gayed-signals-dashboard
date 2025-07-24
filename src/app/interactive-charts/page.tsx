@@ -1,17 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { BarChart3, Users, Home, TrendingUp, Info, Sparkles, Activity } from 'lucide-react';
+import { Users, Home, TrendingUp, Info, Sparkles } from 'lucide-react';
 import EnhancedInteractiveHousingChart from '../../components/charts/EnhancedInteractiveHousingChart';
 import EnhancedInteractiveLaborChart from '../../components/charts/EnhancedInteractiveLaborChart';
-import EnhancedSignalsChart from '../../components/charts/EnhancedSignalsChart';
-import UtilitiesSpySignal from '../../components/charts/signals/UtilitiesSpySignal';
-import LumberGoldSignal from '../../components/charts/signals/LumberGoldSignal';
-import TreasuryCurveSignal from '../../components/charts/signals/TreasuryCurveSignal';
-import VixDefensiveSignal from '../../components/charts/signals/VixDefensiveSignal';
-import SP500MASignal from '../../components/charts/signals/SP500MASignal';
 
-type ChartType = 'housing' | 'labor' | 'signals' | 'combined';
+type ChartType = 'housing' | 'labor';
 
 /**
  * Interactive Charts Demo Page
@@ -23,17 +17,10 @@ type ChartType = 'housing' | 'labor' | 'signals' | 'combined';
  * - Real-time data integration
  */
 export default function InteractiveChartsPage() {
-  const [activeChart, setActiveChart] = useState<ChartType>('signals');
+  const [activeChart, setActiveChart] = useState<ChartType>('housing');
   const [selectedPeriod, setSelectedPeriod] = useState('12m');
 
   const chartTypes = [
-    {
-      id: 'signals' as ChartType,
-      name: 'Gayed Market Signals',
-      description: 'All 5 market regime signals: Utilities/SPY, Lumber/Gold, Treasury Curve, VIX Defensive, S&P 500 MA',
-      icon: Activity,
-      color: 'blue'
-    },
     {
       id: 'housing' as ChartType,
       name: 'Housing Market',
@@ -47,13 +34,6 @@ export default function InteractiveChartsPage() {
       description: 'Employment data with unemployment rates, job claims, and participation metrics',
       icon: Users,
       color: 'orange'
-    },
-    {
-      id: 'combined' as ChartType,
-      name: 'Combined Analysis',
-      description: 'Side-by-side comparison of housing and labor market indicators',
-      icon: BarChart3,
-      color: 'purple'
     }
   ];
 
@@ -161,15 +141,6 @@ export default function InteractiveChartsPage() {
 
         {/* Chart Display */}
         <div className="space-y-8">
-          {activeChart === 'signals' && (
-            <EnhancedSignalsChart
-              height={700}
-              selectedPeriod={selectedPeriod}
-              onPeriodChange={setSelectedPeriod}
-              showAllSignals={true}
-            />
-          )}
-
           {activeChart === 'housing' && (
             <EnhancedInteractiveHousingChart
               height={700}
@@ -189,97 +160,6 @@ export default function InteractiveChartsPage() {
                 { id: 2, severity: 'low', message: 'Labor participation stable' }
               ]}
             />
-          )}
-
-          {activeChart === 'combined' && (
-            <div className="space-y-8">
-              <div className="text-center py-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Combined Analysis
-                </h3>
-                <p className="text-gray-600">
-                  Side-by-side comparison of housing and labor market indicators, plus all 5 Gayed Market Signals
-                </p>
-              </div>
-              
-              {/* Housing and Labor Market Comparison */}
-              <div className="mb-12">
-                <h4 className="text-lg font-semibold text-gray-900 mb-6 text-center">
-                  Housing & Labor Market Indicators
-                </h4>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                  <EnhancedInteractiveHousingChart
-                    height={500}
-                    selectedPeriod={selectedPeriod}
-                    onPeriodChange={setSelectedPeriod}
-                    region="US Housing"
-                  />
-                  
-                  <EnhancedInteractiveLaborChart
-                    height={500}
-                    selectedPeriod={selectedPeriod}
-                    onPeriodChange={setSelectedPeriod}
-                  />
-                </div>
-              </div>
-
-              {/* All 5 Gayed Market Signals */}
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-6 text-center">
-                  Gayed Market Regime Signals
-                </h4>
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  <UtilitiesSpySignal
-                    height={350}
-                    selectedPeriod={selectedPeriod}
-                    onPeriodChange={setSelectedPeriod}
-                  />
-                  
-                  <LumberGoldSignal
-                    height={350}
-                    selectedPeriod={selectedPeriod}
-                    onPeriodChange={setSelectedPeriod}
-                  />
-                  
-                  <TreasuryCurveSignal
-                    height={350}
-                    selectedPeriod={selectedPeriod}
-                    onPeriodChange={setSelectedPeriod}
-                  />
-                  
-                  <VixDefensiveSignal
-                    height={350}
-                    selectedPeriod={selectedPeriod}
-                    onPeriodChange={setSelectedPeriod}
-                  />
-                  
-                  <SP500MASignal
-                    height={350}
-                    selectedPeriod={selectedPeriod}
-                    onPeriodChange={setSelectedPeriod}
-                  />
-
-                  {/* Consensus Summary Card */}
-                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6 flex flex-col justify-center items-center">
-                    <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl mb-4">
-                      <Activity className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">
-                      Market Consensus
-                    </h3>
-                    <p className="text-sm text-gray-600 text-center mb-4">
-                      Aggregate view of all 5 signals combined with detailed analysis
-                    </p>
-                    <button 
-                      onClick={() => setActiveChart('signals')}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all text-sm font-medium"
-                    >
-                      View Full Analysis
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
           )}
         </div>
 
