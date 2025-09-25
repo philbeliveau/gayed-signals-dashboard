@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { FREDAPIClient, createFREDClient } from '../../../../lib/data/fred-api-client';
+import { FREDAPIClient, createFREDClient } from '../../../domains/market-data/services/fred-api-client';
 
 // Simple logger for this API
 const logger = {

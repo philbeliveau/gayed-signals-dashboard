@@ -28,7 +28,7 @@ import Link from 'next/link';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import ThemeToggle from '../../components/ThemeToggle';
-import { ETF_RECOMMENDATIONS, getETFRecommendations, getStrategyConfig } from '../../../lib/etf-recommendations';
+import { ETF_RECOMMENDATIONS, getETFRecommendations, getStrategyConfig } from '../../domains/trading-signals/utils/etf-recommendations';
 import dynamic from 'next/dynamic';
 
 // Dynamic import for chart component to avoid SSR issues

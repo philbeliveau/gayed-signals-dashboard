@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { EnhancedMarketClient } from '../../../../lib/data/enhanced-market-client';
-import { SignalOrchestrator } from '../../../../lib/signals';
+import { EnhancedMarketClient } from '../../../domains/market-data/services/enhanced-market-client';
+import { SignalOrchestrator } from '../../../domains/trading-signals/engines/gayed-signals';
 
 // Simple in-memory cache for faster signal responses
 interface CacheEntry {

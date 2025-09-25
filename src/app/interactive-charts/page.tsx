@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, Home, TrendingUp, Info, Sparkles } from 'lucide-react';
+import { Users, Home, TrendingUp, Info, Sparkles, BarChart3 } from 'lucide-react';
 import EnhancedInteractiveHousingChart from '../../components/charts/EnhancedInteractiveHousingChart';
 import EnhancedInteractiveLaborChart from '../../components/charts/EnhancedInteractiveLaborChart';
 
