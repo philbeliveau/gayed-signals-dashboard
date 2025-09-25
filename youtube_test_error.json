@@ -1,8 +1,0 @@
-{
-  "success": false,
-  "url": "https://www.youtube.com/watch?v=0xKZl8kFXlo&ab_channel=PeterStOnge%2CPh.D",
-  "error": "\u001b[0;31mERROR:\u001b[0m unable to download video data: HTTP Error 403: Forbidden",
-  "error_type": "DownloadError",
-  "processing_time": 3.193148136138916,
-  "timestamp": "2025-07-02T11:51:08.985360"
-}
