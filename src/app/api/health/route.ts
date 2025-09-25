@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { healthCheckHandler } from '../../../../lib/risk/enhanced-api-route';
+import { healthCheckHandler } from '../../../domains/risk-management/services/enhanced-api-route';
 
 /**
  * Health check endpoint that provides detailed system status

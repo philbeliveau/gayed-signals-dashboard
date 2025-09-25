@@ -21,8 +21,7 @@ from sqlalchemy import text
 
 from core.config import settings
 from core.database import engine, create_db_and_tables
-from core.security import get_current_user_optional
-from api.routes import videos, folders, prompts, economic_data, simple_youtube, auth, users
+from api.routes import videos, folders, prompts, economic_data, simple_youtube
 from models.database import Base
 
 # Configure logging
@@ -57,22 +56,19 @@ app.add_middleware(
 app.include_router(
     videos.router,
     prefix="/api/v1/videos",
-    tags=["videos"],
-    dependencies=[Depends(get_current_user_optional)]
+    tags=["videos"]
 )
 
 app.include_router(
     folders.router,
     prefix="/api/v1/folders",
-    tags=["folders"],
-    dependencies=[Depends(get_current_user_optional)]
+    tags=["folders"]
 )
 
 app.include_router(
     prompts.router,
     prefix="/api/v1/prompts",
-    tags=["prompts"],
-    dependencies=[Depends(get_current_user_optional)]
+    tags=["prompts"]
 )
 
 app.include_router(
@@ -84,22 +80,7 @@ app.include_router(
 app.include_router(
     simple_youtube.router,
     prefix="/api/v1/youtube",
-    tags=["simple-youtube"],
-    dependencies=[Depends(get_current_user_optional)]
-)
-
-# Authentication routes
-app.include_router(
-    auth.router,
-    prefix="/api/auth",
-    tags=["authentication"]
-)
-
-# User management routes
-app.include_router(
-    users.router,
-    prefix="/api/users",
-    tags=["users"]
+    tags=["simple-youtube"]
 )
 
 

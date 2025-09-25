@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { UserPreferencesProvider } from "../contexts/UserPreferencesContext";
-import { AuthProvider } from "../contexts/AuthContext";
 import AuthNavigation from "../components/navigation/AuthNavigation";
 import "./globals.css";
 
@@ -46,16 +46,16 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <ThemeProvider>
-          <UserPreferencesProvider>
-            <AuthProvider>
+        <ClerkProvider>
+          <ThemeProvider>
+            <UserPreferencesProvider>
               <AuthNavigation />
               <main>
                 {children}
               </main>
-            </AuthProvider>
-          </UserPreferencesProvider>
-        </ThemeProvider>
+            </UserPreferencesProvider>
+          </ThemeProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

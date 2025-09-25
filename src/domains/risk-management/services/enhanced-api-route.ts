@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { SignalOrchestrator } from '../signals';
+import { SignalOrchestrator } from '../../trading-signals';
 import { enhancedYahooFinanceClient } from './enhanced-yahoo-finance';
 import { riskManager, AlertLevel } from './risk-manager';
 import { gracefulDegradationManager } from './graceful-degradation';

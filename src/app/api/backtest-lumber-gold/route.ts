@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchMarketData } from '../../../../lib/yahoo-finance';
+import { fetchMarketData } from '../../../domains/market-data/services/yahoo-finance';
 
 /**
  * REAL Lumber/Gold Strategy Backtesting API

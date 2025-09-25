@@ -6,11 +6,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { riskManager } from '../../../../lib/risk/risk-manager';
-import { dataFallbackManager } from '../../../../lib/risk/data-fallback';
-import { securityManager } from '../../../../lib/risk/security';
-import { gracefulDegradationManager } from '../../../../lib/risk/graceful-degradation';
-import { enhancedYahooFinanceClient } from '../../../../lib/risk/enhanced-yahoo-finance';
+import { riskManager } from '../../../domains/risk-management/services/risk-manager';
+import { dataFallbackManager } from '../../../domains/risk-management/services/data-fallback';
+import { securityManager } from '../../../domains/risk-management/services/security';
+import { gracefulDegradationManager } from '../../../domains/risk-management/services/graceful-degradation';
+import { enhancedYahooFinanceClient } from '../../../domains/risk-management/services/enhanced-yahoo-finance';
 
 export interface MonitoringResponse {
   health: {

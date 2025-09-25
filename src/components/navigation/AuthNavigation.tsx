@@ -17,10 +17,8 @@ import {
   Settings,
   Shield
 } from 'lucide-react';
-import { useAuthContext } from '../../contexts/AuthContext';
-import { usePermissions } from '../../hooks/useAuth';
-import { getNavigationRoutes } from '../../config/routes';
-import UserMenu from './UserMenu';
+import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import { getNavigationRoutes } from '../../lib/navigation';
 import ThemeToggle from '../ThemeToggle';
 
 export interface AuthNavigationProps {
@@ -41,23 +39,15 @@ export default function AuthNavigation({
   showThemeToggle = true,
 }: AuthNavigationProps) {
   const pathname = usePathname();
-  // TEMPORARY: Bypass auth hooks to prevent undefined component errors
+  const { isSignedIn, userId } = useAuth();
+  const { user } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // TEMPORARY: Mock auth state and show all routes
-  const mockAuth = {
-    state: {
-      isAuthenticated: true,
-      user: {
-        full_name: 'Development User',
-        email: 'dev@example.com'
-      }
-    }
-  };
+  // For now, assume no admin users - this can be enhanced with Clerk metadata
   const isAdmin = false;
 
-  // Get navigation routes based on mock auth status
-  const navigationRoutes = getNavigationRoutes(mockAuth.state.isAuthenticated, isAdmin);
+  // Get navigation routes based on Clerk auth status
+  const navigationRoutes = getNavigationRoutes(isSignedIn || false, isAdmin);
 
   // Icon mapping for navigation items
   const iconMap: Record<string, React.ComponentType<any>> = {
@@ -135,18 +125,29 @@ export default function AuthNavigation({
             {/* Right side controls */}
             <div className="flex items-center space-x-6">
               {/* Auth status indicator */}
-              {mockAuth.state.isAuthenticated && (
+              <SignedIn>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-theme-success rounded-full animate-pulse"></div>
                   <span className="text-sm text-theme-success font-medium">Authenticated</span>
                 </div>
-              )}
+              </SignedIn>
               
               {/* Theme toggle */}
               {showThemeToggle && <ThemeToggle />}
               
-              {/* User menu */}
-              {showUserMenu && <UserMenu />}
+              {/* Authentication buttons */}
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="px-4 py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-colors">
+                    Sign In
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              
+              <SignedIn>
+                {/* User button from Clerk */}
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
               
               {/* Mobile menu button */}
               <button
@@ -172,25 +173,25 @@ export default function AuthNavigation({
                 {renderNavigationItems()}
                 
                 {/* Mobile user info */}
-                {mockAuth.state.isAuthenticated && mockAuth.state.user && (
+                <SignedIn>
                   <div className="pt-4 border-t border-theme-border">
                     <div className="flex items-center space-x-3 px-4 py-2">
                       <div className="w-8 h-8 bg-theme-primary rounded-full flex items-center justify-center">
                         <span className="text-white text-sm font-medium">
-                          {mockAuth.state.user.full_name?.[0] || mockAuth.state.user.email[0].toUpperCase()}
+                          {user?.firstName?.[0] || user?.emailAddresses[0]?.emailAddress[0].toUpperCase() || 'U'}
                         </span>
                       </div>
                       <div>
                         <div className="text-sm font-medium text-theme-text">
-                          {mockAuth.state.user.full_name || 'User'}
+                          {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
                         </div>
                         <div className="text-xs text-theme-text-muted">
-                          {mockAuth.state.user.email}
+                          {user?.emailAddresses[0]?.emailAddress || ''}
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
+                </SignedIn>
               </div>
             </div>
           )}
@@ -218,11 +219,13 @@ export default function AuthNavigation({
           </nav>
 
           {/* User section */}
-          {showUserMenu && mockAuth.state.isAuthenticated && (
-            <div className="mt-8 pt-4 border-t border-theme-border">
-              <UserMenu variant="sidebar" />
-            </div>
-          )}
+          <SignedIn>
+            {showUserMenu && (
+              <div className="mt-8 pt-4 border-t border-theme-border">
+                <UserButton afterSignOutUrl="/" />
+              </div>
+            )}
+          </SignedIn>
         </div>
       </aside>
     );
@@ -250,10 +253,10 @@ export function MobileNavigation({
 }: { 
   className?: string; 
 }) {
-  const auth = useAuthContext();
+  const { isSignedIn } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!auth.state.isAuthenticated) {
+  if (!isSignedIn) {
     return null;
   }
 
@@ -286,8 +289,9 @@ export function AuthBreadcrumb({
   className?: string;
 }) {
   const pathname = usePathname();
-  const auth = useAuthContext();
-  const { isAdmin } = usePermissions();
+  const { isSignedIn } = useAuth();
+  // For now, assume no admin users - this can be enhanced with Clerk metadata
+  const isAdmin = false;
 
   // Generate breadcrumb items based on current path and auth status
   const generateBreadcrumbs = () => {
@@ -299,7 +303,7 @@ export function AuthBreadcrumb({
       currentPath += `/${segment}`;
       
       // Check if user has access to this path
-      const navigationRoutes = getNavigationRoutes(auth.state.isAuthenticated, isAdmin);
+      const navigationRoutes = getNavigationRoutes(isSignedIn || false, isAdmin);
       const route = navigationRoutes.find(r => r.path === currentPath);
       
       if (route) {
