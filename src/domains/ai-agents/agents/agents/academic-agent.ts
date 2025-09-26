@@ -9,7 +9,7 @@
  */
 
 import { BaseFactCheckAgent, SAFLAValidationResult } from './base-agent';
-import { ExtractedClaim, Investigation, SourceEvidence, McpResponse, AgentType, VeracityLevel } from '../../../src/types/fact-check';
+import { ExtractedClaim, Investigation, SourceEvidence, McpResponse, AgentType, VeracityLevel } from '../../../../types/fact-check';
 
 export class AcademicAgent extends BaseFactCheckAgent {
   constructor() {

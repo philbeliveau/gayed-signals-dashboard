@@ -6,8 +6,8 @@
  */
 
 import type { Signal, ConsensusSignal, MarketData, SignalCalculationInput, SignalOrchestrationConfig } from '../types';
-import { UtilitiesSpySignal } from './gayed-signals/utilities-spy';
-import { LumberGoldSignal } from './gayed-signals/lumber-gold';
+import { GayedSignalCalculator } from './gayed-signals/utilities-spy';
+import { LumberGoldSignalCalculator } from './gayed-signals/lumber-gold';
 // Import other signals as they're migrated
 // import { TreasuryCurveSignal } from './gayed-signals/treasury-curve';
 // import { VixDefensiveSignal } from './gayed-signals/vix-defensive';

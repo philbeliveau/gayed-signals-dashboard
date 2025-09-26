@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Signal, ConsensusSignal } from '../../lib/types';
-import { ETF_RECOMMENDATIONS, getETFRecommendations, getStrategyConfig, ETFRecommendation } from '../../lib/etf-recommendations';
+import { Signal, ConsensusSignal } from '../lib/types';
+import { ETF_RECOMMENDATIONS, getETFRecommendations, getStrategyConfig, ETFRecommendation } from '../domains/trading-signals/utils/etf-recommendations';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import ETFChart from './ETFChart';
 

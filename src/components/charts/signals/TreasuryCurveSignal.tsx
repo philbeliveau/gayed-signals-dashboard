@@ -13,6 +13,7 @@ interface TreasuryCurveData {
   signal: 'Risk-On' | 'Risk-Off' | 'Neutral';
   strength: 'Strong' | 'Moderate' | 'Weak';
   confidence: number;
+  [key: string]: number | string;
 }
 
 interface TreasuryCurveSignalProps {
@@ -34,10 +35,10 @@ export default function TreasuryCurveSignal({
   onPeriodChange,
   className = ''
 }: TreasuryCurveSignalProps) {
-  const [data, setData] = useState&lt;TreasuryCurveData[]&gt;([]);
+  const [data, setData] = useState<TreasuryCurveData[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState&lt;string | null&gt;(null);
-  const [currentSignal, setCurrentSignal] = useState&lt;TreasuryCurveData | null&gt;(null);
+  const [error, setError] = useState<string | null>(null);
+  const [currentSignal, setCurrentSignal] = useState<TreasuryCurveData | null>(null);
 
   // Fetch Treasury Curve signal data
   const fetchData = useCallback(async () => {
@@ -160,11 +161,11 @@ export default function TreasuryCurveSignal({
   const getSignalIcon = (signal: 'Risk-On' | 'Risk-Off' | 'Neutral') => {
     switch (signal) {
       case 'Risk-On':
-        return &lt;TrendingUp className="w-5 h-5" /&gt;;
+        return <TrendingUp className="w-5 h-5" />;
       case 'Risk-Off':
-        return &lt;TrendingDown className="w-5 h-5" /&gt;;
+        return <TrendingDown className="w-5 h-5" />;
       default:
-        return &lt;Activity className="w-5 h-5" /&gt;;
+        return <Activity className="w-5 h-5" />;
     }
   };
 
@@ -178,8 +179,9 @@ export default function TreasuryCurveSignal({
       visible: true,
       focused: false,
       frequency: 'weekly' as const,
-      category: 'ratio' as const,
+      category: 'economic' as const,
       unit: 'Ratio',
+      description: '10-Year to 30-Year Treasury yield ratio',
       yAxisId: 'ratio',
       strokeWidth: 2,
       showDots: false
@@ -187,74 +189,74 @@ export default function TreasuryCurveSignal({
   ];
 
   return (
-    &lt;div className={`bg-white border border-gray-200 rounded-xl p-6 ${className}`}&gt;
+    <div className={`bg-white border border-gray-200 rounded-xl p-6 ${className}`}>
       {/* Header */}
-      &lt;div className="flex items-start justify-between mb-6"&gt;
-        &lt;div className="flex items-center gap-3"&gt;
-          &lt;div className="p-2 bg-yellow-100 text-yellow-600 rounded-lg"&gt;
-            &lt;Landmark className="w-6 h-6" /&gt;
-          &lt;/div&gt;
-          &lt;div&gt;
-            &lt;h3 className="text-lg font-semibold text-gray-900"&gt;
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-yellow-100 text-yellow-600 rounded-lg">
+            <Landmark className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">
               Treasury Curve Signal
-            &lt;/h3&gt;
-            &lt;p className="text-sm text-gray-600"&gt;
+            </h3>
+            <p className="text-sm text-gray-600">
               10Y vs 30Y Treasury performance indicates yield curve shape
-            &lt;/p&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
+            </p>
+          </div>
+        </div>
         
         {currentSignal && (
-          &lt;div className="text-right"&gt;
-            &lt;div 
+          <div className="text-right">
+            <div 
               className="flex items-center gap-2 text-sm font-medium mb-1"
               style={{ color: SIGNAL_COLORS[currentSignal.signal] }}
-            &gt;
+            >
               {getSignalIcon(currentSignal.signal)}
               {currentSignal.signal}
-            &lt;/div&gt;
-            &lt;div className="text-xs text-gray-500"&gt;
+            </div>
+            <div className="text-xs text-gray-500">
               {Math.round(currentSignal.confidence * 100)}% confidence
-            &lt;/div&gt;
-          &lt;/div&gt;
+            </div>
+          </div>
         )}
-      &lt;/div&gt;
+      </div>
 
       {/* Current Status */}
       {currentSignal && (
-        &lt;div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg"&gt;
-          &lt;div className="text-center"&gt;
-            &lt;div className="text-lg font-semibold text-gray-900"&gt;
+        <div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-900">
               {currentSignal.ratio.toFixed(4)}
-            &lt;/div&gt;
-            &lt;div className="text-xs text-gray-600"&gt;10Y/30Y Ratio&lt;/div&gt;
-          &lt;/div&gt;
-          &lt;div className="text-center"&gt;
-            &lt;div className="text-lg font-semibold text-gray-900"&gt;
+            </div>
+            <div className="text-xs text-gray-600">10Y/30Y Ratio</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-900">
               {currentSignal.strength}
-            &lt;/div&gt;
-            &lt;div className="text-xs text-gray-600"&gt;Signal Strength&lt;/div&gt;
-          &lt;/div&gt;
-          &lt;div className="text-center"&gt;
-            &lt;div className="text-lg font-semibold text-gray-900"&gt;
+            </div>
+            <div className="text-xs text-gray-600">Signal Strength</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-900">
               {currentSignal.spread.toFixed(2)}
-            &lt;/div&gt;
-            &lt;div className="text-xs text-gray-600"&gt;Price Spread&lt;/div&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
+            </div>
+            <div className="text-xs text-gray-600">Price Spread</div>
+          </div>
+        </div>
       )}
 
       {/* Error Display */}
       {error && (
-        &lt;div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg mb-4"&gt;
-          &lt;AlertCircle className="w-4 h-4 text-red-600" /&gt;
-          &lt;span className="text-sm text-red-700"&gt;{error}&lt;/span&gt;
-        &lt;/div&gt;
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
+          <AlertCircle className="w-4 h-4 text-red-600" />
+          <span className="text-sm text-red-700">{error}</span>
+        </div>
       )}
 
       {/* Chart */}
-      &lt;div className="border border-gray-200 rounded-lg"&gt;
-        &lt;InteractiveEconomicChart
+      <div className="border border-gray-200 rounded-lg">
+        <InteractiveEconomicChart
           data={data}
           seriesConfig={seriesConfig}
           loading={loading}
@@ -263,18 +265,18 @@ export default function TreasuryCurveSignal({
           title="10Y/30Y Treasury Ratio Over Time"
           showBrush={false}
           allowMultipleYAxes={false}
-        /&gt;
-      &lt;/div&gt;
+        />
+      </div>
 
       {/* Interpretation */}
-      &lt;div className="mt-4 p-4 bg-yellow-50 rounded-lg"&gt;
-        &lt;h4 className="text-sm font-medium text-yellow-900 mb-2"&gt;Signal Interpretation&lt;/h4&gt;
-        &lt;div className="space-y-1 text-xs text-yellow-800"&gt;
-          &lt;div&gt;• &lt;strong&gt;Risk-On:&lt;/strong&gt; Steepening curve (lower ratio) indicates growth expectations&lt;/div&gt;
-          &lt;div&gt;• &lt;strong&gt;Risk-Off:&lt;/strong&gt; Flattening/inverting curve (higher ratio) suggests recession fears&lt;/div&gt;
-          &lt;div&gt;• &lt;strong&gt;Neutral:&lt;/strong&gt; Normal curve shape with balanced economic outlook&lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
+      <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+        <h4 className="text-sm font-medium text-yellow-900 mb-2">Signal Interpretation</h4>
+        <div className="space-y-1 text-xs text-yellow-800">
+          <div>• <strong>Risk-On:</strong> Steepening curve (lower ratio) indicates growth expectations</div>
+          <div>• <strong>Risk-Off:</strong> Flattening/inverting curve (higher ratio) suggests recession fears</div>
+          <div>• <strong>Neutral:</strong> Normal curve shape with balanced economic outlook</div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -521,3 +521,195 @@ main {
     min-height: 350px !important;
   }
 }
+
+/* =================================================================
+ * MOBILE OPTIMIZATION STYLES
+ * =================================================================*/
+
+/* Touch-optimized interactions */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide scrollbars on mobile while maintaining functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area adjustments for mobile devices */
+@supports (padding: max(0px)) {
+  .safe-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-left {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+  
+  .safe-right {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Mobile-first responsive text scaling */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 641px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Enhanced touch targets for mobile */
+@media (max-width: 768px) {
+  button, 
+  [role="button"], 
+  input[type="button"], 
+  input[type="submit"], 
+  .cursor-pointer {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing for mobile inputs */
+  input, 
+  textarea, 
+  select {
+    padding: 12px 16px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Mobile navigation optimizations */
+@media (max-width: 768px) {
+  .mobile-nav-item {
+    padding: 12px 16px;
+    margin: 4px 0;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-nav-item:active {
+    transform: scale(0.98);
+    background-color: var(--theme-card-hover);
+  }
+}
+
+/* Mobile modal optimizations */
+@media (max-width: 640px) {
+  .mobile-modal {
+    margin: 0;
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+    min-height: 50vh;
+  }
+  
+  .mobile-modal-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--theme-border);
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .mobile-modal-content {
+    padding: 16px;
+    overflow-y: auto;
+    max-height: calc(90vh - 80px);
+  }
+}
+
+/* Card hover effects for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .hover\:scale-\[1\.02\]:hover {
+    transform: none;
+  }
+  
+  .hover\:scale-\[1\.02\]:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Mobile-friendly grid adjustments */
+@media (max-width: 640px) {
+  .mobile-grid-single {
+    grid-template-columns: 1fr;
+  }
+  
+  .mobile-grid-double {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Improve text readability on mobile */
+@media (max-width: 768px) {
+  .text-mobile-base {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  
+  .text-mobile-lg {
+    font-size: 1.125rem;
+    line-height: 1.4;
+  }
+  
+  .text-mobile-xl {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+}
+
+/* Loading states optimized for mobile */
+@media (max-width: 640px) {
+  .mobile-loading {
+    padding: 2rem 1rem;
+  }
+  
+  .mobile-loading .animate-spin {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+/* Better mobile spacing */
+.mobile-space-y-2 > * + * {
+  margin-top: 0.5rem;
+}
+
+.mobile-space-y-3 > * + * {
+  margin-top: 0.75rem;
+}
+
+.mobile-space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+/* Mobile performance optimizations */
+@media (max-width: 768px) {
+  * {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+  }
+  
+  .transition-transform {
+    will-change: transform;
+  }
+  
+  .transition-colors {
+    will-change: background-color, color;
+  }
+}

@@ -13,11 +13,11 @@
 export { SignalOrchestrator } from './engines/orchestrator';
 
 // Individual signal implementations
-export { UtilitiesSpySignal } from './engines/gayed-signals/utilities-spy';
-export { LumberGoldSignal } from './engines/gayed-signals/lumber-gold';
-export { TreasuryCurveSignal } from './engines/gayed-signals/treasury-curve';
-export { VixDefensiveSignal } from './engines/gayed-signals/vix-defensive';
-export { SP500MASignal } from './engines/gayed-signals/sp500-ma';
+export { GayedSignalCalculator as UtilitiesSpySignal } from './engines/gayed-signals/utilities-spy';
+export { LumberGoldSignalCalculator as LumberGoldSignal } from './engines/gayed-signals/lumber-gold';
+export { TreasuryCurveSignalCalculator as TreasuryCurveSignal } from './engines/gayed-signals/treasury-curve';
+export { VixDefensiveSignalCalculator as VixDefensiveSignal } from './engines/gayed-signals/vix-defensive';
+export { SP500MovingAverageSignalCalculator as SP500MASignal } from './engines/gayed-signals/sp500-ma';
 
 // Services - temporarily disabled due to import issues
 // export { signalService } from './services/signalService';

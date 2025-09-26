@@ -76,7 +76,7 @@ export default function AuthNavigation({
     return false;
   };
 
-  // Render navigation items
+  // Render navigation items with responsive design
   const renderNavigationItems = () => {
     return navigationRoutes.map((route) => {
       const IconComponent = getIcon(route.icon);
@@ -88,17 +88,17 @@ export default function AuthNavigation({
           href={route.path}
           onClick={() => setMobileMenuOpen(false)}
           className={`
-            flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors whitespace-nowrap
+            flex items-center space-x-2 sm:space-x-3 px-3 py-3 sm:px-4 sm:py-3 rounded-lg transition-colors whitespace-nowrap touch-manipulation
             ${isActive 
-              ? 'bg-theme-primary text-white' 
+              ? 'bg-theme-primary text-white shadow-md' 
               : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
             }
           `}
         >
-          <IconComponent className="w-4 h-4" />
-          <span>{route.displayName}</span>
+          <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+          <span className="text-sm sm:text-base font-medium">{route.displayName}</span>
           {route.adminOnly && (
-            <Shield className="w-3 h-3 text-theme-warning" />
+            <Shield className="w-3 h-3 text-theme-warning flex-shrink-0" />
           )}
         </Link>
       );
@@ -109,89 +109,109 @@ export default function AuthNavigation({
   if (variant === 'header') {
     return (
       <header className={`border-b border-theme-border bg-theme-card/80 backdrop-blur-sm sticky top-0 z-50 ${className}`}>
-        <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             {/* Logo and brand */}
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">G</span>
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm sm:text-lg">G</span>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-theme-text">Gayed Signal Dashboard</h1>
-                <p className="text-theme-text-muted text-sm">Professional Market Regime Analysis</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-theme-text truncate">Gayed Signal Dashboard</h1>
+                <p className="text-theme-text-muted text-xs sm:text-sm hidden sm:block">Professional Market Regime Analysis</p>
               </div>
             </div>
             
             {/* Right side controls */}
-            <div className="flex items-center space-x-6">
-              {/* Auth status indicator */}
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Auth status indicator - hidden on mobile */}
               <SignedIn>
-                <div className="flex items-center space-x-2">
+                <div className="hidden lg:flex items-center space-x-2">
                   <div className="w-2 h-2 bg-theme-success rounded-full animate-pulse"></div>
                   <span className="text-sm text-theme-success font-medium">Authenticated</span>
                 </div>
               </SignedIn>
               
-              {/* Theme toggle */}
-              {showThemeToggle && <ThemeToggle />}
+              {/* Theme toggle - smaller on mobile */}
+              {showThemeToggle && (
+                <div className="hidden sm:block">
+                  <ThemeToggle />
+                </div>
+              )}
               
               {/* Authentication buttons */}
               <SignedOut>
                 <SignInButton mode="modal">
-                  <button className="px-4 py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-colors">
+                  <button className="px-3 py-2 sm:px-4 sm:py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-colors text-sm sm:text-base">
                     Sign In
                   </button>
                 </SignInButton>
               </SignedOut>
               
               <SignedIn>
-                {/* User button from Clerk */}
-                <UserButton afterSignOutUrl="/" />
+                {/* User button from Clerk - responsive sizing */}
+                <div className="scale-90 sm:scale-100">
+                  <UserButton afterSignOutUrl="/" />
+                </div>
               </SignedIn>
               
-              {/* Mobile menu button */}
+              {/* Mobile menu button - larger touch target */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 hover:bg-theme-card-hover rounded-lg text-theme-text-secondary hover:text-theme-text transition-colors"
+                className="md:hidden p-3 hover:bg-theme-card-hover rounded-lg text-theme-text-secondary hover:text-theme-text transition-colors touch-manipulation"
               >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
             </div>
           </div>
 
-          {/* Navigation tabs */}
-          <div className="mt-4">
-            <div className="flex space-x-1 bg-theme-bg p-1 rounded-xl border border-theme-border overflow-x-auto">
+          {/* Navigation tabs - responsive layout */}
+          <div className="mt-3 sm:mt-4">
+            <div className="flex space-x-1 bg-theme-bg p-1 rounded-xl border border-theme-border overflow-x-auto scrollbar-hide">
               {renderNavigationItems()}
             </div>
           </div>
 
-          {/* Mobile menu */}
+          {/* Mobile menu - enhanced for touch */}
           {mobileMenuOpen && (
-            <div className="md:hidden mt-4 p-4 bg-theme-card border border-theme-border rounded-xl">
-              <div className="flex flex-col space-y-2">
+            <div className="md:hidden mt-4 p-4 bg-theme-card border border-theme-border rounded-xl shadow-lg">
+              <div className="flex flex-col space-y-3">
+                {/* Enhanced mobile navigation items */}
                 {renderNavigationItems()}
                 
-                {/* Mobile user info */}
-                <SignedIn>
-                  <div className="pt-4 border-t border-theme-border">
-                    <div className="flex items-center space-x-3 px-4 py-2">
-                      <div className="w-8 h-8 bg-theme-primary rounded-full flex items-center justify-center">
+                {/* Mobile-specific controls */}
+                <div className="pt-4 border-t border-theme-border space-y-3">
+                  {/* Theme toggle for mobile */}
+                  {showThemeToggle && (
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <span className="text-sm font-medium text-theme-text">Dark Mode</span>
+                      <ThemeToggle />
+                    </div>
+                  )}
+                  
+                  {/* Auth status for mobile */}
+                  <SignedIn>
+                    <div className="flex items-center space-x-3 px-4 py-3 bg-theme-card-hover rounded-lg">
+                      <div className="w-10 h-10 bg-theme-primary rounded-full flex items-center justify-center">
                         <span className="text-white text-sm font-medium">
                           {user?.firstName?.[0] || user?.emailAddresses[0]?.emailAddress[0].toUpperCase() || 'U'}
                         </span>
                       </div>
-                      <div>
-                        <div className="text-sm font-medium text-theme-text">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-theme-text truncate">
                           {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
                         </div>
-                        <div className="text-xs text-theme-text-muted">
+                        <div className="text-xs text-theme-text-muted truncate">
                           {user?.emailAddresses[0]?.emailAddress || ''}
                         </div>
                       </div>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 bg-theme-success rounded-full animate-pulse"></div>
+                        <span className="text-xs text-theme-success font-medium">Online</span>
+                      </div>
                     </div>
-                  </div>
-                </SignedIn>
+                  </SignedIn>
+                </div>
               </div>
             </div>
           )}
