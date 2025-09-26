@@ -163,3 +163,5 @@ hive-mind-prompt-*.txt
 .claude
 .swarm
 public
+
+.playwright-mcp

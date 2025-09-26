@@ -713,3 +713,279 @@ main {
     will-change: background-color, color;
   }
 }
+
+/* =================================================================
+ * CLERK MODAL MOBILE OPTIMIZATION
+ * =================================================================*/
+
+/* Prevent body scroll lock issues on mobile */
+@media (max-width: 768px) {
+  /* Override Clerk's body scroll lock behavior */
+  body.cl-modal-open {
+    overflow: auto !important;
+    position: static !important;
+    height: auto !important;
+    width: auto !important;
+  }
+  
+  /* Clerk modal container mobile optimization */
+  .cl-modalContainer {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important; /* Dynamic viewport height for mobile */
+    z-index: 9999 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* Clerk modal backdrop */
+  .cl-modalBackdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    background-color: rgba(0, 0, 0, 0.75) !important;
+    backdrop-filter: blur(4px) !important;
+    z-index: 9998 !important;
+  }
+  
+  /* Clerk modal content - mobile-first bottom sheet style */
+  .cl-modalContent {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 90vh !important;
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    transform: translateY(0) !important;
+    animation: slideUpMobile 0.3s ease-out !important;
+  }
+  
+  /* Clerk sign-in/sign-up card mobile optimization */
+  .cl-card {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    border: none !important;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  /* Clerk form inputs mobile optimization */
+  .cl-formFieldInput {
+    min-height: 48px !important;
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+  }
+  
+  /* Clerk buttons mobile optimization */
+  .cl-formButtonPrimary {
+    min-height: 48px !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
+    padding: 14px 20px !important;
+    touch-action: manipulation !important;
+  }
+  
+  /* Clerk modal header mobile optimization */
+  .cl-modalContent .cl-header {
+    padding: 16px 16px 8px 16px !important;
+    border-bottom: 1px solid var(--theme-border) !important;
+  }
+  
+  /* Clerk modal body mobile optimization */
+  .cl-modalContent .cl-main {
+    padding: 16px !important;
+    overflow-y: auto !important;
+    max-height: calc(80vh - 100px) !important;
+    max-height: calc(80dvh - 100px) !important;
+  }
+  
+  /* Safe area adjustments for Clerk modal */
+  .cl-modalContent {
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+  }
+  
+  /* Clerk social buttons mobile optimization */
+  .cl-socialButtons {
+    gap: 12px !important;
+  }
+  
+  .cl-socialButtonsBlockButton {
+    min-height: 48px !important;
+    border-radius: 8px !important;
+    touch-action: manipulation !important;
+  }
+}
+
+/* Slide up animation for mobile modal */
+@keyframes slideUpMobile {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Additional iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    /* iOS Safari viewport height fix */
+    .cl-modalContainer {
+      height: -webkit-fill-available !important;
+    }
+    
+    .cl-modalBackdrop {
+      height: -webkit-fill-available !important;
+    }
+    
+    /* Prevent iOS bounce scrolling issues */
+    .cl-modalContent {
+      -webkit-overflow-scrolling: touch !important;
+      overflow: auto !important;
+    }
+    
+    /* Fix iOS input zoom */
+    .cl-formFieldInput {
+      font-size: 16px !important;
+      transform: scale(1) !important;
+    }
+  }
+}
+
+/* Desktop Clerk modal improvements */
+@media (min-width: 769px) {
+  .cl-modalContent {
+    border-radius: 12px !important;
+    max-width: 400px !important;
+    margin: auto !important;
+    position: relative !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+}
+
+/* =================================================================
+ * MOBILE BROWSER COMPATIBILITY FIXES
+ * =================================================================*/
+
+/* Chrome Mobile Address Bar Hiding Support */
+@media (max-width: 768px) {
+  /* Fix for Chrome mobile address bar */
+  html {
+    height: -webkit-fill-available;
+    height: fill-available;
+  }
+  
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    min-height: fill-available;
+    /* Prevent horizontal scrolling on mobile */
+    overflow-x: hidden;
+    /* Ensure proper touch scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix button click delays on iOS */
+  button, 
+  input[type="submit"], 
+  input[type="button"], 
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Prevent zoom on input focus (iOS) */
+  input, 
+  textarea, 
+  select {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  
+  /* Fix sticky positioning on mobile */
+  .sticky {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+  }
+}
+
+/* Samsung Internet Browser Fixes */
+@media (max-width: 768px) {
+  /* Fix Samsung Internet modal issues */
+  .cl-modalContainer {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Firefox Mobile Fixes */
+@-moz-document url-prefix() {
+  @media (max-width: 768px) {
+    .cl-modalContent {
+      -moz-overflow-scrolling: auto !important;
+    }
+  }
+}
+
+/* High DPI Mobile Device Optimizations */
+@media (max-width: 768px) and (min-resolution: 2dppx) {
+  /* Optimize for high-DPI mobile screens */
+  * {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+  
+  /* Ensure sharp rendering on retina displays */
+  .cl-card,
+  .bg-theme-card {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Landscape Mobile Optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* Adjust Clerk modal for landscape mobile */
+  .cl-modalContent {
+    max-height: 85vh !important;
+    max-height: 85dvh !important;
+  }
+  
+  /* Reduce header height in landscape */
+  header {
+    min-height: auto !important;
+  }
+}
+
+/* Dark Mode Mobile Optimizations */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+  /* Ensure proper contrast in dark mode on mobile */
+  .cl-modalContent {
+    color-scheme: dark;
+  }
+  
+  /* Fix dark mode input styling on mobile */
+  .cl-formFieldInput {
+    color-scheme: dark !important;
+  }
+}

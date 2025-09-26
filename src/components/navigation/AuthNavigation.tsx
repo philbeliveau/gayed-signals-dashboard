@@ -123,7 +123,7 @@ export default function AuthNavigation({
             </div>
             
             {/* Right side controls */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 relative z-50">
               {/* Auth status indicator - hidden on mobile */}
               <SignedIn>
                 <div className="hidden lg:flex items-center space-x-2">
@@ -139,18 +139,18 @@ export default function AuthNavigation({
                 </div>
               )}
               
-              {/* Authentication buttons */}
+              {/* Authentication buttons - Enhanced for mobile */}
               <SignedOut>
                 <SignInButton mode="modal">
-                  <button className="px-3 py-2 sm:px-4 sm:py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-colors text-sm sm:text-base">
+                  <button className="relative z-50 min-h-[44px] min-w-[44px] px-4 py-3 sm:px-4 sm:py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-colors text-sm sm:text-base font-medium touch-manipulation active:scale-95 shadow-lg">
                     Sign In
                   </button>
                 </SignInButton>
               </SignedOut>
               
               <SignedIn>
-                {/* User button from Clerk - responsive sizing */}
-                <div className="scale-90 sm:scale-100">
+                {/* User button from Clerk - responsive sizing with higher z-index */}
+                <div className="relative z-50 scale-90 sm:scale-100">
                   <UserButton afterSignOutUrl="/" />
                 </div>
               </SignedIn>

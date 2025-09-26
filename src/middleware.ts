@@ -1,6 +1,11 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export default clerkMiddleware()
+// Disabled authentication middleware for no_auth branch
+export function middleware(request: NextRequest) {
+  // Simply pass through all requests without authentication
+  return NextResponse.next()
+}
 
 export const config = {
   matcher: [
