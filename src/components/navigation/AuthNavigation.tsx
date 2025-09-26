@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   Settings,
-  Shield
+  Shield,
+  ChevronDown
 } from 'lucide-react';
 import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { getNavigationRoutes } from '../../lib/navigation';
@@ -23,7 +24,6 @@ import ThemeToggle from '../ThemeToggle';
 
 export interface AuthNavigationProps {
   className?: string;
-  variant?: 'header' | 'sidebar' | 'tabs';
   showUserMenu?: boolean;
   showThemeToggle?: boolean;
 }
@@ -34,7 +34,6 @@ export interface AuthNavigationProps {
  */
 export default function AuthNavigation({
   className = '',
-  variant = 'header',
   showUserMenu = true,
   showThemeToggle = true,
 }: AuthNavigationProps) {
@@ -76,7 +75,7 @@ export default function AuthNavigation({
     return false;
   };
 
-  // Render navigation items with responsive design
+  // Render navigation items with unified design
   const renderNavigationItems = () => {
     return navigationRoutes.map((route) => {
       const IconComponent = getIcon(route.icon);
@@ -88,15 +87,18 @@ export default function AuthNavigation({
           href={route.path}
           onClick={() => setMobileMenuOpen(false)}
           className={`
-            flex items-center space-x-2 sm:space-x-3 px-3 py-3 sm:px-4 sm:py-3 rounded-lg transition-colors whitespace-nowrap touch-manipulation
+            nav-item group flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 whitespace-nowrap touch-manipulation
             ${isActive 
-              ? 'bg-theme-primary text-white shadow-md' 
+              ? 'bg-theme-primary text-white shadow-sm' 
               : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
             }
+            lg:px-3 lg:py-2 lg:text-sm
           `}
         >
-          <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-          <span className="text-sm sm:text-base font-medium">{route.displayName}</span>
+          <IconComponent className={`w-5 h-5 flex-shrink-0 lg:w-4 lg:h-4 transition-transform group-hover:scale-105 ${
+            isActive ? 'text-white' : 'text-theme-text-muted group-hover:text-theme-text'
+          }`} />
+          <span className="font-medium">{route.displayName}</span>
           {route.adminOnly && (
             <Shield className="w-3 h-3 text-theme-warning flex-shrink-0" />
           )}
@@ -105,200 +107,137 @@ export default function AuthNavigation({
     });
   };
 
-  // Header variant (horizontal navigation)
-  if (variant === 'header') {
-    return (
-      <header className={`border-b border-theme-border bg-theme-card/80 backdrop-blur-sm sticky top-0 z-50 ${className}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex items-center justify-between">
+  // Unified professional navigation
+  return (
+      <header className={`bg-theme-card/95 backdrop-blur-md border-b border-theme-border sticky top-0 z-50 ${className}`}>
+        <div className="max-w-7xl mx-auto">
+          {/* Main navigation bar */}
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
             {/* Logo and brand */}
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm sm:text-lg">G</span>
+            <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+              <div className="w-10 h-10 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">G</span>
               </div>
-              <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-bold text-theme-text truncate">Gayed Signal Dashboard</h1>
-                <p className="text-theme-text-muted text-xs sm:text-sm hidden sm:block">Professional Market Regime Analysis</p>
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-bold text-theme-text">Gayed Signals</h1>
+                <p className="text-xs text-theme-text-muted">Market Intelligence</p>
               </div>
-            </div>
+            </Link>
+            
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-1">
+              {renderNavigationItems()}
+            </nav>
             
             {/* Right side controls */}
-            <div className="flex items-center space-x-2 sm:space-x-4 relative z-50">
-              {/* Auth status indicator - hidden on mobile */}
+            <div className="flex items-center space-x-3">
+              {/* Auth status indicator - desktop only */}
               <SignedIn>
-                <div className="hidden lg:flex items-center space-x-2">
+                <div className="hidden xl:flex items-center space-x-2 px-3 py-1.5 bg-theme-success/10 rounded-full">
                   <div className="w-2 h-2 bg-theme-success rounded-full animate-pulse"></div>
-                  <span className="text-sm text-theme-success font-medium">Authenticated</span>
+                  <span className="text-xs text-theme-success font-medium">Live</span>
                 </div>
               </SignedIn>
               
-              {/* Theme toggle - smaller on mobile */}
+              {/* Theme toggle */}
               {showThemeToggle && (
                 <div className="hidden sm:block">
                   <ThemeToggle />
                 </div>
               )}
               
-              {/* Authentication buttons - Enhanced for mobile */}
+              {/* Authentication */}
               <SignedOut>
                 <SignInButton mode="modal">
-                  <button className="relative z-50 min-h-[44px] min-w-[44px] px-4 py-3 sm:px-4 sm:py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-colors text-sm sm:text-base font-medium touch-manipulation active:scale-95 shadow-lg">
+                  <button className="px-4 py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md touch-manipulation min-h-[44px]">
                     Sign In
                   </button>
                 </SignInButton>
               </SignedOut>
               
               <SignedIn>
-                {/* User button from Clerk - responsive sizing with higher z-index */}
-                <div className="relative z-50 scale-90 sm:scale-100">
-                  <UserButton afterSignOutUrl="/" />
+                <div className="relative z-50">
+                  <UserButton 
+                    afterSignOutUrl="/"
+                    appearance={{
+                      elements: {
+                        avatarBox: "w-9 h-9"
+                      }
+                    }}
+                  />
                 </div>
               </SignedIn>
               
-              {/* Mobile menu button - larger touch target */}
+              {/* Mobile menu button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-3 hover:bg-theme-card-hover rounded-lg text-theme-text-secondary hover:text-theme-text transition-colors touch-manipulation"
+                className="lg:hidden p-2.5 hover:bg-theme-card-hover rounded-lg text-theme-text transition-colors touch-manipulation min-h-[44px] min-w-[44px]"
+                aria-label="Toggle mobile menu"
               >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
-          {/* Navigation tabs - responsive layout */}
-          <div className="mt-3 sm:mt-4">
-            <div className="flex space-x-1 bg-theme-bg p-1 rounded-xl border border-theme-border overflow-x-auto scrollbar-hide">
-              {renderNavigationItems()}
-            </div>
-          </div>
-
-          {/* Mobile menu - enhanced for touch */}
+          {/* Mobile Navigation Overlay */}
           {mobileMenuOpen && (
-            <div className="md:hidden mt-4 p-4 bg-theme-card border border-theme-border rounded-xl shadow-lg">
-              <div className="flex flex-col space-y-3">
-                {/* Enhanced mobile navigation items */}
-                {renderNavigationItems()}
-                
-                {/* Mobile-specific controls */}
-                <div className="pt-4 border-t border-theme-border space-y-3">
-                  {/* Theme toggle for mobile */}
-                  {showThemeToggle && (
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-sm font-medium text-theme-text">Dark Mode</span>
-                      <ThemeToggle />
-                    </div>
-                  )}
+            <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" 
+                onClick={() => setMobileMenuOpen(false)}
+              />
+              
+              {/* Mobile Menu */}
+              <div className="absolute top-full left-0 right-0 bg-theme-card border-b border-theme-border shadow-2xl z-50 lg:hidden">
+                <div className="px-4 py-6 space-y-6">
+                  {/* Navigation Links */}
+                  <nav className="space-y-2">
+                    {renderNavigationItems()}
+                  </nav>
                   
-                  {/* Auth status for mobile */}
-                  <SignedIn>
-                    <div className="flex items-center space-x-3 px-4 py-3 bg-theme-card-hover rounded-lg">
-                      <div className="w-10 h-10 bg-theme-primary rounded-full flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">
-                          {user?.firstName?.[0] || user?.emailAddresses[0]?.emailAddress[0].toUpperCase() || 'U'}
-                        </span>
+                  {/* Mobile Controls */}
+                  <div className="border-t border-theme-border pt-6 space-y-4">
+                    {/* Theme Toggle */}
+                    {showThemeToggle && (
+                      <div className="flex items-center justify-between px-4 py-3 bg-theme-card-hover rounded-lg">
+                        <span className="text-sm font-medium text-theme-text">Dark Mode</span>
+                        <ThemeToggle />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-theme-text truncate">
-                          {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
+                    )}
+                    
+                    {/* User Info */}
+                    <SignedIn>
+                      <div className="flex items-center space-x-4 px-4 py-4 bg-theme-primary/5 rounded-lg border border-theme-primary/20">
+                        <div className="w-12 h-12 bg-theme-primary rounded-full flex items-center justify-center">
+                          <span className="text-white text-lg font-semibold">
+                            {user?.firstName?.[0] || user?.emailAddresses[0]?.emailAddress[0].toUpperCase() || 'U'}
+                          </span>
                         </div>
-                        <div className="text-xs text-theme-text-muted truncate">
-                          {user?.emailAddresses[0]?.emailAddress || ''}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-theme-text truncate">
+                            {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
+                          </div>
+                          <div className="text-xs text-theme-text-muted truncate">
+                            {user?.emailAddresses[0]?.emailAddress || ''}
+                          </div>
+                          <div className="flex items-center space-x-1 mt-1">
+                            <div className="w-2 h-2 bg-theme-success rounded-full animate-pulse"></div>
+                            <span className="text-xs text-theme-success font-medium">Active</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <div className="w-2 h-2 bg-theme-success rounded-full animate-pulse"></div>
-                        <span className="text-xs text-theme-success font-medium">Online</span>
-                      </div>
-                    </div>
-                  </SignedIn>
+                    </SignedIn>
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </header>
     );
-  }
-
-  // Sidebar variant (vertical navigation)
-  if (variant === 'sidebar') {
-    return (
-      <aside className={`w-64 bg-theme-card border-r border-theme-border ${className}`}>
-        <div className="p-6">
-          {/* Logo */}
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-8 h-8 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">G</span>
-            </div>
-            <span className="text-lg font-bold text-theme-text">Gayed Signals</span>
-          </div>
-
-          {/* Navigation */}
-          <nav className="space-y-2">
-            {renderNavigationItems()}
-          </nav>
-
-          {/* User section */}
-          <SignedIn>
-            {showUserMenu && (
-              <div className="mt-8 pt-4 border-t border-theme-border">
-                <UserButton afterSignOutUrl="/" />
-              </div>
-            )}
-          </SignedIn>
-        </div>
-      </aside>
-    );
-  }
-
-  // Tabs variant (simple horizontal tabs)
-  if (variant === 'tabs') {
-    return (
-      <div className={`border-b border-theme-border ${className}`}>
-        <div className="flex space-x-1 p-1 overflow-x-auto">
-          {renderNavigationItems()}
-        </div>
-      </div>
-    );
-  }
-
-  return null;
 }
 
-/**
- * Simplified navigation for mobile
- */
-export function MobileNavigation({ 
-  className = '' 
-}: { 
-  className?: string; 
-}) {
-  const { isSignedIn } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-
-  if (!isSignedIn) {
-    return null;
-  }
-
-  return (
-    <div className={`md:hidden ${className}`}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 w-14 h-14 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-full shadow-lg flex items-center justify-center z-50"
-      >
-        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-      </button>
-
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setIsOpen(false)}>
-          <div className="fixed bottom-20 right-4 bg-theme-card border border-theme-border rounded-xl shadow-xl p-4 min-w-[200px]">
-            <AuthNavigation variant="tabs" showUserMenu={false} showThemeToggle={false} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 /**
  * Breadcrumb navigation with auth awareness
