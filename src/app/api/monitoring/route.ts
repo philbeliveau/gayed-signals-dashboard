@@ -6,11 +6,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { riskManager } from '../../../../lib/risk/risk-manager';
-import { dataFallbackManager } from '../../../../lib/risk/data-fallback';
-import { securityManager } from '../../../../lib/risk/security';
-import { gracefulDegradationManager } from '../../../../lib/risk/graceful-degradation';
-import { enhancedYahooFinanceClient } from '../../../../lib/risk/enhanced-yahoo-finance';
+import { riskManager } from '../../../domains/risk-management/services/risk-manager';
+import { dataFallbackManager } from '../../../domains/risk-management/services/data-fallback';
+import { securityManager } from '../../../domains/risk-management/services/security';
+import { gracefulDegradationManager } from '../../../domains/risk-management/services/graceful-degradation';
+import { enhancedYahooFinanceClient } from '../../../domains/risk-management/services/enhanced-yahoo-finance';
 
 export interface MonitoringResponse {
   health: {
@@ -139,9 +139,13 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
         circuitBreakerState: riskHealthStatus.circuitBreakerState
       },
       security: {
-        rateLimiting: securityStats.rateLimiting,
-        events: securityStats.events,
-        suspiciousIPs: securityStats.suspiciousIPs
+        rateLimiting: securityStats?.rateLimiting || {
+          totalIPs: 0,
+          suspiciousIPs: 0,
+          totalRequests: 0
+        },
+        events: securityStats?.events || { total: 0, recent: [] },
+        suspiciousIPs: securityStats?.suspiciousIPs || []
       },
       dataSources: combinedDataSources,
       alerts: recentAlerts,
@@ -153,8 +157,8 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
       performance: {
         requestStats: {
           ...riskStats.requests,
-          averageResponseTime: riskStats.requests.responseTimes.length > 0 
-            ? riskStats.requests.responseTimes.reduce((a, b) => a + b, 0) / riskStats.requests.responseTimes.length 
+          averageResponseTime: riskStats.requests.responseTimes?.length > 0 
+            ? riskStats.requests.responseTimes.reduce((a, b) => a + b, 0) / riskStats.requests.responseTimes.length
             : 0
         },
         clientStats: clientStats

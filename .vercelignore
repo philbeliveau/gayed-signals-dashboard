@@ -1,0 +1,15 @@
+# Ignore Railway-specific files
+railway.json
+backend/
+python-services/
+task/deployment/
+*.railway.json
+
+# Ignore development files
+.env.local
+.env.development
+.env.test
+
+# Ignore build artifacts
+.next/
+node_modules/

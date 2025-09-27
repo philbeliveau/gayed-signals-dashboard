@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchMarketData } from '../../../../lib/yahoo-finance';
+import { fetchMarketData } from '../../../domains/market-data/services/yahoo-finance';
 
 /**
  * REAL Lumber/Gold Strategy Backtesting API
@@ -236,7 +236,7 @@ async function executeLumberGoldBacktest(
       // Open new position
       portfolio.shares = portfolio.cash / targetPrice;
       portfolio.cash = 0;
-      currentPosition = targetSymbol as 'WOOD' | 'GLD';
+      currentPosition = targetSymbol as "WOOD" | "GLD" | null;
       
       trades.push({
         date: current.date,

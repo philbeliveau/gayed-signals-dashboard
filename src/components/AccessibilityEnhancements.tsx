@@ -567,4 +567,6 @@ export const AccessibilityMenu: React.FC = () => {
   );
 };
 
-// Note: All exports are already declared inline above
+// =============================================================================
+// All functions are already exported at their declarations above
+// =============================================================================

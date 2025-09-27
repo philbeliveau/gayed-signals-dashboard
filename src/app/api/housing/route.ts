@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { HousingLaborProcessor, EconomicIndicator, fetchEconomicIndicators } from '../../../../lib/data/housing-labor-processor';
-import { EnhancedMarketClient } from '../../../../lib/data/enhanced-market-client';
-import { RealDataFetcher } from '../../../../lib/data/real-data-fetcher';
+import { FREDAPIClient, createFREDClient } from '../../../domains/market-data/services/fred-api-client';
 
-// Simple in-memory cache for housing data
-interface CacheEntry {
-  data: any;
-  timestamp: number;
-  ttl: number; // Time to live in milliseconds
-}
+// Simple logger for this API
+const logger = {
+  info: (message: string) => console.log(`ℹ️ Housing API: ${message}`),
+  warn: (message: string) => console.warn(`⚠️ Housing API: ${message}`),
+  error: (message: string, error?: any) => console.error(`❌ Housing API: ${message}`, error)
+};
 
-const housingCache = new Map<string, CacheEntry>();
-const CACHE_TTL = 1800000; // 30 minutes cache for housing data (updates monthly)
-const FAST_CACHE_TTL = 3600000; // 1 hour for fast mode
+// Cache for housing data
+const housingCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// Cleanup old cache entries
 function cleanupCache() {
   const now = Date.now();
   for (const [key, entry] of housingCache.entries()) {
@@ -24,7 +21,6 @@ function cleanupCache() {
   }
 }
 
-// Get cached data or null if expired
 function getCachedData(key: string): any | null {
   const entry = housingCache.get(key);
   if (!entry) return null;
@@ -38,7 +34,6 @@ function getCachedData(key: string): any | null {
   return entry.data;
 }
 
-// Set cache data
 function setCachedData(key: string, data: any, ttl: number = CACHE_TTL) {
   housingCache.set(key, {
     data,
@@ -47,26 +42,20 @@ function setCachedData(key: string, data: any, ttl: number = CACHE_TTL) {
   });
 }
 
-/**
- * GET handler for housing market data
- */
 export async function GET(request: NextRequest) {
   try {
-    // Clean up expired cache entries
     cleanupCache();
     
-    // Parse query parameters
     const url = new URL(request.url);
-    const region = url.searchParams.get('region') || 'national';
     const period = url.searchParams.get('period') || '12m';
-    const fastMode = url.searchParams.get('fast') === 'true';
+    const fast = url.searchParams.get('fast') === 'true';
     
-    const cacheKey = `housing_${region}_${period}_${fastMode ? 'fast' : 'full'}`;
+    const cacheKey = `housing_${period}_${fast}`;
     
     // Check cache first
     const cachedData = getCachedData(cacheKey);
     if (cachedData) {
-      console.log(`🏠 Returning cached housing data for ${region} (${period})`);
+      logger.info(`🚀 Returning cached housing data for period: ${period}`);
       return NextResponse.json({
         ...cachedData,
         cached: true,
@@ -74,244 +63,149 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    console.log(`🏠 Fetching housing market data for ${region} (${period})...`);
+    logger.info(`🏠 Fetching housing data for period: ${period}, fast: ${fast}`);
     
-    // Initialize housing/labor processor
-    const marketClient = new EnhancedMarketClient({
-      tiingoApiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
-      alphaVantageApiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
-      rateLimits: {
-        tiingo: 500,
-        alphaVantage: 12000,
-        yahooFinance: 100
-      }
+    // Initialize FRED client
+    const fredClient = createFREDClient();
+    
+    // Housing series IDs for FRED API
+    const housingSeriesIds = [
+      'CSUSHPINSA',    // Case-Shiller Index
+      'HOUST',         // Housing Starts
+      'MSACSR',        // Months Supply
+      'HSN1F',         // New Home Sales
+      'EXHOSLUSM495S', // Existing Home Sales
+      'PERMIT',        // Building Permits
+      'MORTGAGE30US',  // 30-Year Mortgage Rate
+      'USSTHPI'        // All-Transactions House Price Index
+    ];
+    
+    // Calculate date range based on period
+    const endDate = new Date();
+    const startDate = new Date();
+    
+    if (period === 'max' || period === 'all') {
+      startDate.setFullYear(1987, 0, 1); // Case-Shiller starts in 1987
+    } else if (period.endsWith('y')) {
+      const years = parseInt(period) || 1;
+      startDate.setFullYear(endDate.getFullYear() - years);
+    } else if (period.endsWith('m')) {
+      const months = parseInt(period) || 12;
+      startDate.setMonth(endDate.getMonth() - months);
+    } else {
+      startDate.setMonth(endDate.getMonth() - 12); // Default to 12 months
+    }
+    
+    // Fetch data from FRED
+    const seriesToFetch = fast ? housingSeriesIds.slice(0, 4) : housingSeriesIds;
+    const housingData = await fredClient.getBatchSeriesData(seriesToFetch, {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
     });
     
-    const processor = new HousingLaborProcessor(marketClient);
+    if (!housingData || Object.keys(housingData).length === 0) {
+      logger.warn('No housing data received from FRED');
+      return NextResponse.json({ 
+        error: 'No housing data available',
+        period,
+        fast,
+        seriesIds: seriesToFetch
+      }, { status: 404 });
+    }
     
-    // Get housing market symbols
-    const economicSymbols = processor.getEconomicSymbols();
-    const housingSymbols = fastMode 
-      ? [economicSymbols.housing.caseShill, economicSymbols.housing.houst] // Fast mode: just essentials
-      : Object.values(economicSymbols.housing); // Full mode: all housing indicators
-    
-    console.log(`📊 Fetching data for housing indicators: ${housingSymbols.join(', ')}`);
-    
-    // REAL DATA: Fetch actual housing data from Alpha Vantage and Tiingo
-    const realDataFetcher = new RealDataFetcher();
-    
-    // Test API connectivity first
-    const apiStatus = await realDataFetcher.testAPIConnectivity();
-    console.log('🔑 API Status:', apiStatus);
-    
-    // Fetch real housing data
-    const realHousingData = await realDataFetcher.fetchRealHousingData(
-      period === '3m' ? 3 : period === '6m' ? 6 : period === '12m' ? 12 : 24
-    );
-    
-    // Process the REAL data through the housing processor
-    const processedData = await processHousingData(processor, realHousingData);
+    // Transform data to time series format
+    const transformedData = transformHousingData(housingData);
     
     const responseData = {
-      region,
-      period,
-      housingData: processedData.timeSeries,
-      currentMetrics: processedData.currentMetrics,
-      alerts: processedData.alerts,
-      trendAnalysis: processedData.trendAnalysis,
-      statistics: processedData.statistics,
+      timeSeries: transformedData,
       metadata: {
         timestamp: new Date().toISOString(),
-        dataSource: 'alpha_vantage_tiingo_real_data', // Real APIs!
-        indicatorCount: housingSymbols.length,
-        fastMode,
-        region,
         period,
-        apiStatus
+        fast,
+        dataPoints: transformedData.length,
+        seriesCount: fast ? 4 : 8,
+        dataSource: 'FRED',
+        dateRange: {
+          start: startDate.toISOString().split('T')[0],
+          end: endDate.toISOString().split('T')[0]
+        }
       }
     };
     
     // Cache the result
-    const cacheTtl = fastMode ? FAST_CACHE_TTL : CACHE_TTL;
-    setCachedData(cacheKey, responseData, cacheTtl);
+    setCachedData(cacheKey, responseData);
     
-    console.log(`✅ Successfully processed housing data for ${region} with ${processedData.alerts.length} alerts`);
+    logger.info(`✅ Successfully fetched ${transformedData.length} housing data points`);
     
     return NextResponse.json(responseData);
     
   } catch (error) {
-    console.error('❌ Error fetching housing market data:', error);
+    logger.error('❌ Error fetching housing data:', error);
     return NextResponse.json({ 
-      error: 'Failed to fetch housing market data',
+      error: 'Failed to fetch housing data',
       details: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }
 }
 
-/**
- * POST handler for historical housing data requests
- */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { indicator, startDate, endDate, region = 'national' } = body;
-    
-    if (!indicator || !startDate || !endDate) {
-      return NextResponse.json({ 
-        error: 'Missing required parameters: indicator, startDate, endDate' 
-      }, { status: 400 });
-    }
-    
-    console.log(`🏠 Fetching historical housing data for ${indicator} (${region}) from ${startDate} to ${endDate}`);
-    
-    // Initialize processor
-    const processor = new HousingLaborProcessor();
-    const economicSymbols = processor.getEconomicSymbols();
-    
-    // Validate indicator
-    const validIndicators = Object.values(economicSymbols.housing);
-    if (!validIndicators.includes(indicator)) {
-      return NextResponse.json({ 
-        error: `Invalid housing indicator. Valid indicators: ${validIndicators.join(', ')}` 
-      }, { status: 400 });
-    }
-    
-    // Real historical data from FRED API - NO MOCK DATA
-    const realDataFetcher = new RealDataFetcher();
-    const realHousingData = await realDataFetcher.fetchRealHousingData(12); // Get real data
-    
-    if (!realHousingData || realHousingData.length === 0) {
-      return NextResponse.json({ 
-        error: `No historical data available for ${indicator}`,
-        indicator,
-        startDate,
-        endDate,
-        region
-      }, { status: 404 });
-    }
-
-    // Convert RealHousingData to EconomicIndicator format for processor
-    const historicalData: EconomicIndicator[] = realHousingData.map(data => ({
-      date: data.date,
-      value: indicator === 'CSUSHPINSA' ? data.caseSillerIndex :
-             indicator === 'HOUST' ? data.housingStarts :
-             indicator === 'MSACSR' ? data.monthsSupply :
-             indicator === 'HSN1F' ? data.newHomeSales : data.caseSillerIndex,
-      symbol: indicator,
-      source: 'FRED',
-      metadata: {
-        period: data.date.substring(0, 7),
-        frequency: 'monthly',
-        seasonallyAdjusted: true
-      }
-    }));
-    
-    // Process through housing processor for trend analysis
-    const trendAnalysis = processor.detectHousingTrends(historicalData);
-    const statistics = processor.calculateStatistics(historicalData);
-    
-    console.log(`✅ Retrieved ${historicalData.length} historical data points for ${indicator}`);
-    
-    return NextResponse.json({
-      indicator,
-      region,
-      startDate,
-      endDate,
-      historicalData,
-      trendAnalysis,
-      statistics,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        dataPoints: historicalData.length,
-        dataSource: 'mock_data' // In production: 'fred_api'
-      }
-    });
-    
-  } catch (error) {
-    console.error('❌ Error fetching historical housing data:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch historical housing data',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
-  }
-}
-
-/**
- * OPTIONS handler for CORS support
- */
 export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
   return NextResponse.json({}, {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
       'Access-Control-Max-Age': '86400'
     }
   });
 }
 
-// NO MOCK DATA FUNCTIONS - Only real data from APIs
-
-async function processHousingData(processor: HousingLaborProcessor, rawData: any[]) {
-  // Convert raw data to EconomicIndicator format
-  const economicData: Record<string, EconomicIndicator[]> = {};
+// Transform FRED data to time series format
+function transformHousingData(fredData: Record<string, any[]>): any[] {
+  const dateMap = new Map<string, any>();
   
-  // For mock data, create economic indicators from the raw housing data
-  rawData.forEach(dataPoint => {
-    ['CSUSHPINSA', 'HOUST', 'MSACSR', 'HSN1F'].forEach(symbol => {
-      if (!economicData[symbol]) {
-        economicData[symbol] = [];
+  // Process each series
+  Object.entries(fredData).forEach(([seriesId, dataPoints]) => {
+    dataPoints.forEach((point: any) => {
+      const date = point.date;
+      if (!dateMap.has(date)) {
+        dateMap.set(date, { date });
       }
       
-      const value = symbol === 'CSUSHPINSA' ? dataPoint.caseSillerIndex :
-                   symbol === 'HOUST' ? dataPoint.housingStarts :
-                   symbol === 'MSACSR' ? dataPoint.monthsSupply :
-                   dataPoint.newHomeSales;
+      const entry = dateMap.get(date);
+      const value = typeof point.value === 'number' ? point.value : parseFloat(point.value);
       
-      economicData[symbol].push({
-        date: dataPoint.date,
-        value,
-        symbol,
-        source: 'FRED',
-        metadata: {
-          period: dataPoint.date.substring(0, 7),
-          frequency: 'monthly',
-          seasonallyAdjusted: true
-        }
-      });
+      // Map FRED series IDs to data keys
+      switch (seriesId) {
+        case 'CSUSHPINSA':
+          entry.caseSillerIndex = value;
+          break;
+        case 'HOUST':
+          entry.housingStarts = value;
+          break;
+        case 'MSACSR':
+          entry.monthsSupply = value;
+          break;
+        case 'HSN1F':
+          entry.newHomeSales = value;
+          break;
+        case 'EXHOSLUSM495S':
+          entry.existingHomeSales = value;
+          break;
+        case 'PERMIT':
+          entry.housingPermits = value;
+          break;
+        case 'MORTGAGE30US':
+          entry.mortgageRates = value;
+          break;
+        case 'USSTHPI':
+          entry.housePriceIndex = value;
+          break;
+      }
     });
   });
   
-  // Process through housing processor
-  const alerts = await processor.evaluateAlerts(economicData);
-  const trendAnalysis = processor.detectHousingTrends(economicData['CSUSHPINSA'] || []);
-  const statistics = economicData['CSUSHPINSA']?.length > 12 
-    ? processor.calculateStatistics(economicData['CSUSHPINSA']) 
-    : null;
-  
-  // Calculate current metrics
-  const currentData = rawData[rawData.length - 1];
-  const currentMetrics = {
-    caseSillerIndex: currentData?.caseSillerIndex || 0,
-    housingStarts: currentData?.housingStarts || 0,
-    monthsSupply: currentData?.monthsSupply || 0,
-    newHomeSales: currentData?.newHomeSales || 0,
-    priceChangeMonthly: rawData.length >= 2 
-      ? ((currentData.caseSillerIndex / rawData[rawData.length - 2].caseSillerIndex - 1) * 100)
-      : 0,
-    priceChangeYearly: rawData.length >= 12 
-      ? ((currentData.caseSillerIndex / rawData[rawData.length - 12].caseSillerIndex - 1) * 100)
-      : 0
-  };
-  
-  return {
-    timeSeries: rawData,
-    currentMetrics,
-    alerts,
-    trendAnalysis,
-    statistics
-  };
+  // Convert to array and sort by date
+  return Array.from(dateMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }

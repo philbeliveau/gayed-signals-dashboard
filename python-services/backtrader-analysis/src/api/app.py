@@ -47,7 +47,8 @@ def create_app(config_name: str = 'development') -> Flask:
     app.config.from_object(config)
     
     # Enable CORS for cross-origin requests from Node.js
-    CORS(app, origins=['http://localhost:3000', 'http://localhost:3001'])
+    cors_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,http://localhost:3001').split(',')
+    CORS(app, origins=cors_origins, supports_credentials=True)
     
     # Initialize analysis engine
     analysis_engine = BacktraderAnalysisEngine()

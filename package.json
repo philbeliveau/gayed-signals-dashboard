@@ -9,10 +9,20 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "check-services": "node scripts/check-services.js",
+    "validate-config": "node scripts/validate-config.js",
+    "health-check": "npm run validate-config && npm run check-services",
+    "start-platform": "./scripts/start-platform.sh",
+    "stop-platform": "./scripts/stop-platform.sh",
+    "clean-platform": "./scripts/clean-platform.sh",
+    "restart-platform": "npm run stop-platform && sleep 3 && npm run start-platform",
+    "platform-status": "cat .platform-status 2>/dev/null || echo 'Platform not running'"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.32.2",
     "@headlessui/react": "^2.2.4",
+    "@heroicons/react": "^2.2.0",
     "axios": "^1.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -20,9 +30,11 @@
     "dotenv": "^16.6.0",
     "lucide-react": "^0.523.0",
     "next": "15.3.4",
+    "playwright": "^1.53.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^2.12.7",
+    "uuid": "^11.1.0",
     "yahoo-finance2": "^2.13.3"
   },
   "devDependencies": {
@@ -35,6 +47,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "jest": "^30.0.3",
