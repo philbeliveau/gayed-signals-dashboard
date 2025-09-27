@@ -5,6 +5,7 @@ import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, Ac
 import Link from 'next/link';
 import { useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
+// import AgentDebateView from '../components/AgentDebateView';
 
 interface Signal {
   type: string;
@@ -21,6 +22,15 @@ interface ConsensusSignal {
   riskOnCount: number;
   riskOffCount: number;
   signals: Signal[];
+}
+
+interface AgentMessage {
+  agentName: string;
+  agentType: 'SIGNAL_ANALYST' | 'MARKET_CONTEXT' | 'RISK_CHALLENGER';
+  role: string;
+  message: string;
+  timestamp: string;
+  confidence?: number;
 }
 
 interface ETF {
@@ -404,6 +414,10 @@ export default function Dashboard() {
   const [showETFModal, setShowETFModal] = useState(false);
   const [loadingMode, setLoadingMode] = useState<'fast' | 'full' | null>(null);
   const [isFullMode, setIsFullMode] = useState(true);
+  // NEW: Agent debate state
+  const [agentConversation, setAgentConversation] = useState<AgentMessage[]>([]);
+  const [reasoning, setReasoning] = useState<string[]>([]);
+  const [transparentDecision, setTransparentDecision] = useState(false);
 
   const fetchSignals = useCallback(async (fast = false) => {
     try {
@@ -429,6 +443,10 @@ export default function Dashboard() {
       setSignals(data.signals || []);
       setConsensus(data.consensus);
       setLastUpdated(new Date());
+      // NEW: Set agent debate data
+      setAgentConversation(data.agentConversation || []);
+      setReasoning(data.reasoning || []);
+      setTransparentDecision(data.transparentDecision || false);
       
       const loadTime = Date.now() - startTime;
       
@@ -703,11 +721,11 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center trading-background-subtle">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary mx-auto mb-4"></div>
-          <div className="text-xl font-medium text-theme-text-secondary">Loading market signals...</div>
-          <div className="text-sm text-theme-text-muted mt-2">Analyzing market regime data</div>
+      <div className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center">
+        <div className="text-center bg-theme-card border border-theme-border rounded-2xl p-12 shadow-xl max-w-md mx-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-theme-border border-t-theme-primary mx-auto mb-6"></div>
+          <div className="text-xl font-bold text-theme-text mb-2">Loading market signals...</div>
+          <div className="text-theme-text-muted">Analyzing market regime data</div>
         </div>
       </div>
     );
@@ -715,19 +733,19 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center trading-background-subtle">
-        <div className="text-center max-w-md mx-auto p-8 bg-theme-card border border-theme-danger-border rounded-xl shadow-lg">
-          <div className="text-theme-danger text-5xl mb-4">⚠</div>
-          <div className="text-xl font-semibold text-theme-danger mb-4">Error Loading Signals</div>
-          <div className="text-theme-text-muted mb-6">{error}</div>
-          <div className="flex gap-3">
+      <div className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center">
+        <div className="text-center max-w-md mx-4 p-8 bg-theme-card border border-theme-border rounded-2xl shadow-xl">
+          <div className="text-theme-danger text-6xl mb-6">⚠</div>
+          <div className="text-2xl font-bold text-theme-danger mb-4">Error Loading Signals</div>
+          <div className="text-theme-text-muted mb-8 leading-relaxed">{error}</div>
+          <div className="flex flex-col sm:flex-row gap-4">
             <button 
               onClick={() => {
                 setLoading(true);
                 setError(null);
                 fetchSignals(!isFullMode);
               }}
-              className="px-6 py-3 bg-theme-danger-bg border border-theme-danger-border rounded-lg text-theme-danger hover:bg-theme-danger-bg/80 transition-colors duration-200"
+              className="px-6 py-3 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-hover transition-all duration-200 font-medium shadow-md"
             >
               Try Again
             </button>
@@ -738,7 +756,7 @@ export default function Dashboard() {
                 setIsFullMode(false);
                 fetchSignals(true);
               }}
-              className="px-6 py-3 bg-theme-warning-bg border border-theme-warning-border rounded-lg text-theme-warning hover:bg-theme-warning-bg/80 transition-colors duration-200"
+              className="px-6 py-3 bg-theme-card border border-theme-border rounded-xl text-theme-text hover:bg-theme-card-hover transition-all duration-200 font-medium"
             >
               Try Fast Mode
             </button>
@@ -754,8 +772,8 @@ export default function Dashboard() {
   const neutralSignals = signals.filter(s => s.signal === 'Neutral').length;
 
   return (
-    <div className="min-h-screen bg-theme-bg text-theme-text trading-background-subtle">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-6 sm:pb-8 space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className="min-h-screen bg-theme-bg text-theme-text">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 lg:pt-12 pb-8 sm:pb-12 space-y-6 sm:space-y-8 lg:space-y-12">
         {/* Header Controls - mobile optimized */}
         <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
           <div className="text-center sm:text-left">
@@ -764,24 +782,24 @@ export default function Dashboard() {
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            {/* Mode Toggle - mobile optimized */}
-            <div className="flex items-center gap-1 bg-theme-card border border-theme-border rounded-lg p-1 w-full sm:w-auto">
+            {/* Mode Toggle - clean design */}
+            <div className="flex items-center gap-2 bg-theme-card border border-theme-border rounded-xl p-2 w-full sm:w-auto shadow-sm">
               <button
                 onClick={() => setIsFullMode(true)}
-                className={`flex-1 sm:flex-none px-2 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm rounded transition-all touch-manipulation ${
+                className={`flex-1 sm:flex-none px-4 py-3 text-sm font-medium rounded-lg transition-all touch-manipulation ${
                   isFullMode
-                    ? 'bg-theme-primary text-white'
-                    : 'text-theme-text-muted hover:text-theme-text'
+                    ? 'bg-theme-primary text-white shadow-md'
+                    : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
                 }`}
               >
                 All 5 Signals
               </button>
               <button
                 onClick={() => setIsFullMode(false)}
-                className={`flex-1 sm:flex-none px-2 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm rounded transition-all touch-manipulation ${
+                className={`flex-1 sm:flex-none px-4 py-3 text-sm font-medium rounded-lg transition-all touch-manipulation ${
                   !isFullMode
-                    ? 'bg-theme-primary text-white'
-                    : 'text-theme-text-muted hover:text-theme-text'
+                    ? 'bg-theme-primary text-white shadow-md'
+                    : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
                 }`}
               >
                 Fast Mode
@@ -794,7 +812,7 @@ export default function Dashboard() {
               <button
                 onClick={() => fetchSignals(!isFullMode)}
                 disabled={refreshing}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-3 sm:py-2 bg-theme-card border border-theme-border rounded-lg hover:border-theme-border-hover hover:bg-theme-card-hover transition-colors disabled:opacity-50 touch-manipulation"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-theme-card border border-theme-border rounded-xl hover:border-theme-border-hover hover:bg-theme-card-hover transition-all disabled:opacity-50 touch-manipulation shadow-sm font-medium"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                 <span className="text-sm sm:text-base">Refresh</span>
@@ -803,7 +821,7 @@ export default function Dashboard() {
               {/* Navigation Links */}
               <Link
                 href="/interactive-charts"
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-3 sm:py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors touch-manipulation"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-hover transition-all touch-manipulation shadow-md font-medium"
               >
                 <LineChart className="w-4 h-4" />
                 <span className="text-sm sm:text-base">Charts</span>
@@ -812,9 +830,9 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* Status Bar - mobile optimized */}
-        <div className="flex flex-col gap-3 sm:gap-2 sm:flex-row sm:justify-between sm:items-center px-3 sm:px-4 py-3 bg-theme-card border border-theme-border rounded-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-theme-text-muted">
+        {/* Status Bar - clean design */}
+        <div className="flex flex-col gap-4 sm:gap-3 sm:flex-row sm:justify-between sm:items-center px-6 py-4 bg-theme-card border border-theme-border rounded-2xl shadow-md">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm font-medium text-theme-text-muted">
             <span className="text-center sm:text-left">
               Mode: <strong className="text-theme-text">{isFullMode ? 'Full Analysis' : 'Fast Mode'}</strong>
             </span>
@@ -822,92 +840,92 @@ export default function Dashboard() {
               Signals: <strong className="text-theme-text">{signals.length}</strong>
             </span>
             {loadingMode && (
-              <span className="text-theme-primary text-center sm:text-left">
+              <span className="text-theme-primary text-center sm:text-left font-semibold">
                 {loadingMode === 'fast' ? 'Fast loading...' : 'Full analysis...'}
               </span>
             )}
           </div>
           
           {lastUpdated && (
-            <div className="text-xs sm:text-sm text-theme-text-muted text-center sm:text-right">
+            <div className="text-sm text-theme-text-muted text-center sm:text-right font-medium">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </div>
           )}
         </div>
 
-        {/* Market Overview Section - mobile optimized grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-          <div className="bg-theme-card border border-theme-border rounded-xl p-4 sm:p-6 hover:border-theme-border-hover hover:shadow-lg transition-all duration-200">
-            <div className="text-xs text-theme-text-light uppercase tracking-wide mb-1 sm:mb-2">Total Signals</div>
-            <div className="text-xl sm:text-2xl font-bold text-theme-text">{totalSignals}</div>
+        {/* Market Overview Section - clean card design */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          <div className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="text-xs text-theme-text-muted uppercase tracking-wider font-semibold mb-3">Total Signals</div>
+            <div className="text-2xl sm:text-3xl font-bold text-theme-text">{totalSignals}</div>
           </div>
           
-          <div className="bg-theme-card border border-theme-success-border rounded-xl p-4 sm:p-6 hover:border-theme-success hover:shadow-lg transition-all duration-200">
-            <div className="text-xs text-theme-success uppercase tracking-wide mb-1 sm:mb-2">Risk-On</div>
-            <div className="text-xl sm:text-2xl font-bold text-theme-success">{riskOnSignals}</div>
-            <div className="text-xs text-theme-text-muted mt-1">{totalSignals > 0 ? Math.round((riskOnSignals / totalSignals) * 100) : 0}%</div>
+          <div className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="text-xs text-theme-success uppercase tracking-wider font-semibold mb-3">Risk-On</div>
+            <div className="text-2xl sm:text-3xl font-bold text-theme-success">{riskOnSignals}</div>
+            <div className="text-sm text-theme-text-muted mt-2 font-medium">{totalSignals > 0 ? Math.round((riskOnSignals / totalSignals) * 100) : 0}%</div>
           </div>
           
-          <div className="bg-theme-card border border-theme-danger-border rounded-xl p-4 sm:p-6 hover:border-theme-danger hover:shadow-lg transition-all duration-200">
-            <div className="text-xs text-theme-danger uppercase tracking-wide mb-1 sm:mb-2">Risk-Off</div>
-            <div className="text-xl sm:text-2xl font-bold text-theme-danger">{riskOffSignals}</div>
-            <div className="text-xs text-theme-text-muted mt-1">{totalSignals > 0 ? Math.round((riskOffSignals / totalSignals) * 100) : 0}%</div>
+          <div className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="text-xs text-theme-danger uppercase tracking-wider font-semibold mb-3">Risk-Off</div>
+            <div className="text-2xl sm:text-3xl font-bold text-theme-danger">{riskOffSignals}</div>
+            <div className="text-sm text-theme-text-muted mt-2 font-medium">{totalSignals > 0 ? Math.round((riskOffSignals / totalSignals) * 100) : 0}%</div>
           </div>
           
-          <div className="bg-theme-card border border-theme-warning-border rounded-xl p-4 sm:p-6 hover:border-theme-warning hover:shadow-lg transition-all duration-200">
-            <div className="text-xs text-theme-warning uppercase tracking-wide mb-1 sm:mb-2">Neutral</div>
-            <div className="text-xl sm:text-2xl font-bold text-theme-warning">{neutralSignals}</div>
-            <div className="text-xs text-theme-text-muted mt-1">{totalSignals > 0 ? Math.round((neutralSignals / totalSignals) * 100) : 0}%</div>
+          <div className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="text-xs text-theme-warning uppercase tracking-wider font-semibold mb-3">Neutral</div>
+            <div className="text-2xl sm:text-3xl font-bold text-theme-warning">{neutralSignals}</div>
+            <div className="text-sm text-theme-text-muted mt-2 font-medium">{totalSignals > 0 ? Math.round((neutralSignals / totalSignals) * 100) : 0}%</div>
           </div>
         </div>
 
-        {/* Enhanced Consensus Panel - mobile optimized */}
+        {/* Enhanced Consensus Panel - clean design */}
         {consensus && (
-          <div className="bg-gradient-to-br from-theme-card to-theme-card-secondary border border-theme-border rounded-2xl p-6 sm:p-8 lg:p-12 shadow-2xl trading-symbols">
-            <div className="text-center mb-6 sm:mb-8 relative z-10">
-              <div className="text-xs sm:text-sm text-theme-text-muted uppercase tracking-wide mb-3 sm:mb-4">Market Consensus</div>
-              <div className={`text-4xl sm:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 ${getSignalColor(consensus.consensus)} flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4`}>
-                <span className="p-3 sm:p-4 rounded-full bg-current/10">
+          <div className="bg-theme-card border border-theme-border rounded-2xl p-8 sm:p-12 lg:p-16 shadow-xl">
+            <div className="text-center mb-8 sm:mb-12">
+              <div className="text-sm text-theme-text-muted uppercase tracking-wider font-semibold mb-6">Market Consensus</div>
+              <div className={`text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 ${getSignalColor(consensus.consensus)} flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6`}>
+                <span className="p-4 sm:p-6 rounded-2xl bg-current/10">
                   {getSignalIcon(consensus.consensus)}
                 </span>
                 <span className="text-center">{consensus.consensus}</span>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-4xl mx-auto">
-                <div className="text-center bg-theme-card/50 rounded-xl p-4 sm:bg-transparent sm:p-0">
-                  <div className="text-2xl sm:text-3xl font-bold text-theme-text mb-1 sm:mb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 max-w-5xl mx-auto">
+                <div className="text-center bg-theme-card-secondary rounded-2xl p-6 shadow-md">
+                  <div className="text-3xl sm:text-4xl font-bold text-theme-text mb-3">
                     {Math.round(consensus.confidence * 100)}%
                   </div>
-                  <div className="text-theme-text-muted text-sm sm:text-base">Confidence Level</div>
-                  <div className="w-full bg-theme-bg-secondary rounded-full h-2 mt-2 sm:mt-3">
+                  <div className="text-theme-text-muted font-medium">Confidence Level</div>
+                  <div className="w-full bg-theme-border rounded-full h-3 mt-4">
                     <div 
-                      className="bg-theme-primary h-2 rounded-full transition-all duration-500"
+                      className="bg-theme-primary h-3 rounded-full transition-all duration-700"
                       style={{ width: `${consensus.confidence * 100}%` }}
                     ></div>
                   </div>
                 </div>
                 
-                <div className="text-center bg-theme-card/50 rounded-xl p-4 sm:bg-transparent sm:p-0">
-                  <div className="text-2xl sm:text-3xl font-bold text-theme-success mb-1 sm:mb-2">
+                <div className="text-center bg-theme-card-secondary rounded-2xl p-6 shadow-md">
+                  <div className="text-3xl sm:text-4xl font-bold text-theme-success mb-3">
                     {consensus.riskOnCount}
                   </div>
-                  <div className="text-theme-text-muted text-sm sm:text-base">Risk-On Signals</div>
-                  <div className="w-full bg-theme-bg-secondary rounded-full h-2 mt-2 sm:mt-3">
+                  <div className="text-theme-text-muted font-medium">Risk-On Signals</div>
+                  <div className="w-full bg-theme-border rounded-full h-3 mt-4">
                     <div 
-                      className="bg-theme-success h-2 rounded-full transition-all duration-500"
+                      className="bg-theme-success h-3 rounded-full transition-all duration-700"
                       style={{ width: `${totalSignals > 0 ? (consensus.riskOnCount / totalSignals) * 100 : 0}%` }}
                     ></div>
                   </div>
                 </div>
                 
-                <div className="text-center bg-theme-card/50 rounded-xl p-4 sm:bg-transparent sm:p-0">
-                  <div className="text-2xl sm:text-3xl font-bold text-theme-danger mb-1 sm:mb-2">
+                <div className="text-center bg-theme-card-secondary rounded-2xl p-6 shadow-md">
+                  <div className="text-3xl sm:text-4xl font-bold text-theme-danger mb-3">
                     {consensus.riskOffCount}
                   </div>
-                  <div className="text-theme-text-muted text-sm sm:text-base">Risk-Off Signals</div>
-                  <div className="w-full bg-theme-bg-secondary rounded-full h-2 mt-2 sm:mt-3">
+                  <div className="text-theme-text-muted font-medium">Risk-Off Signals</div>
+                  <div className="w-full bg-theme-border rounded-full h-3 mt-4">
                     <div 
-                      className="bg-theme-danger h-2 rounded-full transition-all duration-500"
+                      className="bg-theme-danger h-3 rounded-full transition-all duration-700"
                       style={{ width: `${totalSignals > 0 ? (consensus.riskOffCount / totalSignals) * 100 : 0}%` }}
                     ></div>
                   </div>
@@ -917,77 +935,85 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Enhanced Individual Signal Cards - mobile optimized */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+        {/* Enhanced Individual Signal Cards - clean design */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
           {signals.map((signal, index) => (
             <div 
               key={index} 
               onClick={() => handleSignalClick(signal)}
-              className={`bg-theme-card border rounded-xl p-4 sm:p-6 hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer touch-manipulation active:scale-95 ${getSignalBgColor(signal.signal)}`}
+              className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer touch-manipulation active:scale-95"
             >
-              <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <div className={`p-2 rounded-lg ${getSignalBgColor(signal.signal)}`}>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className={`p-3 rounded-xl ${getSignalBgColor(signal.signal)}`}>
                     {getSignalIcon(signal.signal)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-theme-text font-semibold text-xs sm:text-sm uppercase tracking-wide truncate">
+                    <h3 className="text-theme-text font-bold text-sm sm:text-base uppercase tracking-wide truncate">
                       {signal.type.replace('_', ' / ')}
                     </h3>
-                    <div className="text-xs text-theme-text-light mt-1 hidden sm:block">
+                    <div className="text-xs text-theme-text-muted mt-2 hidden sm:block font-medium">
                       Updated {new Date(signal.date).toLocaleTimeString()}
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className={`text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-center sm:text-left ${getSignalColor(signal.signal)}`}>
+              <div className={`text-3xl sm:text-4xl font-bold mb-6 text-center ${getSignalColor(signal.signal)}`}>
                 {signal.signal}
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-theme-text-muted text-sm">Signal Strength</span>
-                    <span className="text-theme-text font-medium text-sm">{signal.strength}</span>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-theme-text-muted font-medium">Signal Strength</span>
+                    <span className="text-theme-text font-semibold">{signal.strength}</span>
                   </div>
-                  <div className="w-full bg-theme-bg-secondary rounded-full h-2">
+                  <div className="w-full bg-theme-border rounded-full h-3">
                     <div 
-                      className={`h-2 rounded-full transition-all duration-500 ${getStrengthColor(signal.strength)}`}
+                      className={`h-3 rounded-full transition-all duration-700 ${getStrengthColor(signal.strength)}`}
                       style={{ width: `${getStrengthValue(signal.strength)}%` }}
                     ></div>
                   </div>
                 </div>
                 
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-theme-text-muted text-sm">Confidence</span>
-                    <span className="text-theme-text font-medium text-sm">{Math.round(signal.confidence * 100)}%</span>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-theme-text-muted font-medium">Confidence</span>
+                    <span className="text-theme-text font-semibold">{Math.round(signal.confidence * 100)}%</span>
                   </div>
-                  <div className="w-full bg-theme-bg-secondary rounded-full h-2">
+                  <div className="w-full bg-theme-border rounded-full h-3">
                     <div 
-                      className="bg-theme-info h-2 rounded-full transition-all duration-500"
+                      className="bg-theme-primary h-3 rounded-full transition-all duration-700"
                       style={{ width: `${signal.confidence * 100}%` }}
                     ></div>
                   </div>
                 </div>
               </div>
               
-              <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-theme-border">
-                <div className="flex justify-between items-center mb-2 sm:mb-3">
-                  <span className="text-theme-text-light text-xs">Raw Value</span>
-                  <span className="text-theme-text-secondary text-xs sm:text-sm font-mono">
+              <div className="mt-6 pt-6 border-t border-theme-border">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-theme-text-muted font-medium">Raw Value</span>
+                  <span className="text-theme-text font-mono font-semibold">
                     {signal.rawValue.toFixed(4)}
                   </span>
                 </div>
-                <div className="flex items-center justify-center space-x-1 sm:space-x-2 text-theme-primary text-xs sm:text-sm">
-                  <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
+                <div className="flex items-center justify-center space-x-2 text-theme-primary font-medium">
+                  <ExternalLink className="w-4 h-4" />
                   <span className="text-center">Tap for ETF Recommendations</span>
                 </div>
               </div>
             </div>
           ))}
         </div>
+        
+        {/* AI Agent Debate View - Coming Soon */}
+        {transparentDecision && (
+          <div className="bg-theme-card border border-theme-border rounded-2xl p-6 shadow-lg mt-8">
+            <h3 className="text-lg font-semibold text-theme-text mb-4">🤖 AI Agent Analysis</h3>
+            <p className="text-theme-text-muted">Multi-agent decision system coming soon...</p>
+          </div>
+        )}
       </div>
 
       {/* ETF Modal */}

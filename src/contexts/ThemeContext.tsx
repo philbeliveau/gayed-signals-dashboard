@@ -76,7 +76,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       // Update meta theme-color for mobile browsers
       const metaThemeColor = document.querySelector('meta[name="theme-color"]');
       if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', theme === 'light' ? '#FFFFFF' : '#0A0A0A');
+        metaThemeColor.setAttribute('content', theme === 'light' ? '#1a1a1a' : '#1a1a1a');
       }
     } catch (error) {
       console.warn('Error applying theme changes:', error);
