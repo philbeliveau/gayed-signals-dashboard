@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, Activity, LineChart, Users, Home, Youtube } from 'lucide-react';
+import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, Activity, LineChart, Users, Home, Youtube, User, Bell, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -774,12 +774,39 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-theme-bg text-theme-text">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 lg:pt-12 pb-8 sm:pb-12 space-y-6 sm:space-y-8 lg:space-y-12">
-        {/* Header Controls - mobile optimized */}
-        <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
-          <div className="text-center sm:text-left">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-theme-text mb-1 sm:mb-2">Market Signals Dashboard</h1>
-            <p className="text-theme-text-muted text-sm sm:text-base">Real-time analysis of Gayed market regime indicators</p>
+        {/* Header with Profile - inspired by reference design */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          {/* Left: Main Title */}
+          <div className="flex-1">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-theme-text mb-2">Market Signals Dashboard</h1>
+            <p className="text-theme-text-muted text-base sm:text-lg">Real-time analysis of Gayed market regime indicators</p>
           </div>
+
+          {/* Right: Profile Section (inspired by reference) */}
+          <div className="flex items-center gap-4 bg-theme-card border border-theme-border rounded-2xl p-4 shadow-lg min-w-fit">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-full flex items-center justify-center shadow-md">
+                <User className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <div className="text-sm text-theme-text-muted">Hello 👋</div>
+                <div className="font-bold text-theme-text">Market Analyst</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 ml-4 border-l border-theme-border pl-4">
+              <button className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors">
+                <Bell className="w-5 h-5 text-theme-text-muted" />
+              </button>
+              <button className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors">
+                <Settings className="w-5 h-5 text-theme-text-muted" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls Section */}
+        <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
+          <div></div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             {/* Mode Toggle - clean design */}
@@ -806,26 +833,35 @@ export default function Dashboard() {
               </button>
             </div>
             
-            {/* Controls row - better mobile layout */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Enhanced Controls - reference-inspired */}
+            <div className="flex items-center gap-3 w-full sm:w-auto">
               {/* Refresh Button */}
               <button
                 onClick={() => fetchSignals(!isFullMode)}
                 disabled={refreshing}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-theme-card border border-theme-border rounded-xl hover:border-theme-border-hover hover:bg-theme-card-hover transition-all disabled:opacity-50 touch-manipulation shadow-sm font-medium"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-6 py-4 bg-theme-card border border-theme-border rounded-2xl hover:border-theme-border-hover hover:bg-theme-card-hover transition-all disabled:opacity-50 touch-manipulation shadow-lg font-semibold"
               >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <div className="w-6 h-6 bg-theme-text/10 rounded-lg flex items-center justify-center">
+                  <RefreshCw className={`w-4 h-4 text-theme-text ${refreshing ? 'animate-spin' : ''}`} />
+                </div>
                 <span className="text-sm sm:text-base">Refresh</span>
               </button>
               
-              {/* Navigation Links */}
+              {/* Charts Button */}
               <Link
                 href="/interactive-charts"
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-hover transition-all touch-manipulation shadow-md font-medium"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-6 py-4 bg-theme-primary text-white rounded-2xl hover:bg-theme-primary-hover transition-all touch-manipulation shadow-lg font-semibold"
               >
-                <LineChart className="w-4 h-4" />
+                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
+                  <LineChart className="w-4 h-4" />
+                </div>
                 <span className="text-sm sm:text-base">Charts</span>
               </Link>
+              
+              {/* Add Menu Button */}
+              <button className="w-12 h-12 bg-theme-text rounded-xl flex items-center justify-center shadow-lg hover:bg-theme-text/90 transition-colors">
+                <Users className="w-5 h-5 text-white" />
+              </button>
             </div>
           </div>
         </div>
@@ -851,6 +887,45 @@ export default function Dashboard() {
               Last updated: {lastUpdated.toLocaleTimeString()}
             </div>
           )}
+        </div>
+
+        {/* Portfolio Summary - inspired by reference balance section */}
+        <div className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 shadow-xl">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            {/* Left: Portfolio Balance */}
+            <div className="flex-1">
+              <div className="text-sm text-theme-text-muted uppercase tracking-wide font-semibold mb-2">TOTAL BALANCE</div>
+              <div className="text-4xl sm:text-5xl lg:text-6xl font-bold text-theme-text mb-2 flex items-center gap-3">
+                $180,512.85
+                <span className="text-sm font-medium text-theme-success bg-theme-success-bg px-3 py-1 rounded-full">
+                  +2.45%
+                </span>
+              </div>
+              <div className="text-theme-text-muted text-base">≈ 1.06 ETH</div>
+            </div>
+
+            {/* Right: Quick Actions */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-theme-text rounded-full flex items-center justify-center">
+                  <TrendingDown className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-sm font-medium text-theme-text">Withdraw</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-theme-text rounded-full flex items-center justify-center">
+                  <ExternalLink className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-sm font-medium text-theme-text">Send</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-theme-primary rounded-full flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-sm font-medium text-theme-text">Invest</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Market Overview Section - clean card design */}
@@ -879,53 +954,71 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Enhanced Consensus Panel - clean design */}
+        {/* Enhanced Consensus Panel - reference-inspired prominence */}
         {consensus && (
-          <div className="bg-theme-card border border-theme-border rounded-2xl p-8 sm:p-12 lg:p-16 shadow-xl">
-            <div className="text-center mb-8 sm:mb-12">
-              <div className="text-sm text-theme-text-muted uppercase tracking-wider font-semibold mb-6">Market Consensus</div>
-              <div className={`text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 ${getSignalColor(consensus.consensus)} flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6`}>
-                <span className="p-4 sm:p-6 rounded-2xl bg-current/10">
-                  {getSignalIcon(consensus.consensus)}
-                </span>
-                <span className="text-center">{consensus.consensus}</span>
+          <div className="bg-gradient-to-br from-theme-card to-theme-card-secondary border border-theme-border rounded-3xl p-8 sm:p-12 lg:p-20 shadow-2xl">
+            <div className="text-center mb-12">
+              {/* Header */}
+              <div className="flex items-center justify-center gap-4 mb-8">
+                <div className="text-sm text-theme-text-muted uppercase tracking-wider font-bold">Market Consensus</div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-theme-success rounded-full animate-pulse"></div>
+                  <span className="text-xs text-theme-success font-semibold">LIVE</span>
+                </div>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 max-w-5xl mx-auto">
-                <div className="text-center bg-theme-card-secondary rounded-2xl p-6 shadow-md">
-                  <div className="text-3xl sm:text-4xl font-bold text-theme-text mb-3">
+              {/* Main Consensus Display */}
+              <div className="mb-12">
+                <div className={`text-7xl sm:text-8xl lg:text-9xl font-black mb-6 ${getSignalColor(consensus.consensus)} flex flex-col items-center justify-center space-y-6`}>
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-current/10 flex items-center justify-center shadow-xl">
+                    <div className="scale-150 sm:scale-200">
+                      {getSignalIcon(consensus.consensus)}
+                    </div>
+                  </div>
+                  <span className="text-center tracking-tight">{consensus.consensus}</span>
+                </div>
+                <div className="text-xl text-theme-text-muted font-medium">
+                  Market is showing <strong className="text-theme-text">{consensus.consensus.toLowerCase()}</strong> signals with{' '}
+                  <strong className="text-theme-text">{Math.round(consensus.confidence * 100)}%</strong> confidence
+                </div>
+              </div>
+              
+              {/* Enhanced Metrics Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
+                <div className="bg-theme-card border border-theme-border rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="text-4xl sm:text-5xl font-black text-theme-text mb-4">
                     {Math.round(consensus.confidence * 100)}%
                   </div>
-                  <div className="text-theme-text-muted font-medium">Confidence Level</div>
-                  <div className="w-full bg-theme-border rounded-full h-3 mt-4">
+                  <div className="text-theme-text-muted font-semibold text-lg mb-4">Confidence Level</div>
+                  <div className="w-full bg-theme-border rounded-full h-4">
                     <div 
-                      className="bg-theme-primary h-3 rounded-full transition-all duration-700"
+                      className="bg-theme-primary h-4 rounded-full transition-all duration-1000"
                       style={{ width: `${consensus.confidence * 100}%` }}
                     ></div>
                   </div>
                 </div>
                 
-                <div className="text-center bg-theme-card-secondary rounded-2xl p-6 shadow-md">
-                  <div className="text-3xl sm:text-4xl font-bold text-theme-success mb-3">
+                <div className="bg-theme-card border border-theme-border rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="text-4xl sm:text-5xl font-black text-theme-success mb-4">
                     {consensus.riskOnCount}
                   </div>
-                  <div className="text-theme-text-muted font-medium">Risk-On Signals</div>
-                  <div className="w-full bg-theme-border rounded-full h-3 mt-4">
+                  <div className="text-theme-text-muted font-semibold text-lg mb-4">Risk-On Signals</div>
+                  <div className="w-full bg-theme-border rounded-full h-4">
                     <div 
-                      className="bg-theme-success h-3 rounded-full transition-all duration-700"
+                      className="bg-theme-success h-4 rounded-full transition-all duration-1000"
                       style={{ width: `${totalSignals > 0 ? (consensus.riskOnCount / totalSignals) * 100 : 0}%` }}
                     ></div>
                   </div>
                 </div>
                 
-                <div className="text-center bg-theme-card-secondary rounded-2xl p-6 shadow-md">
-                  <div className="text-3xl sm:text-4xl font-bold text-theme-danger mb-3">
+                <div className="bg-theme-card border border-theme-border rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="text-4xl sm:text-5xl font-black text-theme-danger mb-4">
                     {consensus.riskOffCount}
                   </div>
-                  <div className="text-theme-text-muted font-medium">Risk-Off Signals</div>
-                  <div className="w-full bg-theme-border rounded-full h-3 mt-4">
+                  <div className="text-theme-text-muted font-semibold text-lg mb-4">Risk-Off Signals</div>
+                  <div className="w-full bg-theme-border rounded-full h-4">
                     <div 
-                      className="bg-theme-danger h-3 rounded-full transition-all duration-700"
+                      className="bg-theme-danger h-4 rounded-full transition-all duration-1000"
                       style={{ width: `${totalSignals > 0 ? (consensus.riskOffCount / totalSignals) * 100 : 0}%` }}
                     ></div>
                   </div>
@@ -935,74 +1028,84 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Enhanced Individual Signal Cards - clean design */}
+        {/* Enhanced Individual Signal Cards - reference-inspired design */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
           {signals.map((signal, index) => (
             <div 
               key={index} 
               onClick={() => handleSignalClick(signal)}
-              className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer touch-manipulation active:scale-95"
+              className="bg-theme-card border border-theme-border rounded-2xl p-8 hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer touch-manipulation active:scale-95"
             >
-              <div className="flex items-center justify-between mb-6">
+              {/* Header with larger icon */}
+              <div className="flex items-start justify-between mb-8">
                 <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-xl ${getSignalBgColor(signal.signal)}`}>
-                    {getSignalIcon(signal.signal)}
+                  <div className={`w-16 h-16 rounded-2xl ${getSignalBgColor(signal.signal)} flex items-center justify-center shadow-md`}>
+                    <div className="scale-125">
+                      {getSignalIcon(signal.signal)}
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-theme-text font-bold text-sm sm:text-base uppercase tracking-wide truncate">
+                  <div className="flex-1">
+                    <h3 className="text-theme-text font-bold text-lg uppercase tracking-wide mb-1">
                       {signal.type.replace('_', ' / ')}
                     </h3>
-                    <div className="text-xs text-theme-text-muted mt-2 hidden sm:block font-medium">
-                      Updated {new Date(signal.date).toLocaleTimeString()}
+                    <div className="text-theme-text-muted font-medium">
+                      {signal.strength} Signal
                     </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-theme-text">
+                    {Math.round(signal.confidence * 100)}%
+                  </div>
+                  <div className="text-xs text-theme-text-muted uppercase tracking-wide">
+                    Confidence
                   </div>
                 </div>
               </div>
               
-              <div className={`text-3xl sm:text-4xl font-bold mb-6 text-center ${getSignalColor(signal.signal)}`}>
-                {signal.signal}
+              {/* Main signal display */}
+              <div className="text-center mb-8">
+                <div className={`text-5xl font-bold mb-3 ${getSignalColor(signal.signal)}`}>
+                  {signal.signal}
+                </div>
+                <div className="text-theme-text-muted">
+                  Updated {new Date(signal.date).toLocaleTimeString()}
+                </div>
               </div>
               
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-theme-text-muted font-medium">Signal Strength</span>
-                    <span className="text-theme-text font-semibold">{signal.strength}</span>
+              {/* Compact metrics display */}
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center justify-between p-4 bg-theme-card-secondary rounded-xl">
+                  <div>
+                    <div className="text-theme-text-muted text-sm font-medium">Signal Strength</div>
+                    <div className="text-theme-text text-lg font-bold">{signal.strength}</div>
                   </div>
-                  <div className="w-full bg-theme-border rounded-full h-3">
+                  <div className="w-20 bg-theme-border rounded-full h-2">
                     <div 
-                      className={`h-3 rounded-full transition-all duration-700 ${getStrengthColor(signal.strength)}`}
+                      className={`h-2 rounded-full transition-all duration-700 ${getStrengthColor(signal.strength)}`}
                       style={{ width: `${getStrengthValue(signal.strength)}%` }}
                     ></div>
                   </div>
                 </div>
                 
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-theme-text-muted font-medium">Confidence</span>
-                    <span className="text-theme-text font-semibold">{Math.round(signal.confidence * 100)}%</span>
+                <div className="flex items-center justify-between p-4 bg-theme-card-secondary rounded-xl">
+                  <div>
+                    <div className="text-theme-text-muted text-sm font-medium">Raw Value</div>
+                    <div className="text-theme-text text-lg font-mono font-bold">
+                      {signal.rawValue.toFixed(4)}
+                    </div>
                   </div>
-                  <div className="w-full bg-theme-border rounded-full h-3">
-                    <div 
-                      className="bg-theme-primary h-3 rounded-full transition-all duration-700"
-                      style={{ width: `${signal.confidence * 100}%` }}
-                    ></div>
+                  <div className="w-8 h-8 bg-theme-primary rounded-full flex items-center justify-center">
+                    <ExternalLink className="w-4 h-4 text-white" />
                   </div>
                 </div>
               </div>
               
-              <div className="mt-6 pt-6 border-t border-theme-border">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-theme-text-muted font-medium">Raw Value</span>
-                  <span className="text-theme-text font-mono font-semibold">
-                    {signal.rawValue.toFixed(4)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-center space-x-2 text-theme-primary font-medium">
-                  <ExternalLink className="w-4 h-4" />
-                  <span className="text-center">Tap for ETF Recommendations</span>
-                </div>
-              </div>
+              {/* Action button */}
+              <button className="w-full bg-theme-text text-white py-4 rounded-xl font-semibold hover:bg-theme-text/90 transition-colors flex items-center justify-center gap-2">
+                View ETF Recommendations
+                <ExternalLink className="w-5 h-5" />
+              </button>
             </div>
           ))}
         </div>

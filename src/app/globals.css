@@ -3,14 +3,14 @@
 /* Light Theme Variables */
 :root.light {
   /* Background Colors */
-  --theme-bg: #1a1a1a;
-  --theme-bg-secondary: #ffffff;
+  --theme-bg: #f4f6f8;
+  --theme-bg-secondary: #fefefe;
   --theme-bg-tertiary: #f1f5f9;
   
   /* Card Colors */
-  --theme-card: #ffffff;
-  --theme-card-hover: #f8fafc;
-  --theme-card-secondary: #fafafa;
+  --theme-card: #fefefe;
+  --theme-card-hover: #f9fafb;
+  --theme-card-secondary: #f8fafc;
   
   /* Border Colors */
   --theme-border: #e2e8f0;
@@ -73,24 +73,24 @@
 :root.dark {
   /* Background Colors */
   --theme-bg: #1a1a1a;
-  --theme-bg-secondary: #ffffff;
-  --theme-bg-tertiary: #f8fafc;
+  --theme-bg-secondary: #2a2a2a;
+  --theme-bg-tertiary: #2f2f2f;
   
   /* Card Colors */
-  --theme-card: #ffffff;
-  --theme-card-hover: #f8fafc;
-  --theme-card-secondary: #fafafa;
+  --theme-card: #2a2a2a;
+  --theme-card-hover: #323232;
+  --theme-card-secondary: #2f2f2f;
   
   /* Border Colors */
-  --theme-border: #e2e8f0;
-  --theme-border-hover: #cbd5e1;
+  --theme-border: #3a3a3a;
+  --theme-border-hover: #4a4a4a;
   --theme-border-focus: #3b82f6;
   
   /* Text Colors */
-  --theme-text: #1f2937;
-  --theme-text-secondary: #4b5563;
-  --theme-text-muted: #6b7280;
-  --theme-text-light: #9ca3af;
+  --theme-text: #e5e5e5;
+  --theme-text-secondary: #c5c5c5;
+  --theme-text-muted: #a5a5a5;
+  --theme-text-light: #8a8a8a;
   
   /* Primary Professional Colors */
   --theme-primary: #3b82f6;
@@ -138,14 +138,14 @@
   --theme-grid: rgba(59, 130, 246, 0.08);
 }
 
-/* Default to professional charcoal/slate theme */
+/* Default to light theme matching reference design */
 :root {
-  --theme-bg: #1a1a1a;
-  --theme-bg-secondary: #ffffff;
-  --theme-bg-tertiary: #f8fafc;
-  --theme-card: #ffffff;
-  --theme-card-hover: #f8fafc;
-  --theme-card-secondary: #fafafa;
+  --theme-bg: #f4f6f8;
+  --theme-bg-secondary: #fefefe;
+  --theme-bg-tertiary: #f1f5f9;
+  --theme-card: #fefefe;
+  --theme-card-hover: #f9fafb;
+  --theme-card-secondary: #f8fafc;
   --theme-border: #e2e8f0;
   --theme-border-hover: #cbd5e1;
   --theme-border-focus: #3b82f6;

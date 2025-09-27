@@ -26,7 +26,7 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   // Initialize with a default theme that matches the expected server render
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
 
   // First useEffect: Mark as mounted and load saved preferences
@@ -43,16 +43,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
           return;
         }
         
-        // Default to system preference if no saved preference
+        // Default to light theme to match reference design
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
           setTheme('dark');
         } else {
           setTheme('light');
         }
       } catch (error) {
-        // Fallback to dark theme if any errors occur
+        // Fallback to light theme if any errors occur
         console.warn('Error loading theme preference:', error);
-        setTheme('dark');
+        setTheme('light');
       }
     };
 
@@ -76,7 +76,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       // Update meta theme-color for mobile browsers
       const metaThemeColor = document.querySelector('meta[name="theme-color"]');
       if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', theme === 'light' ? '#1a1a1a' : '#1a1a1a');
+        metaThemeColor.setAttribute('content', theme === 'light' ? '#f4f6f8' : '#1a1a1a');
       }
     } catch (error) {
       console.warn('Error applying theme changes:', error);
