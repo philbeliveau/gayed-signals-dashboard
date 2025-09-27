@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { getNavigationRoutes } from '../../lib/navigation';
+import { useAuthMode } from '../../lib/device-detection';
 import ThemeToggle from '../ThemeToggle';
 
 export interface AuthNavigationProps {
@@ -41,6 +42,7 @@ export default function AuthNavigation({
   const { isSignedIn, userId } = useAuth();
   const { user } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const authMode = useAuthMode();
 
   // For now, assume no admin users - this can be enhanced with Clerk metadata
   const isAdmin = false;
@@ -125,7 +127,7 @@ export default function AuthNavigation({
             </Link>
             
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-1">
+            <nav className="hidden md:flex items-center space-x-1">
               {renderNavigationItems()}
             </nav>
             
@@ -148,7 +150,7 @@ export default function AuthNavigation({
               
               {/* Authentication */}
               <SignedOut>
-                <SignInButton mode="modal">
+                <SignInButton mode={authMode}>
                   <button className="px-4 py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md touch-manipulation min-h-[44px]">
                     Sign In
                   </button>
@@ -171,7 +173,7 @@ export default function AuthNavigation({
               {/* Mobile menu button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2.5 hover:bg-theme-card-hover rounded-lg text-theme-text transition-colors touch-manipulation min-h-[44px] min-w-[44px]"
+                className="md:hidden p-2.5 hover:bg-theme-card-hover rounded-lg text-theme-text transition-colors touch-manipulation min-h-[44px] min-w-[44px]"
                 aria-label="Toggle mobile menu"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -184,12 +186,12 @@ export default function AuthNavigation({
             <>
               {/* Backdrop */}
               <div 
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" 
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden" 
                 onClick={() => setMobileMenuOpen(false)}
               />
               
               {/* Mobile Menu */}
-              <div className="absolute top-full left-0 right-0 bg-theme-card border-b border-theme-border shadow-2xl z-50 lg:hidden">
+              <div className="absolute top-full left-0 right-0 bg-theme-card border-b border-theme-border shadow-2xl z-50 md:hidden">
                 <div className="px-4 py-6 space-y-6">
                   {/* Navigation Links */}
                   <nav className="space-y-2">

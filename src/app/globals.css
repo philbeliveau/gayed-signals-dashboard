@@ -751,73 +751,11 @@ main {
 }
 
 /* =================================================================
- * CLERK MODAL MOBILE OPTIMIZATION
+ * CLERK MOBILE OPTIMIZATION (Simplified)
  * =================================================================*/
 
-/* Prevent body scroll lock issues on mobile */
+/* Essential mobile optimizations for Clerk forms */
 @media (max-width: 768px) {
-  /* Override Clerk's body scroll lock behavior */
-  body.cl-modal-open {
-    overflow: auto !important;
-    position: static !important;
-    height: auto !important;
-    width: auto !important;
-  }
-  
-  /* Clerk modal container mobile optimization */
-  .cl-modalContainer {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100vh !important;
-    height: 100dvh !important; /* Dynamic viewport height for mobile */
-    z-index: 9999 !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  
-  /* Clerk modal backdrop */
-  .cl-modalBackdrop {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    background-color: rgba(0, 0, 0, 0.75) !important;
-    backdrop-filter: blur(4px) !important;
-    z-index: 9998 !important;
-  }
-  
-  /* Clerk modal content - mobile-first bottom sheet style */
-  .cl-modalContent {
-    position: absolute !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    border-radius: 16px 16px 0 0 !important;
-    max-height: 90vh !important;
-    max-height: 90dvh !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    transform: translateY(0) !important;
-    animation: slideUpMobile 0.3s ease-out !important;
-  }
-  
-  /* Clerk sign-in/sign-up card mobile optimization */
-  .cl-card {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    border-radius: 16px 16px 0 0 !important;
-    border: none !important;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15) !important;
-  }
-  
   /* Clerk form inputs mobile optimization */
   .cl-formFieldInput {
     min-height: 48px !important;
@@ -835,30 +773,7 @@ main {
     touch-action: manipulation !important;
   }
   
-  /* Clerk modal header mobile optimization */
-  .cl-modalContent .cl-header {
-    padding: 16px 16px 8px 16px !important;
-    border-bottom: 1px solid var(--theme-border) !important;
-  }
-  
-  /* Clerk modal body mobile optimization */
-  .cl-modalContent .cl-main {
-    padding: 16px !important;
-    overflow-y: auto !important;
-    max-height: calc(80vh - 100px) !important;
-    max-height: calc(80dvh - 100px) !important;
-  }
-  
-  /* Safe area adjustments for Clerk modal */
-  .cl-modalContent {
-    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-  }
-  
   /* Clerk social buttons mobile optimization */
-  .cl-socialButtons {
-    gap: 12px !important;
-  }
-  
   .cl-socialButtonsBlockButton {
     min-height: 48px !important;
     border-radius: 8px !important;
@@ -866,55 +781,6 @@ main {
   }
 }
 
-/* Slide up animation for mobile modal */
-@keyframes slideUpMobile {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Additional iOS Safari specific fixes */
-@supports (-webkit-touch-callout: none) {
-  @media (max-width: 768px) {
-    /* iOS Safari viewport height fix */
-    .cl-modalContainer {
-      height: -webkit-fill-available !important;
-    }
-    
-    .cl-modalBackdrop {
-      height: -webkit-fill-available !important;
-    }
-    
-    /* Prevent iOS bounce scrolling issues */
-    .cl-modalContent {
-      -webkit-overflow-scrolling: touch !important;
-      overflow: auto !important;
-    }
-    
-    /* Fix iOS input zoom */
-    .cl-formFieldInput {
-      font-size: 16px !important;
-      transform: scale(1) !important;
-    }
-  }
-}
-
-/* Desktop Clerk modal improvements */
-@media (min-width: 769px) {
-  .cl-modalContent {
-    border-radius: 12px !important;
-    max-width: 400px !important;
-    margin: auto !important;
-    position: relative !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-  }
-}
 
 /* =================================================================
  * MOBILE BROWSER COMPATIBILITY FIXES
