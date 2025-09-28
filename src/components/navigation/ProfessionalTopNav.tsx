@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Search, Bell, ChevronDown } from 'lucide-react';
 import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
-import { useAuthMode } from '../../lib/device-detection';
+import { useAuthMode } from '@/lib/device-detection';
 import ThemeToggle from '../ThemeToggle';
 
 interface ProfessionalTopNavProps {

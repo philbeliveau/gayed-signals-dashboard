@@ -16,7 +16,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
-import { getNavigationRoutes } from '../../lib/navigation';
+import { getNavigationRoutes } from '@/lib/navigation';
 
 interface ProfessionalSidebarProps {
   className?: string;

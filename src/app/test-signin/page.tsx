@@ -1,7 +1,7 @@
 'use client';
 
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
-import { useAuthMode } from '../../lib/device-detection';
+import { useAuthMode } from '@/lib/device-detection';
 
 export default function TestSignIn() {
   const authMode = useAuthMode();
