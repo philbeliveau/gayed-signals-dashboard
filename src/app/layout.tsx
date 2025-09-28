@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ConditionalClerkProvider } from "../components/auth/ClerkWrapper";
+import { ClerkProvider } from "../components/auth/ConditionalClerkComponents";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { UserPreferencesProvider } from "../contexts/UserPreferencesContext";
 import ProfessionalLayout from "../components/layout/ProfessionalLayout";
@@ -59,7 +59,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased touch-manipulation`}
         suppressHydrationWarning
       >
-        <ConditionalClerkProvider publishableKey={clerkPublishableKey}>
+        <ClerkProvider>
           <ThemeProvider>
             <UserPreferencesProvider>
               <ProfessionalLayout>
@@ -72,7 +72,7 @@ export default function RootLayout({
               </ProfessionalLayout>
             </UserPreferencesProvider>
           </ThemeProvider>
-        </ConditionalClerkProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

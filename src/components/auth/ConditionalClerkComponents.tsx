@@ -1,14 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 
 // Check if we're in a Clerk environment
 const hasClerkEnv = typeof process !== 'undefined' &&
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== 'your-clerk-publishable-key-here';
 
-// Store Clerk components after client-side initialization
-let ClerkComponents: any = {};
+// Context for shared Clerk state
+const ClerkContext = createContext<{
+  isClient: boolean;
+  clerkLoaded: boolean;
+  components: any;
+}>({
+  isClient: false,
+  clerkLoaded: false,
+  components: {},
+});
 
 // Mock components for demo mode
 const MockAuthHook = () => ({ isSignedIn: false, isLoaded: true });
@@ -30,10 +38,11 @@ const MockUserButton = ({ afterSignOutUrl, appearance }: any) => (
   </div>
 );
 
-// Hook to initialize Clerk components on the client side
-const useClerkComponents = () => {
+// Provider component to manage Clerk initialization
+export function ClerkProvider({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
   const [clerkLoaded, setClerkLoaded] = useState(false);
+  const [components, setComponents] = useState<any>({});
 
   useEffect(() => {
     setIsClient(true);
@@ -42,7 +51,7 @@ const useClerkComponents = () => {
       try {
         // Dynamic import on client side only
         const clerk = require('@clerk/nextjs');
-        ClerkComponents = {
+        const clerkComponents = {
           useAuth: clerk.useAuth,
           useUser: clerk.useUser,
           SignedIn: clerk.SignedIn,
@@ -50,6 +59,7 @@ const useClerkComponents = () => {
           SignInButton: clerk.SignInButton,
           UserButton: clerk.UserButton,
         };
+        setComponents(clerkComponents);
         setClerkLoaded(true);
       } catch (error) {
         console.warn('Clerk not available, using mock components:', error);
@@ -58,19 +68,28 @@ const useClerkComponents = () => {
     }
   }, []);
 
-  return { isClient, clerkLoaded };
+  return (
+    <ClerkContext.Provider value={{ isClient, clerkLoaded, components }}>
+      {children}
+    </ClerkContext.Provider>
+  );
+}
+
+// Hook to use Clerk context
+const useClerkComponents = () => {
+  return useContext(ClerkContext);
 };
 
 // Export hooks with proper client-side handling
 export const useAuth = () => {
-  const { isClient, clerkLoaded } = useClerkComponents();
+  const { isClient, clerkLoaded, components } = useClerkComponents();
 
-  if (!isClient || !clerkLoaded || !ClerkComponents.useAuth) {
+  if (!isClient || !clerkLoaded || !components.useAuth) {
     return MockAuthHook();
   }
 
   try {
-    return ClerkComponents.useAuth();
+    return components.useAuth();
   } catch (error) {
     console.warn('Clerk useAuth error, falling back to mock:', error);
     return MockAuthHook();
@@ -78,14 +97,14 @@ export const useAuth = () => {
 };
 
 export const useUser = () => {
-  const { isClient, clerkLoaded } = useClerkComponents();
+  const { isClient, clerkLoaded, components } = useClerkComponents();
 
-  if (!isClient || !clerkLoaded || !ClerkComponents.useUser) {
+  if (!isClient || !clerkLoaded || !components.useUser) {
     return MockUserHook();
   }
 
   try {
-    return ClerkComponents.useUser();
+    return components.useUser();
   } catch (error) {
     console.warn('Clerk useUser error, falling back to mock:', error);
     return MockUserHook();
@@ -94,19 +113,19 @@ export const useUser = () => {
 
 // Export components with client-side only rendering
 export const SignedIn = ({ children }: { children: React.ReactNode }) => {
-  const { isClient, clerkLoaded } = useClerkComponents();
+  const { isClient, clerkLoaded, components } = useClerkComponents();
 
   if (!isClient) {
     // During SSR, always show signed-out state
     return null;
   }
 
-  if (!clerkLoaded || !ClerkComponents.SignedIn) {
+  if (!clerkLoaded || !components.SignedIn) {
     return <MockSignedIn>{children}</MockSignedIn>;
   }
 
   try {
-    const ClerkSignedIn = ClerkComponents.SignedIn;
+    const ClerkSignedIn = components.SignedIn;
     return <ClerkSignedIn>{children}</ClerkSignedIn>;
   } catch (error) {
     console.warn('Clerk SignedIn error, falling back to mock:', error);
@@ -115,19 +134,19 @@ export const SignedIn = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const SignedOut = ({ children }: { children: React.ReactNode }) => {
-  const { isClient, clerkLoaded } = useClerkComponents();
+  const { isClient, clerkLoaded, components } = useClerkComponents();
 
   if (!isClient) {
     // During SSR, always show signed-out state
     return <>{children}</>;
   }
 
-  if (!clerkLoaded || !ClerkComponents.SignedOut) {
+  if (!clerkLoaded || !components.SignedOut) {
     return <MockSignedOut>{children}</MockSignedOut>;
   }
 
   try {
-    const ClerkSignedOut = ClerkComponents.SignedOut;
+    const ClerkSignedOut = components.SignedOut;
     return <ClerkSignedOut>{children}</ClerkSignedOut>;
   } catch (error) {
     console.warn('Clerk SignedOut error, falling back to mock:', error);
@@ -136,14 +155,14 @@ export const SignedOut = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const SignInButton = ({ children, mode, ...props }: any) => {
-  const { isClient, clerkLoaded } = useClerkComponents();
+  const { isClient, clerkLoaded, components } = useClerkComponents();
 
-  if (!isClient || !clerkLoaded || !ClerkComponents.SignInButton) {
+  if (!isClient || !clerkLoaded || !components.SignInButton) {
     return <MockSignInButton mode={mode} {...props}>{children}</MockSignInButton>;
   }
 
   try {
-    const ClerkSignInButton = ClerkComponents.SignInButton;
+    const ClerkSignInButton = components.SignInButton;
     return <ClerkSignInButton mode={mode} {...props}>{children}</ClerkSignInButton>;
   } catch (error) {
     console.warn('Clerk SignInButton error, falling back to mock:', error);
@@ -152,14 +171,14 @@ export const SignInButton = ({ children, mode, ...props }: any) => {
 };
 
 export const UserButton = ({ afterSignOutUrl, appearance, ...props }: any) => {
-  const { isClient, clerkLoaded } = useClerkComponents();
+  const { isClient, clerkLoaded, components } = useClerkComponents();
 
-  if (!isClient || !clerkLoaded || !ClerkComponents.UserButton) {
+  if (!isClient || !clerkLoaded || !components.UserButton) {
     return <MockUserButton afterSignOutUrl={afterSignOutUrl} appearance={appearance} {...props} />;
   }
 
   try {
-    const ClerkUserButton = ClerkComponents.UserButton;
+    const ClerkUserButton = components.UserButton;
     return <ClerkUserButton afterSignOutUrl={afterSignOutUrl} appearance={appearance} {...props} />;
   } catch (error) {
     console.warn('Clerk UserButton error, falling back to mock:', error);
