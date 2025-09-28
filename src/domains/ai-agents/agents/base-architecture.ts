@@ -14,11 +14,11 @@ import {
   ConsensusResult,
   AgentType,
   AgentConfiguration
-} from '../../src/types/fact-check';
-import type { SourceEvidence } from '../../src/types/fact-check';
+} from '@/types/fact-check';
+import type { SourceEvidence } from '@/types/fact-check';
 import { ClaimExtractor, ClaimExtractionOptions } from './claim-extractor';
 import { RealDataEnforcer } from '../safety/real-data-enforcer';
-import { webSearchService, WebSearchResult } from '../../src/lib/fact-check/web-search-service';
+import { webSearchService, WebSearchResult } from '@/lib/fact-check/web-search-service';
 
 export interface FactCheckOrchestrationConfig {
   sessionId: string;

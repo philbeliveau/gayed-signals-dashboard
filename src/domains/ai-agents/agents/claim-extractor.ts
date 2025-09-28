@@ -6,7 +6,7 @@
  * Extracts verifiable claims from YouTube transcripts using AI with validation
  */
 
-import { ExtractedClaim, ClaimCategory } from '../../src/types/fact-check';
+import { ExtractedClaim, ClaimCategory } from '@/types/fact-check';
 import { RealDataEnforcer } from '../safety/real-data-enforcer';
 
 export interface ClaimExtractionOptions {

@@ -6,7 +6,7 @@
  * This base class enforces SAFLA protocol for all agents
  */
 
-import { ExtractedClaim, Investigation, AgentType, McpResponse } from '../../../src/types/fact-check';
+import { ExtractedClaim, Investigation, AgentType, McpResponse } from '@/types/fact-check';
 
 export interface SAFLAValidationResult {
   isValid: boolean;
