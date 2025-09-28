@@ -23,5 +23,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "mcp-integrations/**/*", "lib/fact-check/**/*", "lib/safety/**/*", "lib/testing/**/*", "lib/backtesting/**/*"]
+  "exclude": ["node_modules", "mcp-integrations/**/*", "lib/fact-check/**/*", "lib/safety/**/*", "lib/testing/**/*", "lib/backtesting/**/*", "__tests__/**/*"]
 }
