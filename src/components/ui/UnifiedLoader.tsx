@@ -7,7 +7,7 @@ interface UnifiedLoaderProps {
 
 /**
  * UnifiedLoader - Pure UIverse hourglass animation
- * Exact SVG structure from /public/UIverse/loading.html with floating movement
+ * Exact SVG structure from /public/UIverse/loading.html with rotating movement
  */
 export default function UnifiedLoader({
   size = 'md',
@@ -20,15 +20,79 @@ export default function UnifiedLoader({
   };
 
   return (
-    <svg
-      aria-label="loader being flipped clockwise and circled by three white curves fading in and out"
-      role="img"
-      height="56px"
-      width="56px"
-      viewBox="0 0 56 56"
-      className={`loader ${sizeClasses[size]} ${className}`}
-      style={{ '--hue': '35' } as React.CSSProperties}
-    >
+    <>
+      <style jsx>{`
+        @keyframes loader-flip {
+          from { transform: rotate(-180deg); }
+          24%, to { transform: rotate(0deg); }
+        }
+        @keyframes motion-thick {
+          from {
+            animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0);
+            stroke: rgba(255, 255, 255, 0);
+            stroke-dashoffset: 153.94;
+            transform: rotate(-90deg) rotate(0.67turn);
+          }
+          20% {
+            animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1);
+            stroke: rgb(32, 32, 32);
+            stroke-dashoffset: 141.11;
+            transform: rotate(-90deg) rotate(1turn);
+          }
+          40%, to {
+            stroke: rgba(255, 255, 255, 0);
+            stroke-dashoffset: 153.94;
+            transform: rotate(-90deg) rotate(1.33turn);
+          }
+        }
+        @keyframes motion-medium {
+          from, 8% {
+            animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0);
+            stroke: rgba(255, 255, 255, 0);
+            stroke-dashoffset: 153.94;
+            transform: rotate(-90deg) rotate(0.5turn);
+          }
+          20% {
+            animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1);
+            stroke: white;
+            stroke-dashoffset: 147.53;
+            transform: rotate(-90deg) rotate(0.83turn);
+          }
+          32%, to {
+            stroke: rgba(255, 255, 255, 0);
+            stroke-dashoffset: 153.94;
+            transform: rotate(-90deg) rotate(1.17turn);
+          }
+        }
+        @keyframes motion-thin {
+          from, 4% {
+            animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0);
+            stroke: rgba(255, 255, 255, 0);
+            stroke-dashoffset: 153.94;
+            transform: rotate(-90deg) rotate(0.33turn);
+          }
+          24% {
+            animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1);
+            stroke: rgb(53, 53, 53);
+            stroke-dashoffset: 134.7;
+            transform: rotate(-90deg) rotate(0.67turn);
+          }
+          44%, to {
+            stroke: rgba(255, 255, 255, 0);
+            stroke-dashoffset: 153.94;
+            transform: rotate(-90deg) rotate(1turn);
+          }
+        }
+      `}</style>
+      <svg
+        aria-label="loader being flipped clockwise and circled by three white curves fading in and out"
+        role="img"
+        height="56px"
+        width="56px"
+        viewBox="0 0 56 56"
+        className={`unified-loader loader ${sizeClasses[size]} ${className}`}
+        style={{ '--hue': '35' } as React.CSSProperties}
+      >
       <clipPath id="sand-mound-top">
         <path
           d="M 14.613 13.087 C 15.814 12.059 19.3 8.039 20.3 6.539 C 21.5 4.789 21.5 2.039 21.5 2.039 L 3 2.039 C 3 2.039 3 4.789 4.2 6.539 C 5.2 8.039 8.686 12.059 9.887 13.087 C 11 14.039 12.25 14.039 12.25 14.039 C 12.25 14.039 13.5 14.039 14.613 13.087 Z"
@@ -57,6 +121,10 @@ export default function UnifiedLoader({
             cx="26"
             strokeWidth="2.5"
             className="loader__motion-thick"
+            style={{
+              animation: 'motion-thick 2s cubic-bezier(0.83, 0, 0.17, 1) infinite',
+              transformOrigin: '26px 26px'
+            } as React.CSSProperties}
           />
           <circle
             transform="rotate(90,26,26)"
@@ -65,6 +133,10 @@ export default function UnifiedLoader({
             cx="26"
             strokeWidth="1.75"
             className="loader__motion-medium"
+            style={{
+              animation: 'motion-medium 2s cubic-bezier(0.83, 0, 0.17, 1) infinite',
+              transformOrigin: '26px 26px'
+            } as React.CSSProperties}
           />
           <circle
             transform="rotate(180,26,26)"
@@ -73,9 +145,20 @@ export default function UnifiedLoader({
             cx="26"
             strokeWidth="1"
             className="loader__motion-thin"
+            style={{
+              animation: 'motion-thin 2s cubic-bezier(0.83, 0, 0.17, 1) infinite',
+              transformOrigin: '26px 26px'
+            } as React.CSSProperties}
           />
         </g>
-        <g transform="translate(13.75,9.25)" className="loader__model">
+        <g
+          transform="translate(13.75,9.25)"
+          className="loader__model"
+          style={{
+            animation: 'loader-flip 2s cubic-bezier(0.83, 0, 0.17, 1) infinite',
+            transformOrigin: '12.25px 16.75px'
+          } as React.CSSProperties}
+        >
           <path
             d="M 1.5 2 L 23 2 C 23 2 22.5 8.5 19 12 C 16 15.5 13.5 13.5 13.5 16.75 C 13.5 20 16 18 19 21.5 C 22.5 25 23 31.5 23 31.5 L 1.5 31.5 C 1.5 31.5 2 25 5.5 21.5 C 8.5 18 11 20 11 16.75 C 11 13.5 8.5 15.5 5.5 12 C 2 8.5 1.5 2 1.5 2 Z"
             fill="hsl(var(--hue),90%,85%)"
@@ -193,5 +276,6 @@ export default function UnifiedLoader({
         </g>
       </g>
     </svg>
+    </>
   );
 }
