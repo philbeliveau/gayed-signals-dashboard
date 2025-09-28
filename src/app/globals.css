@@ -1001,6 +1001,232 @@ main {
 }
 
 /* =================================================================
+ * MODERN FLOATING NAVIGATION STYLES
+ * =================================================================*/
+
+/* Modern button container with gradient background */
+.modern-nav-container {
+  display: flex;
+  background: linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%);
+  border-radius: 12px;
+  box-shadow:
+    rgba(0, 0, 0, 0.35) 0px 5px 15px,
+    rgba(49, 130, 206, 0.5) 5px 10px 15px;
+  transition: all 0.3s ease;
+}
+
+.modern-nav-container:hover {
+  box-shadow:
+    rgba(0, 0, 0, 0.4) 0px 6px 20px,
+    rgba(49, 130, 206, 0.6) 4px 8px 20px;
+}
+
+/* Modern floating buttons */
+.modern-nav-button {
+  outline: 0 !important;
+  border: 0 !important;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: all ease-in-out 0.3s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-nav-button:hover {
+  transform: translateY(-1px);
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.modern-nav-button:active {
+  transform: translateY(-1px);
+}
+
+.modern-nav-button.active {
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Ripple effect for modern buttons */
+.modern-nav-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: width 0.6s, height 0.6s, top 0.6s, left 0.6s;
+  transform: translate(-50%, -50%);
+}
+
+.modern-nav-button:active::before {
+  width: 100px;
+  height: 100px;
+  top: 50%;
+  left: 50%;
+}
+
+/* Modern sidebar styling - Ultra Slim */
+.modern-sidebar {
+  background: linear-gradient(135deg, #2D3748 0%, #1A202C 100%);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  width: 70px;
+  transition: all 0.3s ease;
+}
+
+/* Tooltip styles for slim sidebar */
+.nav-tooltip {
+  position: absolute;
+  left: 75px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow:
+    rgba(0, 0, 0, 0.3) 0px 4px 12px,
+    rgba(49, 130, 206, 0.4) 2px 6px 16px;
+}
+
+.nav-tooltip::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: #3182CE;
+}
+
+.nav-item-container:hover .nav-tooltip {
+  opacity: 1;
+  left: 80px;
+}
+
+.modern-sidebar-item {
+  background: linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 8px;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0px 3px 8px,
+    rgba(49, 130, 206, 0.3) 2px 5px 12px;
+  transition: all 0.3s ease;
+}
+
+.modern-sidebar-item:hover {
+  box-shadow:
+    rgba(0, 0, 0, 0.3) 0px 6px 16px,
+    rgba(49, 130, 206, 0.5) 4px 8px 20px;
+}
+
+.modern-sidebar-item.active {
+  background: linear-gradient(135deg, #4299E1 0%, #3182CE 100%);
+  box-shadow:
+    rgba(0, 0, 0, 0.3) 0px 6px 16px,
+    rgba(66, 153, 225, 0.6) 4px 8px 20px;
+}
+
+/* Modern top navigation */
+.modern-topnav {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(49, 130, 206, 0.1);
+  box-shadow:
+    rgba(0, 0, 0, 0.1) 0px 4px 12px,
+    rgba(49, 130, 206, 0.1) 0px 2px 8px;
+}
+
+/* Modern search bar */
+.modern-search {
+  background: linear-gradient(135deg, #EBF8FF 0%, #E6FFFA 100%);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 4px rgba(49, 130, 206, 0.1);
+}
+
+.modern-search:focus {
+  border: 2px solid #3182CE;
+  background: white;
+  transform: scale(1.02);
+  box-shadow:
+    inset 0 2px 4px rgba(49, 130, 206, 0.1),
+    0 0 0 4px rgba(49, 130, 206, 0.1);
+}
+
+/* Modern navigation pills */
+.modern-pill {
+  background: linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%);
+  border-radius: 25px;
+  padding: 10px 20px;
+  color: white;
+  font-weight: 500;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0px 3px 8px,
+    rgba(49, 130, 206, 0.3) 2px 5px 12px;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.modern-pill:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #4299E1 0%, #3182CE 100%);
+  box-shadow:
+    rgba(0, 0, 0, 0.3) 0px 6px 16px,
+    rgba(66, 153, 225, 0.5) 4px 8px 20px;
+}
+
+.modern-pill:active {
+  transform: translateY(0px);
+}
+
+.modern-pill.inactive {
+  background: rgba(49, 130, 206, 0.1);
+  color: #3182CE;
+  box-shadow: inset 0 2px 4px rgba(49, 130, 206, 0.1);
+}
+
+.modern-pill.inactive:hover {
+  background: rgba(49, 130, 206, 0.2);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 2px 4px rgba(49, 130, 206, 0.1),
+    0 2px 8px rgba(49, 130, 206, 0.2);
+}
+
+/* Removed floating effects for static design */
+
+/* Pulse animation for active elements */
+.pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 5px rgba(49, 130, 206, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(49, 130, 206, 0.6), 0 0 30px rgba(49, 130, 206, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(49, 130, 206, 0.3); }
+}
+
+/* =================================================================
  * CUSTOM THEME UTILITY CLASSES - CRITICAL FIX
  * =================================================================*/
 

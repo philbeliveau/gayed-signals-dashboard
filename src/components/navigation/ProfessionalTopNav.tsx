@@ -25,25 +25,23 @@ export default function ProfessionalTopNav({
   const [searchValue, setSearchValue] = useState('');
 
   return (
-    <header className={`bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40 ${className}`}>
-      <div className="px-6 py-4">
+    <header className={`modern-topnav sticky top-0 z-40 ${className}`}>
+      <div className="px-6 py-5">
         <div className="flex items-center justify-between">
           {/* Search Section */}
           <div className="flex-1 max-w-lg">
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-theme-text-muted" />
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-theme-primary" />
               </div>
               <input
                 type="text"
-                placeholder="Search here..."
+                placeholder="Search markets, signals, analysis..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 className="
-                  block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl
-                  bg-gray-50 text-theme-text placeholder-theme-text-muted
-                  focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent
-                  transition-all duration-200
+                  modern-search block w-full pl-12 pr-4 py-3 text-theme-text placeholder-gray-500
+                  focus:outline-none
                 "
               />
             </div>
@@ -52,20 +50,20 @@ export default function ProfessionalTopNav({
           {/* Right Side Controls */}
           <div className="flex items-center space-x-4 ml-6">
             {/* Navigation Pills - for larger screens */}
-            <div className="hidden md:flex items-center space-x-2">
-              <button className="px-4 py-2 bg-theme-primary text-white rounded-full text-sm font-medium hover:bg-theme-primary-hover transition-colors">
+            <div className="hidden md:flex items-center space-x-3">
+              <button className="modern-pill">
                 Trader
               </button>
-              <button className="px-4 py-2 text-theme-text-muted hover:text-theme-text rounded-full text-sm font-medium transition-colors hover:bg-gray-100">
+              <button className="modern-pill inactive">
                 Collector
               </button>
             </div>
 
             {/* Notifications */}
             <SignedIn>
-              <button className="relative p-2 text-theme-text-muted hover:text-theme-text transition-colors">
+              <button className="modern-nav-button relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+                <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-400 ring-2 ring-white animate-pulse"></span>
               </button>
             </SignedIn>
 
@@ -80,7 +78,7 @@ export default function ProfessionalTopNav({
             <div className="flex items-center space-x-3">
               <SignedOut>
                 <SignInButton mode={authMode}>
-                  <button className="px-4 py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md">
+                  <button className="modern-pill px-6">
                     Sign In
                   </button>
                 </SignInButton>
@@ -123,11 +121,11 @@ export default function ProfessionalTopNav({
         </div>
 
         {/* Mobile Navigation Pills */}
-        <div className="md:hidden mt-4 flex items-center space-x-2">
-          <button className="px-4 py-2 bg-theme-primary text-white rounded-full text-sm font-medium hover:bg-theme-primary-hover transition-colors">
+        <div className="md:hidden mt-6 flex items-center justify-center space-x-4">
+          <button className="modern-pill text-sm px-5">
             Trader
           </button>
-          <button className="px-4 py-2 text-theme-text-muted hover:text-theme-text rounded-full text-sm font-medium transition-colors hover:bg-gray-100">
+          <button className="modern-pill inactive text-sm px-5">
             Collector
           </button>
         </div>

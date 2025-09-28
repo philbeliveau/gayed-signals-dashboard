@@ -25,7 +25,7 @@ export default function ProfessionalLayout({
       <ProfessionalSidebar />
 
       {/* Main Content Area */}
-      <div className="lg:pl-60 pl-16">
+      <div className="pl-[70px]">
         {/* Top Navigation */}
         <ProfessionalTopNav showThemeToggle={showThemeToggle} />
 
