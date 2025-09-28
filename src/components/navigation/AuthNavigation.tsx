@@ -18,7 +18,7 @@ import {
   Shield,
   ChevronDown
 } from 'lucide-react';
-import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '../auth/ConditionalClerkComponents';
 import { getNavigationRoutes } from '../../lib/navigation';
 import { useAuthMode } from '../../lib/device-detection';
 import ThemeToggle from '../ThemeToggle';

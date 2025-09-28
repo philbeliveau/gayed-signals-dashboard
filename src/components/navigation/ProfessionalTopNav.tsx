@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Search, Bell, ChevronDown } from 'lucide-react';
-import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '../auth/ConditionalClerkComponents';
 import { useAuthMode } from '@/lib/device-detection';
 import ThemeToggle from '../ThemeToggle';
 

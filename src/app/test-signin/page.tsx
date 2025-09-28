@@ -1,6 +1,6 @@
 'use client';
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import { SignInButton, SignedIn, SignedOut, UserButton } from '@/components/auth/ConditionalClerkComponents';
 import { useAuthMode } from '@/lib/device-detection';
 
 // Force dynamic rendering to avoid build-time Clerk issues
