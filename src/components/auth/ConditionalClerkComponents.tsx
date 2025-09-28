@@ -85,10 +85,66 @@ export const useUser = () => {
   }
 };
 
-export const SignedIn = ClerkComponents.SignedIn || MockSignedIn;
-export const SignedOut = ClerkComponents.SignedOut || MockSignedOut;
-export const SignInButton = ClerkComponents.SignInButton || MockSignInButton;
-export const UserButton = ClerkComponents.UserButton || MockUserButton;
+// Export components with conditional logic
+export const SignedIn = ({ children }: { children: React.ReactNode }) => {
+  // Always use mock during SSR or if Clerk isn't properly initialized
+  if (typeof window === 'undefined' || !hasClerkEnv || !ClerkComponents.SignedIn) {
+    return <MockSignedIn>{children}</MockSignedIn>;
+  }
+
+  try {
+    const ClerkSignedIn = ClerkComponents.SignedIn;
+    return <ClerkSignedIn>{children}</ClerkSignedIn>;
+  } catch (error) {
+    console.warn('Clerk SignedIn error, falling back to mock:', error);
+    return <MockSignedIn>{children}</MockSignedIn>;
+  }
+};
+
+export const SignedOut = ({ children }: { children: React.ReactNode }) => {
+  // Always use mock during SSR or if Clerk isn't properly initialized
+  if (typeof window === 'undefined' || !hasClerkEnv || !ClerkComponents.SignedOut) {
+    return <MockSignedOut>{children}</MockSignedOut>;
+  }
+
+  try {
+    const ClerkSignedOut = ClerkComponents.SignedOut;
+    return <ClerkSignedOut>{children}</ClerkSignedOut>;
+  } catch (error) {
+    console.warn('Clerk SignedOut error, falling back to mock:', error);
+    return <MockSignedOut>{children}</MockSignedOut>;
+  }
+};
+
+export const SignInButton = ({ children, mode, ...props }: any) => {
+  // Always use mock during SSR or if Clerk isn't properly initialized
+  if (typeof window === 'undefined' || !hasClerkEnv || !ClerkComponents.SignInButton) {
+    return <MockSignInButton>{children}</MockSignInButton>;
+  }
+
+  try {
+    const ClerkSignInButton = ClerkComponents.SignInButton;
+    return <ClerkSignInButton mode={mode} {...props}>{children}</ClerkSignInButton>;
+  } catch (error) {
+    console.warn('Clerk SignInButton error, falling back to mock:', error);
+    return <MockSignInButton>{children}</MockSignInButton>;
+  }
+};
+
+export const UserButton = ({ afterSignOutUrl, appearance, ...props }: any) => {
+  // Always use mock during SSR or if Clerk isn't properly initialized
+  if (typeof window === 'undefined' || !hasClerkEnv || !ClerkComponents.UserButton) {
+    return <MockUserButton afterSignOutUrl={afterSignOutUrl} appearance={appearance} {...props} />;
+  }
+
+  try {
+    const ClerkUserButton = ClerkComponents.UserButton;
+    return <ClerkUserButton afterSignOutUrl={afterSignOutUrl} appearance={appearance} {...props} />;
+  } catch (error) {
+    console.warn('Clerk UserButton error, falling back to mock:', error);
+    return <MockUserButton afterSignOutUrl={afterSignOutUrl} appearance={appearance} {...props} />;
+  }
+};
 
 export const ConditionalClerkComponents = {
   useAuth,
