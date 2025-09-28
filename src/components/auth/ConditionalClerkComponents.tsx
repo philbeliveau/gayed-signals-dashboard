@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
 
-// Enable Clerk authentication - Check if environment variables are available
-const hasClerkEnv = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+// Temporarily disable Clerk to fix React Hook order violations
+const hasClerkEnv = false; // Re-enable after fixing hook order issues
 
 // Context for shared Clerk state
 const ClerkContext = createContext<{
@@ -23,7 +23,11 @@ const MockUserHook = () => ({ user: null, isLoaded: true });
 const MockSignedIn = ({ children }: { children: React.ReactNode }) => null;
 const MockSignedOut = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 const MockSignInButton = ({ children, mode }: { children: React.ReactNode; mode?: string }) => (
-  <div className="cursor-not-allowed opacity-50" title="Authentication disabled in demo mode">
+  <div
+    className="cursor-pointer"
+    title="Demo mode - Click to see authentication modal placeholder"
+    onClick={() => alert('Demo Mode: Clerk authentication temporarily disabled. Will be re-enabled after fixing React Hook order issues.')}
+  >
     {children}
   </div>
 );
