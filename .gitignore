@@ -165,3 +165,4 @@ hive-mind-prompt-*.txt
 public
 
 .playwright-mcp
+/src/generated/prisma
