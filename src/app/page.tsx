@@ -773,83 +773,12 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* Page Header */}
-      <PageHeader
-        title="Market Signals Dashboard"
-        subtitle="Real-time analysis of Gayed market regime indicators"
-        actions={
-          <div className="flex items-center gap-3">
-            {/* Mode Toggle */}
-            <div className="flex items-center gap-1 bg-white rounded-xl p-1.5 shadow-theme-card">
-              <button
-                onClick={() => setIsFullMode(true)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                  isFullMode
-                    ? 'bg-theme-primary text-white shadow-md'
-                    : 'text-theme-text-muted hover:text-theme-text hover:bg-gray-50'
-                }`}
-              >
-                All 5 Signals
-              </button>
-              <button
-                onClick={() => setIsFullMode(false)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                  !isFullMode
-                    ? 'bg-theme-primary text-white shadow-md'
-                    : 'text-theme-text-muted hover:text-theme-text hover:bg-gray-50'
-                }`}
-              >
-                Fast Mode
-              </button>
-            </div>
-
-            {/* Refresh Button */}
-            <button
-              onClick={() => fetchSignals(!isFullMode)}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 shadow-theme-card"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              <span className="text-sm font-medium">Refresh</span>
-            </button>
-
-            {/* Charts Button */}
-            <Link
-              href="/interactive-charts"
-              className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-hover transition-all shadow-theme-card"
-            >
-              <LineChart className="w-4 h-4" />
-              <span className="text-sm font-medium">Charts</span>
-            </Link>
-          </div>
-        }
-      />
+      {/* Minimal Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-theme-text">Market Signals</h1>
+      </div>
 
       <div className="space-y-8">
-        {/* Status Bar */}
-        <ContentCard>
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm font-medium text-theme-text-muted">
-              <span>
-                Mode: <strong className="text-theme-text">{isFullMode ? 'Full Analysis' : 'Fast Mode'}</strong>
-              </span>
-              <span>
-                Signals: <strong className="text-theme-text">{signals.length}</strong>
-              </span>
-              {loadingMode && (
-                <span className="text-theme-primary font-semibold">
-                  {loadingMode === 'fast' ? 'Fast loading...' : 'Full analysis...'}
-                </span>
-              )}
-            </div>
-
-            {lastUpdated && (
-              <div className="text-sm text-theme-text-muted font-medium">
-                Last updated: {lastUpdated.toLocaleTimeString()}
-              </div>
-            )}
-          </div>
-        </ContentCard>
 
 
         {/* Market Overview Section */}
