@@ -71,10 +71,32 @@ export async function GET(request: NextRequest) {
     
     console.log(`🔄 Fetching ${fastMode ? 'fast' : 'live'} market data for Gayed signals...`);
     
+    // Validate required environment variables
+    const tiingoApiKey = process.env.TIINGO_API_KEY;
+    const alphaVantageApiKey = process.env.ALPHA_VANTAGE_KEY;
+
+    if (!tiingoApiKey) {
+      console.error('❌ TIINGO_API_KEY environment variable is required');
+      return NextResponse.json({
+        error: 'Server configuration error',
+        details: 'Missing required API configuration. Please contact support.',
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
+    }
+
+    if (!alphaVantageApiKey) {
+      console.error('❌ ALPHA_VANTAGE_KEY environment variable is required');
+      return NextResponse.json({
+        error: 'Server configuration error',
+        details: 'Missing required API configuration. Please contact support.',
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
+    }
+
     // Initialize enhanced market client with your API keys
     const marketClient = new EnhancedMarketClient({
-      tiingoApiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
-      alphaVantageApiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
+      tiingoApiKey,
+      alphaVantageApiKey,
       rateLimits: {
         tiingo: 500,
         alphaVantage: 12000,
@@ -179,11 +201,33 @@ export async function POST(request: NextRequest) {
     }
     
     console.log(`📈 Fetching historical data for ${symbol} from ${startDate} to ${endDate}`);
-    
+
+    // Validate required environment variables
+    const tiingoApiKey = process.env.TIINGO_API_KEY;
+    const alphaVantageApiKey = process.env.ALPHA_VANTAGE_KEY;
+
+    if (!tiingoApiKey) {
+      console.error('❌ TIINGO_API_KEY environment variable is required');
+      return NextResponse.json({
+        error: 'Server configuration error',
+        details: 'Missing required API configuration. Please contact support.',
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
+    }
+
+    if (!alphaVantageApiKey) {
+      console.error('❌ ALPHA_VANTAGE_KEY environment variable is required');
+      return NextResponse.json({
+        error: 'Server configuration error',
+        details: 'Missing required API configuration. Please contact support.',
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
+    }
+
     // Initialize enhanced market client
     const marketClient = new EnhancedMarketClient({
-      tiingoApiKey: process.env.TIINGO_API_KEY || '36181da7f5290c0544e9cc0b3b5f19249eb69a61',
-      alphaVantageApiKey: process.env.ALPHA_VANTAGE_KEY || 'QM5V895I65W014U0',
+      tiingoApiKey,
+      alphaVantageApiKey,
       rateLimits: {
         tiingo: 500,
         alphaVantage: 12000,
