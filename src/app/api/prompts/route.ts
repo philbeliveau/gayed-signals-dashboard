@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promptManager } from '../../../lib/prompt-management';
+import { promptManager } from '@/lib/prompt-management';
 
 /**
  * GET /api/prompts - Get all prompt templates or search
