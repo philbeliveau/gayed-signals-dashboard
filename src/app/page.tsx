@@ -723,13 +723,11 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center">
-        <div className="text-center bg-theme-card border border-theme-border rounded-2xl p-12 shadow-xl max-w-md mx-4">
+        <div className="flex items-center justify-center">
           <UnifiedLoader
-            message="Loading market signals..."
             size="lg"
-            className="mb-4"
+            className=""
           />
-          <div className="text-theme-text-muted text-sm">Analyzing market regime data</div>
         </div>
       </div>
     );

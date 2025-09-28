@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "/UIverse/loading.css";
+@import "../styles/loading.css";
 
 /* Light Theme Variables */
 :root.light {

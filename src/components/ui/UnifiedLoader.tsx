@@ -1,102 +1,197 @@
 'use client';
 
 interface UnifiedLoaderProps {
-  message?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
 /**
- * UnifiedLoader - Exact UIverse hourglass animation
- *
- * This is the exact implementation from UIverse with all the precise SVG paths
- * and animations that create the beautiful dynamic hourglass effect
+ * UnifiedLoader - Pure UIverse hourglass animation
+ * Exact SVG structure from /public/UIverse/loading.html with floating movement
  */
 export default function UnifiedLoader({
-  message = 'Loading...',
   size = 'md',
   className = ''
 }: UnifiedLoaderProps) {
   const sizeClasses = {
-    sm: 'w-12 h-auto',
-    md: 'w-14 h-auto',
-    lg: 'w-20 h-auto'
-  };
-
-  const textClasses = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg'
+    sm: 'w-12 h-12',
+    md: 'w-14 h-14',
+    lg: 'w-20 h-20'
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center gap-4 ${className}`}>
-      {/* Exact UIverse Hourglass SVG */}
-      <svg
-        className={`loader ${sizeClasses[size]}`}
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 52 52"
-      >
-        <g className="loader__glare-top">
-          <line x1="2" y1="2" x2="6" y2="5" stroke="white" strokeWidth="1" strokeLinecap="round"/>
+    <svg
+      aria-label="loader being flipped clockwise and circled by three white curves fading in and out"
+      role="img"
+      height="56px"
+      width="56px"
+      viewBox="0 0 56 56"
+      className={`loader ${sizeClasses[size]} ${className}`}
+      style={{ '--hue': '35' } as React.CSSProperties}
+    >
+      <clipPath id="sand-mound-top">
+        <path
+          d="M 14.613 13.087 C 15.814 12.059 19.3 8.039 20.3 6.539 C 21.5 4.789 21.5 2.039 21.5 2.039 L 3 2.039 C 3 2.039 3 4.789 4.2 6.539 C 5.2 8.039 8.686 12.059 9.887 13.087 C 11 14.039 12.25 14.039 12.25 14.039 C 12.25 14.039 13.5 14.039 14.613 13.087 Z"
+          className="loader__sand-mound-top"
+        />
+      </clipPath>
+      <clipPath id="sand-mound-bottom">
+        <path
+          d="M 14.613 20.452 C 15.814 21.48 19.3 25.5 20.3 27 C 21.5 28.75 21.5 31.5 21.5 31.5 L 3 31.5 C 3 31.5 3 28.75 4.2 27 C 5.2 25.5 8.686 21.48 9.887 20.452 C 11 19.5 12.25 19.5 12.25 19.5 C 12.25 19.5 13.5 19.5 14.613 20.452 Z"
+          className="loader__sand-mound-bottom"
+        />
+      </clipPath>
+      <g transform="translate(2,2)">
+        <g
+          transform="rotate(-90,26,26)"
+          strokeLinecap="round"
+          strokeDashoffset="153.94"
+          strokeDasharray="153.94 153.94"
+          stroke="hsl(0,0%,100%)"
+          fill="none"
+        >
+          <circle
+            transform="rotate(0,26,26)"
+            r="24.5"
+            cy="26"
+            cx="26"
+            strokeWidth="2.5"
+            className="loader__motion-thick"
+          />
+          <circle
+            transform="rotate(90,26,26)"
+            r="24.5"
+            cy="26"
+            cx="26"
+            strokeWidth="1.75"
+            className="loader__motion-medium"
+          />
+          <circle
+            transform="rotate(180,26,26)"
+            r="24.5"
+            cy="26"
+            cx="26"
+            strokeWidth="1"
+            className="loader__motion-thin"
+          />
         </g>
-        <g className="loader__glare-bottom">
-          <line x1="2" y1="50" x2="6" y2="47" stroke="rgba(255,255,255,0)" strokeWidth="1" strokeLinecap="round"/>
-        </g>
-        <g className="loader__model">
-          <g>
-            {/* Hourglass outline */}
-            <path d="M4.5 2h19v13l-9.5 5 9.5 5v13h-19v-13l9.5-5-9.5-5V2z" fill="none" stroke="#202020" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-            {/* Top compartment */}
-            <path d="M4.5 2h19v13l-9.5 5-9.5-5V2z" fill="none" stroke="#202020" strokeWidth="1"/>
-            {/* Bottom compartment */}
-            <path d="M4.5 38h19v13H4.5v-13z" fill="none" stroke="#202020" strokeWidth="1"/>
-            {/* Neck */}
-            <circle cx="14" cy="20" r="1" fill="#202020"/>
-          </g>
-        </g>
-        <g className="loader__motion-thick">
-          <circle cx="26" cy="26" r="24" fill="none" stroke="rgb(32,32,32)" strokeWidth="3" strokeDasharray="153.94" strokeDashoffset="153.94"/>
-        </g>
-        <g className="loader__motion-medium">
-          <circle cx="26" cy="26" r="24" fill="none" stroke="white" strokeWidth="2" strokeDasharray="153.94" strokeDashoffset="153.94"/>
-        </g>
-        <g className="loader__motion-thin">
-          <circle cx="26" cy="26" r="24" fill="none" stroke="rgb(53,53,53)" strokeWidth="1" strokeDasharray="153.94" strokeDashoffset="153.94"/>
-        </g>
-        <g className="loader__sand-drop">
-          <polyline points="14,7 14,19" fill="none" stroke="#D4A574" strokeWidth="2" strokeDasharray="108" strokeDashoffset="1" strokeLinecap="round"/>
-        </g>
-        <g className="loader__sand-fill">
-          <path d="M6,42 Q14,38 22,42" fill="none" stroke="#D4A574" strokeWidth="3" strokeDasharray="109" strokeDashoffset="55" strokeLinecap="round"/>
-        </g>
-        <g className="loader__sand-grain-left">
-          <path d="M10,40 Q12,38 14,40" fill="none" stroke="#D4A574" strokeWidth="1" strokeDasharray="51" strokeDashoffset="29" strokeLinecap="round"/>
-        </g>
-        <g className="loader__sand-grain-right">
-          <path d="M14,40 Q16,38 18,40" fill="none" stroke="#D4A574" strokeWidth="1" strokeDasharray="51" strokeDashoffset="27" strokeLinecap="round"/>
-        </g>
-        <g className="loader__sand-line-left">
-          <path d="M8,43 Q10,41 12,43 Q14,41 16,43" fill="none" stroke="#D4A574" strokeWidth="1" strokeDasharray="108" strokeDashoffset="53" strokeLinecap="round"/>
-        </g>
-        <g className="loader__sand-line-right">
-          <path d="M16,43 Q18,41 20,43" fill="none" stroke="#D4A574" strokeWidth="1" strokeDasharray="38.5" strokeDashoffset="14" strokeLinecap="round"/>
-        </g>
-        <g className="loader__sand-mound-top">
-          <ellipse cx="14" cy="8" rx="4" ry="2" fill="#E6B887"/>
-        </g>
-        <g className="loader__sand-mound-bottom">
-          <ellipse cx="14" cy="44" rx="6" ry="3" fill="#E6B887"/>
-        </g>
-      </svg>
+        <g transform="translate(13.75,9.25)" className="loader__model">
+          <path
+            d="M 1.5 2 L 23 2 C 23 2 22.5 8.5 19 12 C 16 15.5 13.5 13.5 13.5 16.75 C 13.5 20 16 18 19 21.5 C 22.5 25 23 31.5 23 31.5 L 1.5 31.5 C 1.5 31.5 2 25 5.5 21.5 C 8.5 18 11 20 11 16.75 C 11 13.5 8.5 15.5 5.5 12 C 2 8.5 1.5 2 1.5 2 Z"
+            fill="hsl(var(--hue),90%,85%)"
+          />
 
-      {/* Loading Message */}
-      {message && (
-        <div className={`text-theme-text-muted font-medium ${textClasses[size]} text-center`}>
-          {message}
-        </div>
-      )}
-    </div>
+          <g strokeLinecap="round" stroke="hsl(35,90%,90%)">
+            <line
+              y2="20.75"
+              x2="12"
+              y1="15.75"
+              x1="12"
+              strokeDasharray="0.25 33.75"
+              strokeWidth="1"
+              className="loader__sand-grain-left"
+            />
+            <line
+              y2="21.75"
+              x2="12.5"
+              y1="16.75"
+              x1="12.5"
+              strokeDasharray="0.25 33.75"
+              strokeWidth="1"
+              className="loader__sand-grain-right"
+            />
+            <line
+              y2="31.5"
+              x2="12.25"
+              y1="18"
+              x1="12.25"
+              strokeDasharray="0.5 107.5"
+              strokeWidth="1"
+              className="loader__sand-drop"
+            />
+            <line
+              y2="31.5"
+              x2="12.25"
+              y1="14.75"
+              x1="12.25"
+              strokeDasharray="54 54"
+              strokeWidth="1.5"
+              className="loader__sand-fill"
+            />
+            <line
+              y2="31.5"
+              x2="12"
+              y1="16"
+              x1="12"
+              strokeDasharray="1 107"
+              strokeWidth="1"
+              stroke="hsl(35,90%,83%)"
+              className="loader__sand-line-left"
+            />
+            <line
+              y2="31.5"
+              x2="12.5"
+              y1="16"
+              x1="12.5"
+              strokeDasharray="12 96"
+              strokeWidth="1"
+              stroke="hsl(35,90%,83%)"
+              className="loader__sand-line-right"
+            />
+
+            <g strokeWidth="0" fill="hsl(35,90%,90%)">
+              <path
+                d="M 12.25 15 L 15.392 13.486 C 21.737 11.168 22.5 2 22.5 2 L 2 2.013 C 2 2.013 2.753 11.046 9.009 13.438 L 12.25 15 Z"
+                clipPath="url(#sand-mound-top)"
+              />
+              <path
+                d="M 12.25 18.5 L 15.392 20.014 C 21.737 22.332 22.5 31.5 22.5 31.5 L 2 31.487 C 2 31.487 2.753 22.454 9.009 20.062 Z"
+                clipPath="url(#sand-mound-bottom)"
+              />
+            </g>
+          </g>
+
+          <g strokeWidth="2" strokeLinecap="round" opacity="0.7" fill="none">
+            <path
+              d="M 19.437 3.421 C 19.437 3.421 19.671 6.454 17.914 8.846 C 16.157 11.238 14.5 11.5 14.5 11.5"
+              stroke="hsl(0,0%,100%)"
+              className="loader__glare-top"
+            />
+            <path
+              transform="rotate(180,12.25,16.75)"
+              d="M 19.437 3.421 C 19.437 3.421 19.671 6.454 17.914 8.846 C 16.157 11.238 14.5 11.5 14.5 11.5"
+              stroke="hsla(0,0%,100%,0)"
+              className="loader__glare-bottom"
+            />
+          </g>
+
+          <rect height="2" width="24.5" fill="hsl(var(--hue),90%,50%)" />
+          <rect
+            height="1"
+            width="19.5"
+            y="0.5"
+            x="2.5"
+            ry="0.5"
+            rx="0.5"
+            fill="hsl(var(--hue),90%,57.5%)"
+          />
+          <rect
+            height="2"
+            width="24.5"
+            y="31.5"
+            fill="hsl(var(--hue),90%,50%)"
+          />
+          <rect
+            height="1"
+            width="19.5"
+            y="32"
+            x="2.5"
+            ry="0.5"
+            rx="0.5"
+            fill="hsl(var(--hue),90%,57.5%)"
+          />
+        </g>
+      </g>
+    </svg>
   );
 }
