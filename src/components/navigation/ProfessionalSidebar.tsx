@@ -63,7 +63,7 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
   };
 
   return (
-    <aside className={`hidden md:block fixed inset-y-0 left-0 z-50 modern-sidebar ${className}`}>
+    <aside className={`block fixed inset-y-0 left-0 z-50 modern-sidebar ${className}`}>
       {/* Ultra Slim Sidebar - Hidden on mobile, visible on desktop */}
       <div className="flex flex-col w-[70px] h-full">
         {/* Trading Logo */}
