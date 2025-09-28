@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
 
-// Temporarily disable Clerk to use mock components only
-const hasClerkEnv = false; // Disabled for now to avoid provider issues
+// Enable Clerk authentication - Check if environment variables are available
+const hasClerkEnv = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 // Context for shared Clerk state
 const ClerkContext = createContext<{
