@@ -422,41 +422,12 @@ export default function BacktraderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-theme-bg text-theme-text trading-background-subtle">
-      {/* Header */}
-      <header className="border-b border-theme-border bg-theme-card/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <Link href="/" className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center">
-                <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-              </Link>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-lg flex items-center justify-center">
-                <LineChart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-theme-text truncate">Backtrader Analysis</h1>
-                <p className="text-theme-text-muted text-xs sm:text-sm truncate">Visualize Gayed Signals with Professional Charts</p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between space-x-2 sm:space-x-4">
-              <div className="bg-theme-info-bg border border-theme-info-border rounded-lg px-3 py-2 sm:px-4 flex-shrink-0">
-                <div className="flex items-center space-x-2">
-                  <Info className="w-3 h-3 sm:w-4 sm:h-4 text-theme-info" />
-                  <span className="text-theme-info text-xs sm:text-sm font-medium">Educational Tool</span>
-                </div>
-              </div>
-              <div className="sm:block">
-                <ThemeToggle />
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    <div className="min-h-screen bg-theme-bg text-theme-text">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-theme-text">Backtrader Analysis</h1>
+        </div>
         {/* Navigation Tabs */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-wrap gap-1 bg-theme-card p-1 rounded-xl border border-theme-border overflow-x-auto">

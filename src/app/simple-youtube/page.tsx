@@ -87,15 +87,12 @@ export default function SimpleYouTubePage() {
   };
 
   return (
-    <div className="min-h-screen bg-theme-bg text-theme-text trading-background-subtle">{/* Navigation handled by layout.tsx AuthNavigation component */}
+    <div className="min-h-screen bg-theme-bg text-theme-text">{/* Navigation handled by layout.tsx AuthNavigation component */}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Page Header */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-theme-text mb-2">YouTube Processor</h2>
-          <p className="text-theme-text-muted text-sm sm:text-base">
-            Fast, synchronous YouTube video processing with AI transcription and summarization with folder organization
-          </p>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-theme-text">YouTube Processor</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
@@ -204,14 +201,11 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
 
         {/* Processing Status */}
         {processing && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 sm:mb-8 text-center">
-            <div className="flex items-center justify-center space-x-2 text-blue-700">
+          <div className="bg-theme-card border border-theme-border rounded-lg p-4 mb-6 text-center">
+            <div className="flex items-center justify-center space-x-2 text-theme-text">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="font-medium text-sm sm:text-base">Processing video...</span>
+              <span className="font-medium">Processing video...</span>
             </div>
-            <p className="text-blue-600 text-xs sm:text-sm mt-1">
-              This may take 30-60 seconds. Please wait...
-            </p>
           </div>
         )}
 
@@ -323,25 +317,6 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
           </div>
         )}
 
-        {/* Instructions */}
-        {!processing && !result && (
-          <div className="bg-theme-card rounded-lg p-4 sm:p-6 border border-theme-border">
-            <h2 className="text-lg font-semibold mb-3 sm:mb-4">Quick Start</h2>
-            <div className="space-y-2 text-theme-text-muted text-sm sm:text-base">
-              <p>• Paste any YouTube URL above</p>
-              <p>• Optionally add custom context to guide the AI summary focus</p>
-              <p>• Processing typically takes 30-60 seconds</p>
-              <p>• Get complete transcript and AI-generated summary</p>
-              <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-blue-600 bg-blue-50 p-3 rounded border">
-                💡 <strong>Custom Context Examples:</strong><br/>
-                "Focus on trading strategies" • "Extract key financial metrics" • "Summarize investment advice"
-              </div>
-              <div className="mt-2 text-xs sm:text-sm text-green-600 bg-green-50 p-3 rounded border">
-                ✅ Simple, reliable processing - no complex polling or status updates needed
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
