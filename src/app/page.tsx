@@ -419,6 +419,8 @@ export default function Dashboard() {
   const [agentConversation, setAgentConversation] = useState<AgentMessage[]>([]);
   const [reasoning, setReasoning] = useState<string[]>([]);
   const [transparentDecision, setTransparentDecision] = useState(false);
+  // Mobile optimization states
+  const [isInteracting, setIsInteracting] = useState(false);
 
   const fetchSignals = useCallback(async (fast = false) => {
     try {
@@ -469,7 +471,12 @@ export default function Dashboard() {
   }, [loading]);
 
   useEffect(() => {
-    fetchSignals(!isFullMode);
+    // Add small delay to prevent rapid re-renders on mobile
+    const timeoutId = setTimeout(() => {
+      fetchSignals(!isFullMode);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [fetchSignals, isFullMode]);
 
   const getSignalColor = (signal: string) => {
@@ -533,8 +540,15 @@ export default function Dashboard() {
   };
 
   const handleSignalClick = (signal: Signal) => {
+    // Prevent multiple rapid clicks on mobile
+    if (isInteracting) return;
+
+    setIsInteracting(true);
     setSelectedSignal(signal);
     setShowETFModal(true);
+
+    // Reset interaction flag after a delay
+    setTimeout(() => setIsInteracting(false), 300);
   };
 
   const closeETFModal = () => {

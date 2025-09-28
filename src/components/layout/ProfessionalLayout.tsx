@@ -24,13 +24,13 @@ export default function ProfessionalLayout({
       {/* Left Sidebar */}
       <ProfessionalSidebar />
 
-      {/* Main Content Area */}
-      <div className="pl-[70px]">
+      {/* Main Content Area - Fixed for mobile */}
+      <div className="pl-0 md:pl-[70px]">
         {/* Top Navigation */}
         <ProfessionalTopNav showThemeToggle={showThemeToggle} />
 
-        {/* Page Content */}
-        <main className="p-6 bg-theme-bg-tertiary min-h-screen">
+        {/* Page Content - Mobile optimized */}
+        <main className="p-3 md:p-6 bg-theme-bg-tertiary min-h-screen">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

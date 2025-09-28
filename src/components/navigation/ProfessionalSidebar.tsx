@@ -63,8 +63,8 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
   };
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-50 modern-sidebar ${className}`}>
-      {/* Ultra Slim Sidebar - Always Collapsed */}
+    <aside className={`hidden md:fixed inset-y-0 left-0 z-50 modern-sidebar ${className}`}>
+      {/* Ultra Slim Sidebar - Hidden on mobile, fixed on desktop */}
       <div className="flex flex-col w-[70px] h-full">
         {/* Trading Logo */}
         <div className="flex items-center justify-center h-16 border-b border-theme-border/30">

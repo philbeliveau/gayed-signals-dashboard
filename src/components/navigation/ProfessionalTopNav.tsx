@@ -25,14 +25,14 @@ export default function ProfessionalTopNav({
   const [searchValue, setSearchValue] = useState('');
 
   return (
-    <header className={`modern-topnav sticky top-0 z-40 ${className}`}>
-      <div className="px-6 py-5">
+    <header className={`modern-topnav relative md:sticky top-0 z-40 ${className}`}>
+      <div className="px-3 md:px-6 py-3 md:py-5">
         <div className="flex items-center justify-between">
-          {/* Search Section */}
+          {/* Search Section - Mobile optimized */}
           <div className="flex-1 max-w-lg">
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-theme-primary" />
+              <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 md:h-5 md:w-5 text-theme-primary" />
               </div>
               <input
                 type="text"
@@ -40,19 +40,19 @@ export default function ProfessionalTopNav({
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 className="
-                  modern-search block w-full pl-12 pr-4 py-3 text-theme-text placeholder-gray-500
-                  focus:outline-none
+                  modern-search block w-full pl-10 md:pl-12 pr-3 md:pr-4 py-2 md:py-3 text-theme-text placeholder-gray-500
+                  focus:outline-none text-sm md:text-base
                 "
               />
             </div>
           </div>
 
-          {/* Right Side Controls */}
-          <div className="flex items-center space-x-4 ml-6">
+          {/* Right Side Controls - Mobile optimized */}
+          <div className="flex items-center space-x-2 md:space-x-4 ml-3 md:ml-6">
 
-            {/* Notifications */}
+            {/* Notifications - Hidden on mobile */}
             <SignedIn>
-              <button className="modern-nav-button relative">
+              <button className="modern-nav-button relative hidden md:block">
                 <Bell className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-400 ring-2 ring-theme-card animate-pulse"></span>
               </button>
@@ -66,10 +66,10 @@ export default function ProfessionalTopNav({
             )}
 
             {/* User Section */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 md:space-x-3">
               <SignedOut>
                 <SignInButton mode={authMode}>
-                  <button className="modern-pill px-6">
+                  <button className="modern-pill px-3 md:px-6 py-2 text-sm md:text-base">
                     Sign In
                   </button>
                 </SignInButton>

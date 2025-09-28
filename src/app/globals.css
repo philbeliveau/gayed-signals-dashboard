@@ -976,19 +976,20 @@ main {
     text-size-adjust: 100%;
   }
 
-  /* Mobile-specific optimizations */
+  /* Mobile-specific optimizations - FIXED FOR SCROLL ISSUES */
   body {
-    /* Prevent bounce scrolling on iOS */
-    position: fixed;
-    overflow: hidden;
+    /* Allow normal scrolling behavior */
+    position: relative;
+    overflow-x: hidden;
     width: 100%;
-    height: 100%;
+    min-height: 100vh;
+    /* Improve scrolling performance */
+    -webkit-overflow-scrolling: touch;
   }
 
   #__next {
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    min-height: 100vh;
+    overflow-x: hidden;
   }
 }
 
@@ -1128,21 +1129,30 @@ main {
   margin-top: 1rem;
 }
 
-/* Mobile performance optimizations */
+/* Mobile performance optimizations - REDUCED FOR BETTER PERFORMANCE */
 @media (max-width: 768px) {
+  /* Remove excessive GPU acceleration that can cause freezing */
   * {
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    -webkit-perspective: 1000;
-    perspective: 1000;
+    backface-visibility: visible;
+    perspective: none;
   }
-  
-  .transition-transform {
+
+  /* Only apply will-change to actively animating elements */
+  .transition-transform:hover {
     will-change: transform;
   }
-  
-  .transition-colors {
+
+  .transition-colors:hover {
     will-change: background-color, color;
+  }
+
+  /* Reset will-change after animations */
+  .transition-transform:not(:hover) {
+    will-change: auto;
+  }
+
+  .transition-colors:not(:hover) {
+    will-change: auto;
   }
 }
 
@@ -1182,27 +1192,24 @@ main {
  * MOBILE BROWSER COMPATIBILITY FIXES
  * =================================================================*/
 
-/* Chrome Mobile Address Bar Hiding Support */
+/* Chrome Mobile Address Bar Hiding Support - SIMPLIFIED */
 @media (max-width: 768px) {
   /* Fix for Chrome mobile address bar */
   html {
-    height: -webkit-fill-available;
-    height: fill-available;
     font-size: 14px; /* Smaller base font for mobile */
+    /* Remove height restrictions that can cause scroll issues */
   }
 
   body {
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    min-height: fill-available;
-    /* Prevent horizontal scrolling on mobile */
+    /* Allow natural scrolling behavior on mobile */
     overflow-x: hidden;
+    overflow-y: auto;
     /* Ensure proper touch scrolling */
     -webkit-overflow-scrolling: touch;
-    /* Improve rendering performance */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
+    /* Remove positioning constraints */
+    position: static;
+    height: auto;
+    min-height: 100vh;
   }
 
   /* Fix button click delays on iOS */
@@ -1236,13 +1243,11 @@ main {
     position: sticky !important;
   }
 
-  /* Performance optimizations for mobile */
+  /* Performance optimizations for mobile - SIMPLIFIED */
   * {
-    /* Reduce paint and composite layers */
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    /* Enable hardware acceleration for transforms */
-    transform: translateZ(0);
+    /* Reduce unnecessary GPU layers that can cause freezing */
+    backface-visibility: visible;
+    /* Remove unnecessary transforms */
   }
 
   /* Optimize scroll performance */
