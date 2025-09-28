@@ -566,6 +566,68 @@ main {
 .touch-manipulation {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  /* Improve touch response */
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Enhanced touch targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  position: relative;
+}
+
+/* Touch feedback animations */
+.touch-feedback {
+  position: relative;
+  overflow: hidden;
+}
+
+.touch-feedback::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: scale(0);
+  transition: transform 0.2s ease-out;
+  pointer-events: none;
+}
+
+.touch-feedback:active::before {
+  transform: scale(1);
+}
+
+/* Swipe gesture support */
+.swipeable {
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Pull-to-refresh indicator */
+.ptr-indicator {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-primary);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  opacity: 0;
+}
+
+.ptr-active .ptr-indicator {
+  opacity: 1;
+  top: 20px;
 }
 
 /* Hide scrollbars on mobile while maintaining functionality */
@@ -597,16 +659,43 @@ main {
   }
 }
 
-/* Mobile-first responsive text scaling */
+/* Mobile-first responsive text scaling with improved performance */
 @media (max-width: 640px) {
   html {
     font-size: 14px;
+    /* Improve mobile viewport handling */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Mobile-specific optimizations */
+  body {
+    /* Prevent bounce scrolling on iOS */
+    position: fixed;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+  }
+
+  #__next {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
 @media (min-width: 641px) {
   html {
     font-size: 16px;
+  }
+
+  /* Reset mobile-specific styles on desktop */
+  body {
+    position: static;
+    overflow: visible;
+    width: auto;
+    height: auto;
   }
 }
 
@@ -792,8 +881,9 @@ main {
   html {
     height: -webkit-fill-available;
     height: fill-available;
+    font-size: 14px; /* Smaller base font for mobile */
   }
-  
+
   body {
     min-height: 100vh;
     min-height: -webkit-fill-available;
@@ -802,32 +892,63 @@ main {
     overflow-x: hidden;
     /* Ensure proper touch scrolling */
     -webkit-overflow-scrolling: touch;
+    /* Improve rendering performance */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
-  
+
   /* Fix button click delays on iOS */
-  button, 
-  input[type="submit"], 
-  input[type="button"], 
+  button,
+  input[type="submit"],
+  input[type="button"],
   [role="button"] {
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
+    /* Improve button performance */
+    will-change: transform;
+    transform: translateZ(0);
   }
-  
+
   /* Prevent zoom on input focus (iOS) */
-  input, 
-  textarea, 
+  input,
+  textarea,
   select {
     font-size: 16px !important;
     -webkit-appearance: none;
     appearance: none;
+    /* Improve input performance */
+    will-change: auto;
   }
-  
+
   /* Fix sticky positioning on mobile */
   .sticky {
     position: -webkit-sticky !important;
     position: sticky !important;
+  }
+
+  /* Performance optimizations for mobile */
+  * {
+    /* Reduce paint and composite layers */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    /* Enable hardware acceleration for transforms */
+    transform: translateZ(0);
+  }
+
+  /* Optimize scroll performance */
+  .overflow-y-auto,
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Optimize image rendering on mobile */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 }
 

@@ -89,28 +89,28 @@ export default function SimpleYouTubePage() {
   return (
     <div className="min-h-screen bg-theme-bg text-theme-text trading-background-subtle">{/* Navigation handled by layout.tsx AuthNavigation component */}
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-theme-text mb-2">YouTube Processor</h2>
-          <p className="text-theme-text-muted">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-theme-text mb-2">YouTube Processor</h2>
+          <p className="text-theme-text-muted text-sm sm:text-base">
             Fast, synchronous YouTube video processing with AI transcription and summarization with folder organization
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
           {/* Folder Manager */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 order-2 lg:order-1">
             <FolderManager
               selectedFolder={selectedFolder}
               onFolderSelect={handleFolderSelect}
-              className="sticky top-6"
+              className="lg:sticky lg:top-6"
             />
           </div>
 
           {/* Input Form */}
-          <div className="lg:col-span-2">
-            <div className="bg-theme-card rounded-lg p-6 border border-theme-border">
+          <div className="lg:col-span-2 order-1 lg:order-2">
+            <div className="bg-theme-card rounded-lg p-4 sm:p-6 border border-theme-border">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="url" className="block text-sm font-medium mb-2">
@@ -180,8 +180,9 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
               <button
                 type="submit"
                 disabled={processing || !url.trim()}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 
-                         text-white rounded-lg transition-colors flex items-center space-x-2"
+                className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500
+                         text-white rounded-lg transition-colors flex items-center justify-center space-x-2
+                         touch-manipulation min-h-[44px]"
               >
                 {processing ? (
                   <>
@@ -203,12 +204,12 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
 
         {/* Processing Status */}
         {processing && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 text-center">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 sm:mb-8 text-center">
             <div className="flex items-center justify-center space-x-2 text-blue-700">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="font-medium">Processing video...</span>
+              <span className="font-medium text-sm sm:text-base">Processing video...</span>
             </div>
-            <p className="text-blue-600 text-sm mt-1">
+            <p className="text-blue-600 text-xs sm:text-sm mt-1">
               This may take 30-60 seconds. Please wait...
             </p>
           </div>
@@ -216,40 +217,44 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
 
         {/* Results */}
         {result && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Status Header */}
             <div className={`rounded-lg p-4 border ${
-              result.success 
-                ? 'bg-green-50 border-green-200 text-green-800' 
+              result.success
+                ? 'bg-green-50 border-green-200 text-green-800'
                 : 'bg-red-50 border-red-200 text-red-800'
             }`}>
               <div className="flex flex-col space-y-2">
-                <div className="flex items-center space-x-2">
-                  {result.success ? (
-                    <CheckCircle className="w-5 h-5" />
-                  ) : (
-                    <XCircle className="w-5 h-5" />
-                  )}
-                  <span className="font-medium">
-                    {result.success ? 'Processing Completed Successfully!' : 'Processing Failed'}
-                  </span>
-                  <div className="flex items-center space-x-1 text-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                  <div className="flex items-center space-x-2">
+                    {result.success ? (
+                      <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                    ) : (
+                      <XCircle className="w-5 h-5 flex-shrink-0" />
+                    )}
+                    <span className="font-medium text-sm sm:text-base">
+                      {result.success ? 'Processing Completed Successfully!' : 'Processing Failed'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-xs sm:text-sm">
                     <Clock className="w-4 h-4" />
                     <span>{formatTime(result.processing_time)}</span>
                   </div>
                 </div>
-                
+
                 {/* Database save status */}
                 {result.success && result.video_id && (
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Save className="w-4 h-4" />
-                    <span>✅ Saved to database</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm">
+                    <div className="flex items-center space-x-2">
+                      <Save className="w-4 h-4" />
+                      <span>✅ Saved to database</span>
+                    </div>
                     {result.folder_name && (
-                      <>
-                        <span>•</span>
+                      <div className="flex items-center space-x-2 sm:ml-2">
+                        <span className="hidden sm:inline">•</span>
                         <Folder className="w-4 h-4" />
                         <span>Folder: {result.folder_name}</span>
-                      </>
+                      </div>
                     )}
                   </div>
                 )}
@@ -260,29 +265,31 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
               <>
                 {/* Video Info */}
                 {result.title && (
-                  <div className="bg-theme-card rounded-lg p-6 border border-theme-border">
-                    <h2 className="text-xl font-semibold mb-2 flex items-center space-x-2">
-                      <Youtube className="w-5 h-5 text-red-500" />
+                  <div className="bg-theme-card rounded-lg p-4 sm:p-6 border border-theme-border">
+                    <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-2 flex items-center space-x-2">
+                      <Youtube className="w-5 h-5 text-red-500 flex-shrink-0" />
                       <span>Video Information</span>
                     </h2>
-                    <p className="text-theme-text-muted mb-2">
-                      <strong>Title:</strong> {result.title}
-                    </p>
-                    <p className="text-theme-text-muted text-sm">
-                      <strong>URL:</strong> {result.url}
-                    </p>
+                    <div className="space-y-2">
+                      <p className="text-theme-text-muted text-sm sm:text-base">
+                        <strong>Title:</strong> <span className="break-words">{result.title}</span>
+                      </p>
+                      <p className="text-theme-text-muted text-xs sm:text-sm">
+                        <strong>URL:</strong> <span className="break-all">{result.url}</span>
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {/* Summary */}
                 {result.summary && (
-                  <div className="bg-theme-card rounded-lg p-6 border border-theme-border">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center space-x-2">
-                      <FileText className="w-5 h-5 text-blue-500" />
+                  <div className="bg-theme-card rounded-lg p-4 sm:p-6 border border-theme-border">
+                    <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center space-x-2">
+                      <FileText className="w-5 h-5 text-blue-500 flex-shrink-0" />
                       <span>AI Summary</span>
                     </h2>
                     <div className="prose prose-sm max-w-none text-theme-text">
-                      <pre className="whitespace-pre-wrap font-sans leading-relaxed">
+                      <pre className="whitespace-pre-wrap font-sans leading-relaxed text-sm sm:text-base">
                         {result.summary}
                       </pre>
                     </div>
@@ -291,13 +298,13 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
 
                 {/* Transcript */}
                 {result.transcript && (
-                  <div className="bg-theme-card rounded-lg p-6 border border-theme-border">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center space-x-2">
-                      <FileText className="w-5 h-5 text-green-500" />
+                  <div className="bg-theme-card rounded-lg p-4 sm:p-6 border border-theme-border">
+                    <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center space-x-2">
+                      <FileText className="w-5 h-5 text-green-500 flex-shrink-0" />
                       <span>Full Transcript</span>
                     </h2>
-                    <div className="max-h-64 overflow-y-auto bg-theme-bg rounded-lg p-4 border border-theme-border">
-                      <p className="text-theme-text-muted text-sm leading-relaxed">
+                    <div className="max-h-48 sm:max-h-64 overflow-y-auto bg-theme-bg rounded-lg p-3 sm:p-4 border border-theme-border">
+                      <p className="text-theme-text-muted text-xs sm:text-sm leading-relaxed">
                         {result.transcript}
                       </p>
                     </div>
@@ -318,18 +325,18 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
 
         {/* Instructions */}
         {!processing && !result && (
-          <div className="bg-theme-card rounded-lg p-6 border border-theme-border">
-            <h2 className="text-lg font-semibold mb-4">Quick Start</h2>
-            <div className="space-y-2 text-theme-text-muted">
+          <div className="bg-theme-card rounded-lg p-4 sm:p-6 border border-theme-border">
+            <h2 className="text-lg font-semibold mb-3 sm:mb-4">Quick Start</h2>
+            <div className="space-y-2 text-theme-text-muted text-sm sm:text-base">
               <p>• Paste any YouTube URL above</p>
               <p>• Optionally add custom context to guide the AI summary focus</p>
               <p>• Processing typically takes 30-60 seconds</p>
               <p>• Get complete transcript and AI-generated summary</p>
-              <div className="mt-4 text-sm text-blue-600 bg-blue-50 p-3 rounded border">
+              <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-blue-600 bg-blue-50 p-3 rounded border">
                 💡 <strong>Custom Context Examples:</strong><br/>
                 "Focus on trading strategies" • "Extract key financial metrics" • "Summarize investment advice"
               </div>
-              <div className="mt-2 text-sm text-green-600 bg-green-50 p-3 rounded border">
+              <div className="mt-2 text-xs sm:text-sm text-green-600 bg-green-50 p-3 rounded border">
                 ✅ Simple, reliable processing - no complex polling or status updates needed
               </div>
             </div>

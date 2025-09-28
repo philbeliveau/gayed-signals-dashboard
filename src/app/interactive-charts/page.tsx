@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Users, Home, TrendingUp, Info, Sparkles, BarChart3 } from 'lucide-react';
 import EnhancedInteractiveHousingChart from '../../components/charts/EnhancedInteractiveHousingChart';
 import EnhancedInteractiveLaborChart from '../../components/charts/EnhancedInteractiveLaborChart';
@@ -19,6 +19,26 @@ type ChartType = 'housing' | 'labor';
 export default function InteractiveChartsPage() {
   const [activeChart, setActiveChart] = useState<ChartType>('housing');
   const [selectedPeriod, setSelectedPeriod] = useState('12m');
+  const [chartHeight, setChartHeight] = useState(700);
+
+  useEffect(() => {
+    const updateChartHeight = () => {
+      if (typeof window !== 'undefined') {
+        const width = window.innerWidth;
+        if (width < 640) {
+          setChartHeight(400);
+        } else if (width < 1024) {
+          setChartHeight(500);
+        } else {
+          setChartHeight(700);
+        }
+      }
+    };
+
+    updateChartHeight();
+    window.addEventListener('resize', updateChartHeight);
+    return () => window.removeEventListener('resize', updateChartHeight);
+  }, []);
 
   const chartTypes = [
     {
@@ -82,52 +102,51 @@ export default function InteractiveChartsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
-              {/* <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl">
-                <BarChart3 className="w-8 h-8" />
-              </div> */}
-              {/* <h1 className="text-4xl font-bold text-gray-900">
-                Interactive Economic Charts
-              </h1> */}
+              <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl">
+                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+                Interactive Charts
+              </h1>
             </div>
-            {/* <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Experience the next generation of economic data visualization with clickable series selection, 
-              automatic granularity adjustment, and modern interactive design.
-            </p> */}
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+              Experience economic data visualization with clickable series selection and automatic granularity adjustment.
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Chart Type Selection */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Select Chart Type</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Select Chart Type</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {chartTypes.map((chart) => {
               const Icon = chart.icon;
               const isActive = activeChart === chart.id;
-              
+
               return (
                 <button
                   key={chart.id}
                   onClick={() => setActiveChart(chart.id)}
-                  className={`p-6 border rounded-xl transition-all text-left ${getColorClasses(chart.color, isActive)}`}
+                  className={`p-4 sm:p-6 border rounded-xl transition-all text-left touch-manipulation min-h-[100px] ${getColorClasses(chart.color, isActive)}`}
                 >
-                  <div className="flex items-start gap-4">
-                    <div className={`p-2 rounded-lg ${
-                      isActive 
-                        ? `bg-${chart.color}-100 text-${chart.color}-600` 
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className={`p-2 rounded-lg flex-shrink-0 ${
+                      isActive
+                        ? `bg-${chart.color}-100 text-${chart.color}-600`
                         : 'bg-gray-100 text-gray-600'
                     }`}>
-                      <Icon className="w-6 h-6" />
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold mb-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">
                         {chart.name}
                       </h3>
-                      <p className="text-sm opacity-75">
+                      <p className="text-xs sm:text-sm opacity-75 leading-tight">
                         {chart.description}
                       </p>
                     </div>
@@ -140,33 +159,37 @@ export default function InteractiveChartsPage() {
 
 
         {/* Chart Display */}
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {activeChart === 'housing' && (
-            <EnhancedInteractiveHousingChart
-              height={700}
-              selectedPeriod={selectedPeriod}
-              onPeriodChange={setSelectedPeriod}
-              region="United States"
-            />
+            <div className="w-full overflow-hidden">
+              <EnhancedInteractiveHousingChart
+                height={chartHeight}
+                selectedPeriod={selectedPeriod}
+                onPeriodChange={setSelectedPeriod}
+                region="United States"
+              />
+            </div>
           )}
 
           {activeChart === 'labor' && (
-            <EnhancedInteractiveLaborChart
-              height={700}
-              selectedPeriod={selectedPeriod}
-              onPeriodChange={setSelectedPeriod}
-              alerts={[
-                { id: 1, severity: 'medium', message: 'Initial claims trending upward' },
-                { id: 2, severity: 'low', message: 'Labor participation stable' }
-              ]}
-            />
+            <div className="w-full overflow-hidden">
+              <EnhancedInteractiveLaborChart
+                height={chartHeight}
+                selectedPeriod={selectedPeriod}
+                onPeriodChange={setSelectedPeriod}
+                alerts={[
+                  { id: 1, severity: 'medium', message: 'Initial claims trending upward' },
+                  { id: 2, severity: 'low', message: 'Labor participation stable' }
+                ]}
+              />
+            </div>
           )}
         </div>
 
         {/* Technical Notes */}
-        <div className="mt-12 bg-gray-100 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Technical Implementation</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
+        <div className="mt-8 sm:mt-12 bg-gray-100 rounded-xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Technical Implementation</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 text-xs sm:text-sm text-gray-700">
             <div>
               <h4 className="font-medium text-gray-900 mb-2">Data Sources</h4>
               <ul className="space-y-1">

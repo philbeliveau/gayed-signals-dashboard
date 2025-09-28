@@ -561,19 +561,19 @@ export default function Dashboard() {
         : [];
 
     return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-        <div className="bg-theme-card border border-theme-border rounded-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="bg-theme-card border border-theme-border rounded-t-2xl sm:rounded-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl mobile-modal">
           {/* Modal Header - mobile optimized */}
-          <div className="sticky top-0 bg-theme-card border-b border-theme-border p-4 sm:p-6 flex items-start justify-between">
-            <div className="flex-1 min-w-0 pr-3">
-              <h2 className="text-lg sm:text-2xl font-bold text-theme-text mb-2">
+          <div className="sticky top-0 bg-theme-card border-b border-theme-border p-3 sm:p-4 lg:p-6 flex items-start justify-between mobile-modal-header">
+            <div className="flex-1 min-w-0 pr-2 sm:pr-3">
+              <h2 className="text-base sm:text-lg lg:text-2xl font-bold text-theme-text mb-1 sm:mb-2">
                 ETF Recommendations
               </h2>
-              <p className="text-sm text-theme-text-muted mb-3 sm:hidden">{recommendations.signalType}</p>
+              <p className="text-xs sm:text-sm text-theme-text-muted mb-2 sm:mb-3 sm:hidden">{recommendations.signalType}</p>
               <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${getSignalBgColor(selectedSignal.signal)}`}>
+                <div className={`flex items-center space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg ${getSignalBgColor(selectedSignal.signal)}`}>
                   {getSignalIcon(selectedSignal.signal)}
-                  <span className={`font-semibold text-sm ${getSignalColor(selectedSignal.signal)}`}>
+                  <span className={`font-semibold text-xs sm:text-sm ${getSignalColor(selectedSignal.signal)}`}>
                     {selectedSignal.signal}
                   </span>
                 </div>
@@ -584,22 +584,22 @@ export default function Dashboard() {
             </div>
             <button
               onClick={closeETFModal}
-              className="p-3 hover:bg-theme-card-hover rounded-lg text-theme-text-muted hover:text-theme-text transition-colors touch-manipulation flex-shrink-0"
+              className="p-2 sm:p-3 hover:bg-theme-card-hover rounded-lg text-theme-text-muted hover:text-theme-text transition-colors touch-manipulation flex-shrink-0 min-h-[44px] min-w-[44px]"
             >
-              <X className="w-5 h-5 sm:w-6 sm:h-6" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
             </button>
           </div>
 
           {/* Modal Content - mobile optimized */}
-          <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
-            {/* Current Signal Recommendations */}
+          <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 lg:space-y-8 mobile-modal-content">
+            {/* Current Signal Recommendations - mobile optimized */}
             <div>
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mb-4 sm:mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-lg ${getSignalBgColor(selectedSignal.signal)}`}>
-                    {selectedSignal.signal === 'Risk-On' ? <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5" />}
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-3 sm:mb-4 lg:mb-6">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <div className={`p-1.5 sm:p-2 rounded-lg ${getSignalBgColor(selectedSignal.signal)}`}>
+                    {selectedSignal.signal === 'Risk-On' ? <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" /> : <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />}
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-white">
+                  <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-theme-text">
                     Recommended for {selectedSignal.signal}
                   </h3>
                 </div>
@@ -607,27 +607,27 @@ export default function Dashboard() {
                   PRIMARY
                 </div>
               </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+
+              <div className="grid grid-cols-1 gap-3 sm:gap-4">
                 {currentSignalETFs.map((etf, index) => (
-                  <div key={index} className="bg-theme-card-secondary border border-theme-border rounded-xl p-4 hover:border-theme-border-hover hover:shadow-md transition-all">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-lg font-bold text-theme-text">{etf.ticker}</span>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRiskLevelColor(etf.riskLevel)}`}>
+                  <div key={index} className="bg-theme-card-secondary border border-theme-border rounded-lg sm:rounded-xl p-3 sm:p-4 hover:border-theme-border-hover hover:shadow-md transition-all touch-manipulation">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1 sm:mb-2">
+                          <span className="text-base sm:text-lg font-bold text-theme-text">{etf.ticker}</span>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRiskLevelColor(etf.riskLevel)} self-start`}>
                             {etf.riskLevel} Risk
                           </span>
                         </div>
-                        <div className="text-sm text-theme-text-secondary font-medium mb-1">{etf.name}</div>
-                        <div className="text-xs text-theme-text-light">{etf.category}</div>
+                        <div className="text-xs sm:text-sm text-theme-text-secondary font-medium mb-1 leading-tight">{etf.name}</div>
+                        <div className="text-xs text-theme-text-light mb-2 sm:mb-3">{etf.category}</div>
+                        <p className="text-xs sm:text-sm text-theme-text-muted leading-relaxed">{etf.description}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right flex-shrink-0">
                         <div className="text-sm font-medium text-theme-text">{etf.expenseRatio}%</div>
                         <div className="text-xs text-theme-text-light">Expense Ratio</div>
                       </div>
                     </div>
-                    <p className="text-sm text-theme-text-muted leading-relaxed">{etf.description}</p>
                   </div>
                 ))}
               </div>
@@ -692,21 +692,21 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-4 border-t border-theme-border">
-              <div className="text-sm text-theme-text-light">
+            {/* Action Buttons - mobile optimized */}
+            <div className="border-t border-theme-border pt-3 sm:pt-4 space-y-3 sm:space-y-0">
+              <div className="text-xs sm:text-sm text-theme-text-light text-center sm:text-left">
                 Signal updated: {new Date(selectedSignal.date).toLocaleString()}
               </div>
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
                 <button
                   onClick={closeETFModal}
-                  className="px-6 py-2 bg-theme-card-secondary hover:bg-theme-card-hover text-theme-text border border-theme-border rounded-lg transition-colors"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-2 bg-theme-card-secondary hover:bg-theme-card-hover text-theme-text border border-theme-border rounded-lg transition-colors touch-manipulation min-h-[48px] text-sm sm:text-base"
                 >
                   Close
                 </button>
                 <button
                   onClick={() => window.open('https://finance.yahoo.com', '_blank')}
-                  className="px-6 py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-colors flex items-center space-x-2"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-colors flex items-center justify-center space-x-2 touch-manipulation min-h-[48px] text-sm sm:text-base"
                 >
                   <ExternalLink className="w-4 h-4" />
                   <span>Research ETFs</span>
@@ -774,46 +774,46 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-theme-bg text-theme-text">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 lg:pt-12 pb-8 sm:pb-12 space-y-6 sm:space-y-8 lg:space-y-12">
-        {/* Header with Profile - inspired by reference design */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        {/* Header with Profile - mobile optimized */}
+        <div className="flex flex-col space-y-4 sm:space-y-6 lg:flex-row lg:justify-between lg:items-center lg:space-y-0 lg:gap-6">
           {/* Left: Main Title */}
           <div className="flex-1">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-theme-text mb-2">Market Signals Dashboard</h1>
-            <p className="text-theme-text-muted text-base sm:text-lg">Real-time analysis of Gayed market regime indicators</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-theme-text mb-1 sm:mb-2">Market Signals Dashboard</h1>
+            <p className="text-theme-text-muted text-sm sm:text-base lg:text-lg">Real-time analysis of Gayed market regime indicators</p>
           </div>
 
-          {/* Right: Profile Section (inspired by reference) */}
-          <div className="flex items-center gap-4 bg-theme-card border border-theme-border rounded-2xl p-4 shadow-lg min-w-fit">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-full flex items-center justify-center shadow-md">
-                <User className="w-6 h-6 text-white" />
+          {/* Right: Profile Section - mobile responsive */}
+          <div className="flex items-center gap-3 sm:gap-4 bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg w-full sm:w-auto">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-none">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-full flex items-center justify-center shadow-md">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div>
-                <div className="text-sm text-theme-text-muted">Hello 👋</div>
-                <div className="font-bold text-theme-text">Market Analyst</div>
+              <div className="min-w-0 flex-1 sm:flex-none">
+                <div className="text-xs sm:text-sm text-theme-text-muted">Hello 👋</div>
+                <div className="font-bold text-theme-text text-sm sm:text-base truncate">Market Analyst</div>
               </div>
             </div>
-            <div className="flex items-center gap-2 ml-4 border-l border-theme-border pl-4">
-              <button className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors">
-                <Bell className="w-5 h-5 text-theme-text-muted" />
+            <div className="flex items-center gap-1 sm:gap-2 sm:ml-4 sm:border-l sm:border-theme-border sm:pl-4">
+              <button className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors touch-manipulation">
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-theme-text-muted" />
               </button>
-              <button className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors">
-                <Settings className="w-5 h-5 text-theme-text-muted" />
+              <button className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors touch-manipulation">
+                <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-theme-text-muted" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Controls Section */}
-        <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
+        {/* Controls Section - mobile optimized */}
+        <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
           <div></div>
-          
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            {/* Mode Toggle - clean design */}
-            <div className="flex items-center gap-2 bg-theme-card border border-theme-border rounded-xl p-2 w-full sm:w-auto shadow-sm">
+
+          <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center gap-0 sm:gap-3">
+            {/* Mode Toggle - mobile optimized */}
+            <div className="flex items-center gap-1 bg-theme-card border border-theme-border rounded-xl p-1.5 sm:p-2 w-full sm:w-auto shadow-sm">
               <button
                 onClick={() => setIsFullMode(true)}
-                className={`flex-1 sm:flex-none px-4 py-3 text-sm font-medium rounded-lg transition-all touch-manipulation ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium rounded-lg transition-all touch-manipulation ${
                   isFullMode
                     ? 'bg-theme-primary text-white shadow-md'
                     : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
@@ -823,7 +823,7 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={() => setIsFullMode(false)}
-                className={`flex-1 sm:flex-none px-4 py-3 text-sm font-medium rounded-lg transition-all touch-manipulation ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium rounded-lg transition-all touch-manipulation ${
                   !isFullMode
                     ? 'bg-theme-primary text-white shadow-md'
                     : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
@@ -832,35 +832,35 @@ export default function Dashboard() {
                 Fast Mode
               </button>
             </div>
-            
-            {/* Enhanced Controls - reference-inspired */}
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+
+            {/* Enhanced Controls - mobile responsive */}
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               {/* Refresh Button */}
               <button
                 onClick={() => fetchSignals(!isFullMode)}
                 disabled={refreshing}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-6 py-4 bg-theme-card border border-theme-border rounded-2xl hover:border-theme-border-hover hover:bg-theme-card-hover transition-all disabled:opacity-50 touch-manipulation shadow-lg font-semibold"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl hover:border-theme-border-hover hover:bg-theme-card-hover transition-all disabled:opacity-50 touch-manipulation shadow-lg font-semibold min-h-[48px]"
               >
-                <div className="w-6 h-6 bg-theme-text/10 rounded-lg flex items-center justify-center">
-                  <RefreshCw className={`w-4 h-4 text-theme-text ${refreshing ? 'animate-spin' : ''}`} />
+                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-theme-text/10 rounded-lg flex items-center justify-center">
+                  <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 text-theme-text ${refreshing ? 'animate-spin' : ''}`} />
                 </div>
-                <span className="text-sm sm:text-base">Refresh</span>
+                <span className="text-xs sm:text-sm lg:text-base">Refresh</span>
               </button>
-              
+
               {/* Charts Button */}
               <Link
                 href="/interactive-charts"
-                className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-6 py-4 bg-theme-primary text-white rounded-2xl hover:bg-theme-primary-hover transition-all touch-manipulation shadow-lg font-semibold"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-theme-primary text-white rounded-xl sm:rounded-2xl hover:bg-theme-primary-hover transition-all touch-manipulation shadow-lg font-semibold min-h-[48px]"
               >
-                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                  <LineChart className="w-4 h-4" />
+                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white/20 rounded-lg flex items-center justify-center">
+                  <LineChart className="w-3 h-3 sm:w-4 sm:h-4" />
                 </div>
-                <span className="text-sm sm:text-base">Charts</span>
+                <span className="text-xs sm:text-sm lg:text-base">Charts</span>
               </Link>
-              
-              {/* Add Menu Button */}
-              <button className="w-12 h-12 bg-theme-text rounded-xl flex items-center justify-center shadow-lg hover:bg-theme-text/90 transition-colors">
-                <Users className="w-5 h-5 text-white" />
+
+              {/* Menu Button - mobile optimized */}
+              <button className="w-12 h-12 bg-theme-text rounded-xl flex items-center justify-center shadow-lg hover:bg-theme-text/90 transition-colors touch-manipulation">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </button>
             </div>
           </div>
@@ -889,136 +889,138 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Portfolio Summary - inspired by reference balance section */}
-        <div className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 shadow-xl">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        {/* Portfolio Summary - mobile optimized */}
+        <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl">
+          <div className="flex flex-col space-y-4 sm:space-y-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 lg:gap-6">
             {/* Left: Portfolio Balance */}
             <div className="flex-1">
-              <div className="text-sm text-theme-text-muted uppercase tracking-wide font-semibold mb-2">TOTAL BALANCE</div>
-              <div className="text-4xl sm:text-5xl lg:text-6xl font-bold text-theme-text mb-2 flex items-center gap-3">
-                $180,512.85
-                <span className="text-sm font-medium text-theme-success bg-theme-success-bg px-3 py-1 rounded-full">
+              <div className="text-xs sm:text-sm text-theme-text-muted uppercase tracking-wide font-semibold mb-1 sm:mb-2">TOTAL BALANCE</div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                <div className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-theme-text">
+                  $180,512.85
+                </div>
+                <span className="text-xs sm:text-sm font-medium text-theme-success bg-theme-success-bg px-2 sm:px-3 py-1 rounded-full self-start sm:self-auto">
                   +2.45%
                 </span>
               </div>
-              <div className="text-theme-text-muted text-base">≈ 1.06 ETH</div>
+              <div className="text-theme-text-muted text-sm sm:text-base">≈ 1.06 ETH</div>
             </div>
 
-            {/* Right: Quick Actions */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-theme-text rounded-full flex items-center justify-center">
-                  <TrendingDown className="w-5 h-5 text-white" />
+            {/* Right: Quick Actions - mobile responsive */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto lg:w-auto">
+              <button className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 p-3 sm:p-2 bg-theme-card-hover hover:bg-theme-border rounded-xl transition-colors touch-manipulation min-h-[48px]">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-theme-text rounded-full flex items-center justify-center">
+                  <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <span className="text-sm font-medium text-theme-text">Withdraw</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-theme-text rounded-full flex items-center justify-center">
-                  <ExternalLink className="w-5 h-5 text-white" />
+                <span className="text-sm font-medium text-theme-text flex-1 sm:flex-none text-center sm:text-left">Withdraw</span>
+              </button>
+              <button className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 p-3 sm:p-2 bg-theme-card-hover hover:bg-theme-border rounded-xl transition-colors touch-manipulation min-h-[48px]">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-theme-text rounded-full flex items-center justify-center">
+                  <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <span className="text-sm font-medium text-theme-text">Send</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-theme-primary rounded-full flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-white" />
+                <span className="text-sm font-medium text-theme-text flex-1 sm:flex-none text-center sm:text-left">Send</span>
+              </button>
+              <button className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 p-3 sm:p-2 bg-theme-primary hover:bg-theme-primary-hover rounded-xl transition-colors touch-manipulation min-h-[48px]">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <span className="text-sm font-medium text-theme-text">Invest</span>
-              </div>
+                <span className="text-sm font-medium text-white flex-1 sm:flex-none text-center sm:text-left">Invest</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Market Overview Section - clean card design */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-          <div className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="text-xs text-theme-text-muted uppercase tracking-wider font-semibold mb-3">Total Signals</div>
-            <div className="text-2xl sm:text-3xl font-bold text-theme-text">{totalSignals}</div>
+        {/* Market Overview Section - mobile optimized */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 xl:gap-8">
+          <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation">
+            <div className="text-xs text-theme-text-muted uppercase tracking-wider font-semibold mb-2 sm:mb-3">Total Signals</div>
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-theme-text">{totalSignals}</div>
           </div>
-          
-          <div className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="text-xs text-theme-success uppercase tracking-wider font-semibold mb-3">Risk-On</div>
-            <div className="text-2xl sm:text-3xl font-bold text-theme-success">{riskOnSignals}</div>
-            <div className="text-sm text-theme-text-muted mt-2 font-medium">{totalSignals > 0 ? Math.round((riskOnSignals / totalSignals) * 100) : 0}%</div>
+
+          <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation">
+            <div className="text-xs text-theme-success uppercase tracking-wider font-semibold mb-2 sm:mb-3">Risk-On</div>
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-theme-success">{riskOnSignals}</div>
+            <div className="text-xs sm:text-sm text-theme-text-muted mt-1 sm:mt-2 font-medium">{totalSignals > 0 ? Math.round((riskOnSignals / totalSignals) * 100) : 0}%</div>
           </div>
-          
-          <div className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="text-xs text-theme-danger uppercase tracking-wider font-semibold mb-3">Risk-Off</div>
-            <div className="text-2xl sm:text-3xl font-bold text-theme-danger">{riskOffSignals}</div>
-            <div className="text-sm text-theme-text-muted mt-2 font-medium">{totalSignals > 0 ? Math.round((riskOffSignals / totalSignals) * 100) : 0}%</div>
+
+          <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation">
+            <div className="text-xs text-theme-danger uppercase tracking-wider font-semibold mb-2 sm:mb-3">Risk-Off</div>
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-theme-danger">{riskOffSignals}</div>
+            <div className="text-xs sm:text-sm text-theme-text-muted mt-1 sm:mt-2 font-medium">{totalSignals > 0 ? Math.round((riskOffSignals / totalSignals) * 100) : 0}%</div>
           </div>
-          
-          <div className="bg-theme-card border border-theme-border rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="text-xs text-theme-warning uppercase tracking-wider font-semibold mb-3">Neutral</div>
-            <div className="text-2xl sm:text-3xl font-bold text-theme-warning">{neutralSignals}</div>
-            <div className="text-sm text-theme-text-muted mt-2 font-medium">{totalSignals > 0 ? Math.round((neutralSignals / totalSignals) * 100) : 0}%</div>
+
+          <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation">
+            <div className="text-xs text-theme-warning uppercase tracking-wider font-semibold mb-2 sm:mb-3">Neutral</div>
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-theme-warning">{neutralSignals}</div>
+            <div className="text-xs sm:text-sm text-theme-text-muted mt-1 sm:mt-2 font-medium">{totalSignals > 0 ? Math.round((neutralSignals / totalSignals) * 100) : 0}%</div>
           </div>
         </div>
 
-        {/* Enhanced Consensus Panel - reference-inspired prominence */}
+        {/* Enhanced Consensus Panel - mobile optimized */}
         {consensus && (
-          <div className="bg-gradient-to-br from-theme-card to-theme-card-secondary border border-theme-border rounded-3xl p-8 sm:p-12 lg:p-20 shadow-2xl">
-            <div className="text-center mb-12">
-              {/* Header */}
-              <div className="flex items-center justify-center gap-4 mb-8">
-                <div className="text-sm text-theme-text-muted uppercase tracking-wider font-bold">Market Consensus</div>
+          <div className="bg-gradient-to-br from-theme-card to-theme-card-secondary border border-theme-border rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 xl:p-20 shadow-2xl">
+            <div className="text-center mb-8 sm:mb-12">
+              {/* Header - mobile responsive */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
+                <div className="text-xs sm:text-sm text-theme-text-muted uppercase tracking-wider font-bold">Market Consensus</div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-theme-success rounded-full animate-pulse"></div>
                   <span className="text-xs text-theme-success font-semibold">LIVE</span>
                 </div>
               </div>
-              
-              {/* Main Consensus Display */}
-              <div className="mb-12">
-                <div className={`text-7xl sm:text-8xl lg:text-9xl font-black mb-6 ${getSignalColor(consensus.consensus)} flex flex-col items-center justify-center space-y-6`}>
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-current/10 flex items-center justify-center shadow-xl">
-                    <div className="scale-150 sm:scale-200">
+
+              {/* Main Consensus Display - mobile optimized */}
+              <div className="mb-8 sm:mb-12">
+                <div className={`text-5xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-black mb-4 sm:mb-6 ${getSignalColor(consensus.consensus)} flex flex-col items-center justify-center space-y-4 sm:space-y-6`}>
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 xl:w-32 xl:h-32 rounded-2xl sm:rounded-3xl bg-current/10 flex items-center justify-center shadow-xl">
+                    <div className="scale-125 sm:scale-150 lg:scale-200">
                       {getSignalIcon(consensus.consensus)}
                     </div>
                   </div>
-                  <span className="text-center tracking-tight">{consensus.consensus}</span>
+                  <span className="text-center tracking-tight px-4">{consensus.consensus}</span>
                 </div>
-                <div className="text-xl text-theme-text-muted font-medium">
+                <div className="text-base sm:text-lg lg:text-xl text-theme-text-muted font-medium px-4">
                   Market is showing <strong className="text-theme-text">{consensus.consensus.toLowerCase()}</strong> signals with{' '}
                   <strong className="text-theme-text">{Math.round(consensus.confidence * 100)}%</strong> confidence
                 </div>
               </div>
-              
-              {/* Enhanced Metrics Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
-                <div className="bg-theme-card border border-theme-border rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="text-4xl sm:text-5xl font-black text-theme-text mb-4">
+
+              {/* Enhanced Metrics Grid - mobile responsive */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 xl:gap-12 max-w-6xl mx-auto">
+                <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation">
+                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-theme-text mb-3 sm:mb-4">
                     {Math.round(consensus.confidence * 100)}%
                   </div>
-                  <div className="text-theme-text-muted font-semibold text-lg mb-4">Confidence Level</div>
-                  <div className="w-full bg-theme-border rounded-full h-4">
-                    <div 
-                      className="bg-theme-primary h-4 rounded-full transition-all duration-1000"
+                  <div className="text-theme-text-muted font-semibold text-base sm:text-lg mb-3 sm:mb-4">Confidence Level</div>
+                  <div className="w-full bg-theme-border rounded-full h-3 sm:h-4">
+                    <div
+                      className="bg-theme-primary h-3 sm:h-4 rounded-full transition-all duration-1000"
                       style={{ width: `${consensus.confidence * 100}%` }}
                     ></div>
                   </div>
                 </div>
-                
-                <div className="bg-theme-card border border-theme-border rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="text-4xl sm:text-5xl font-black text-theme-success mb-4">
+
+                <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation">
+                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-theme-success mb-3 sm:mb-4">
                     {consensus.riskOnCount}
                   </div>
-                  <div className="text-theme-text-muted font-semibold text-lg mb-4">Risk-On Signals</div>
-                  <div className="w-full bg-theme-border rounded-full h-4">
-                    <div 
-                      className="bg-theme-success h-4 rounded-full transition-all duration-1000"
+                  <div className="text-theme-text-muted font-semibold text-base sm:text-lg mb-3 sm:mb-4">Risk-On Signals</div>
+                  <div className="w-full bg-theme-border rounded-full h-3 sm:h-4">
+                    <div
+                      className="bg-theme-success h-3 sm:h-4 rounded-full transition-all duration-1000"
                       style={{ width: `${totalSignals > 0 ? (consensus.riskOnCount / totalSignals) * 100 : 0}%` }}
                     ></div>
                   </div>
                 </div>
-                
-                <div className="bg-theme-card border border-theme-border rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="text-4xl sm:text-5xl font-black text-theme-danger mb-4">
+
+                <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation">
+                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-theme-danger mb-3 sm:mb-4">
                     {consensus.riskOffCount}
                   </div>
-                  <div className="text-theme-text-muted font-semibold text-lg mb-4">Risk-Off Signals</div>
-                  <div className="w-full bg-theme-border rounded-full h-4">
-                    <div 
-                      className="bg-theme-danger h-4 rounded-full transition-all duration-1000"
+                  <div className="text-theme-text-muted font-semibold text-base sm:text-lg mb-3 sm:mb-4">Risk-Off Signals</div>
+                  <div className="w-full bg-theme-border rounded-full h-3 sm:h-4">
+                    <div
+                      className="bg-theme-danger h-3 sm:h-4 rounded-full transition-all duration-1000"
                       style={{ width: `${totalSignals > 0 ? (consensus.riskOffCount / totalSignals) * 100 : 0}%` }}
                     ></div>
                   </div>
@@ -1028,33 +1030,33 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Enhanced Individual Signal Cards - reference-inspired design */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
+        {/* Enhanced Individual Signal Cards - mobile optimized */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {signals.map((signal, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               onClick={() => handleSignalClick(signal)}
-              className="bg-theme-card border border-theme-border rounded-2xl p-8 hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer touch-manipulation active:scale-95"
+              className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer touch-manipulation active:scale-95"
             >
-              {/* Header with larger icon */}
-              <div className="flex items-start justify-between mb-8">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-16 h-16 rounded-2xl ${getSignalBgColor(signal.signal)} flex items-center justify-center shadow-md`}>
-                    <div className="scale-125">
+              {/* Header with mobile-optimized layout */}
+              <div className="flex items-start justify-between mb-6 sm:mb-8">
+                <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                  <div className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl ${getSignalBgColor(signal.signal)} flex items-center justify-center shadow-md`}>
+                    <div className="scale-100 sm:scale-110 lg:scale-125">
                       {getSignalIcon(signal.signal)}
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-theme-text font-bold text-lg uppercase tracking-wide mb-1">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-theme-text font-bold text-sm sm:text-base lg:text-lg uppercase tracking-wide mb-1 truncate">
                       {signal.type.replace('_', ' / ')}
                     </h3>
-                    <div className="text-theme-text-muted font-medium">
+                    <div className="text-theme-text-muted font-medium text-xs sm:text-sm">
                       {signal.strength} Signal
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-theme-text">
+                <div className="text-right flex-shrink-0 ml-2">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-theme-text">
                     {Math.round(signal.confidence * 100)}%
                   </div>
                   <div className="text-xs text-theme-text-muted uppercase tracking-wide">
@@ -1062,49 +1064,49 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              
-              {/* Main signal display */}
-              <div className="text-center mb-8">
-                <div className={`text-5xl font-bold mb-3 ${getSignalColor(signal.signal)}`}>
+
+              {/* Main signal display - mobile responsive */}
+              <div className="text-center mb-6 sm:mb-8">
+                <div className={`text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 ${getSignalColor(signal.signal)}`}>
                   {signal.signal}
                 </div>
-                <div className="text-theme-text-muted">
+                <div className="text-theme-text-muted text-xs sm:text-sm">
                   Updated {new Date(signal.date).toLocaleTimeString()}
                 </div>
               </div>
-              
-              {/* Compact metrics display */}
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between p-4 bg-theme-card-secondary rounded-xl">
+
+              {/* Compact metrics display - mobile optimized */}
+              <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+                <div className="flex items-center justify-between p-3 sm:p-4 bg-theme-card-secondary rounded-lg sm:rounded-xl">
                   <div>
-                    <div className="text-theme-text-muted text-sm font-medium">Signal Strength</div>
-                    <div className="text-theme-text text-lg font-bold">{signal.strength}</div>
+                    <div className="text-theme-text-muted text-xs sm:text-sm font-medium">Signal Strength</div>
+                    <div className="text-theme-text text-sm sm:text-base lg:text-lg font-bold">{signal.strength}</div>
                   </div>
-                  <div className="w-20 bg-theme-border rounded-full h-2">
-                    <div 
+                  <div className="w-16 sm:w-20 bg-theme-border rounded-full h-2">
+                    <div
                       className={`h-2 rounded-full transition-all duration-700 ${getStrengthColor(signal.strength)}`}
                       style={{ width: `${getStrengthValue(signal.strength)}%` }}
                     ></div>
                   </div>
                 </div>
-                
-                <div className="flex items-center justify-between p-4 bg-theme-card-secondary rounded-xl">
-                  <div>
-                    <div className="text-theme-text-muted text-sm font-medium">Raw Value</div>
-                    <div className="text-theme-text text-lg font-mono font-bold">
+
+                <div className="flex items-center justify-between p-3 sm:p-4 bg-theme-card-secondary rounded-lg sm:rounded-xl">
+                  <div className="flex-1 min-w-0 mr-2">
+                    <div className="text-theme-text-muted text-xs sm:text-sm font-medium">Raw Value</div>
+                    <div className="text-theme-text text-sm sm:text-base lg:text-lg font-mono font-bold truncate">
                       {signal.rawValue.toFixed(4)}
                     </div>
                   </div>
-                  <div className="w-8 h-8 bg-theme-primary rounded-full flex items-center justify-center">
-                    <ExternalLink className="w-4 h-4 text-white" />
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-theme-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                   </div>
                 </div>
               </div>
-              
-              {/* Action button */}
-              <button className="w-full bg-theme-text text-white py-4 rounded-xl font-semibold hover:bg-theme-text/90 transition-colors flex items-center justify-center gap-2">
-                View ETF Recommendations
-                <ExternalLink className="w-5 h-5" />
+
+              {/* Action button - mobile optimized */}
+              <button className="w-full bg-theme-text text-white py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold hover:bg-theme-text/90 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation min-h-[48px]">
+                <span className="truncate">View ETF Recommendations</span>
+                <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               </button>
             </div>
           ))}

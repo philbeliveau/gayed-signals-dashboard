@@ -425,93 +425,95 @@ export default function BacktraderPage() {
     <div className="min-h-screen bg-theme-bg text-theme-text trading-background-subtle">
       {/* Header */}
       <header className="border-b border-theme-border bg-theme-card/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors">
-                <ArrowLeft className="w-6 h-6" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <Link href="/" className="p-2 hover:bg-theme-card-hover rounded-lg transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
               </Link>
-              <div className="w-10 h-10 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-lg flex items-center justify-center">
-                <LineChart className="w-6 h-6 text-white" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-theme-primary to-theme-primary-hover rounded-lg flex items-center justify-center">
+                <LineChart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-theme-text">Backtrader Analysis</h1>
-                <p className="text-theme-text-muted text-sm">Visualize Gayed Signals with Professional Charts</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-theme-text truncate">Backtrader Analysis</h1>
+                <p className="text-theme-text-muted text-xs sm:text-sm truncate">Visualize Gayed Signals with Professional Charts</p>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="bg-theme-info-bg border border-theme-info-border rounded-lg px-4 py-2">
+
+            <div className="flex items-center justify-between space-x-2 sm:space-x-4">
+              <div className="bg-theme-info-bg border border-theme-info-border rounded-lg px-3 py-2 sm:px-4 flex-shrink-0">
                 <div className="flex items-center space-x-2">
-                  <Info className="w-4 h-4 text-theme-info" />
-                  <span className="text-theme-info text-sm font-medium">Educational Tool</span>
+                  <Info className="w-3 h-3 sm:w-4 sm:h-4 text-theme-info" />
+                  <span className="text-theme-info text-xs sm:text-sm font-medium">Educational Tool</span>
                 </div>
               </div>
-              <ThemeToggle />
+              <div className="sm:block">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Navigation Tabs */}
-        <div className="mb-8">
-          <div className="flex space-x-1 bg-theme-card p-1 rounded-xl border border-theme-border">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-wrap gap-1 bg-theme-card p-1 rounded-xl border border-theme-border overflow-x-auto">
             <button
               onClick={() => setActiveTab('config')}
-              className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-colors whitespace-nowrap touch-manipulation min-h-[44px] ${
                 activeTab === 'config'
                   ? 'bg-theme-primary text-white'
                   : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
               }`}
             >
               <Settings className="w-4 h-4" />
-              <span>Configuration</span>
+              <span className="text-sm sm:text-base">Config</span>
             </button>
             <button
               onClick={() => setActiveTab('charts')}
-              className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-colors whitespace-nowrap touch-manipulation min-h-[44px] ${
                 activeTab === 'charts'
                   ? 'bg-theme-primary text-white'
                   : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
               }`}
             >
               <BarChart3 className="w-4 h-4" />
-              <span>Charts</span>
+              <span className="text-sm sm:text-base">Charts</span>
             </button>
             <button
               onClick={() => setActiveTab('performance')}
-              className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-colors whitespace-nowrap touch-manipulation min-h-[44px] ${
                 activeTab === 'performance'
                   ? 'bg-theme-primary text-white'
                   : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
               }`}
             >
               <TrendingUp className="w-4 h-4" />
-              <span>Performance</span>
+              <span className="text-sm sm:text-base">Performance</span>
             </button>
             <button
               onClick={() => setActiveTab('correlations')}
-              className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-colors whitespace-nowrap touch-manipulation min-h-[44px] ${
                 activeTab === 'correlations'
                   ? 'bg-theme-primary text-white'
                   : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
               }`}
             >
               <Target className="w-4 h-4" />
-              <span>Correlations</span>
+              <span className="text-sm sm:text-base">Correlations</span>
             </button>
             <button
               onClick={() => setActiveTab('signals')}
-              className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-colors whitespace-nowrap touch-manipulation min-h-[44px] ${
                 activeTab === 'signals'
                   ? 'bg-theme-primary text-white'
                   : 'text-theme-text-muted hover:text-theme-text hover:bg-theme-card-hover'
               }`}
             >
               <Activity className="w-4 h-4" />
-              <span>Signal Guide</span>
+              <span className="text-sm sm:text-base">Signals</span>
             </button>
           </div>
         </div>
@@ -1075,65 +1077,67 @@ export default function BacktraderPage() {
         )}
 
         {/* Action Bar */}
-        <div className="sticky bottom-6 bg-theme-card border border-theme-border rounded-xl p-6 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="sticky bottom-4 sm:bottom-6 bg-theme-card border border-theme-border rounded-xl p-4 sm:p-6 shadow-lg mx-4 sm:mx-0">
+          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
               {error && (
                 <div className="flex items-center space-x-2 text-theme-danger">
-                  <AlertTriangle className="w-5 h-5" />
-                  <span className="text-sm">{error}</span>
+                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-xs sm:text-sm">{error}</span>
                 </div>
               )}
               {isAnalyzing && (
                 <div className="flex items-center space-x-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-theme-primary" />
-                  <span className="text-sm text-theme-text-secondary">Running analysis...</span>
-                  <div className="w-32 bg-theme-bg-secondary rounded-full h-2">
-                    <div 
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-theme-primary" />
+                  <span className="text-xs sm:text-sm text-theme-text-secondary">Running analysis...</span>
+                  <div className="w-24 sm:w-32 bg-theme-bg-secondary rounded-full h-2">
+                    <div
                       className="bg-theme-primary h-2 rounded-full transition-all duration-300"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <span className="text-sm text-theme-text-muted">{progress}%</span>
+                  <span className="text-xs sm:text-sm text-theme-text-muted">{progress}%</span>
                 </div>
               )}
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-theme-text-muted">
+
+            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+              <div className="text-xs sm:text-sm text-theme-text-muted text-center sm:text-left">
                 {config.symbols.length} symbol{config.symbols.length !== 1 ? 's' : ''} • {config.signals.length} signal{config.signals.length !== 1 ? 's' : ''}
                 {Object.keys(config.allocations).length > 0 && (
-                  <span className="ml-2 px-2 py-1 bg-theme-primary-bg text-theme-primary rounded text-xs">
+                  <span className="block sm:inline sm:ml-2 mt-1 sm:mt-0 px-2 py-1 bg-theme-primary-bg text-theme-primary rounded text-xs">
                     Portfolio Allocations
                   </span>
                 )}
               </div>
-              {results && (
-                <button
-                  onClick={exportResults}
-                  className="px-4 py-2 bg-theme-card-secondary hover:bg-theme-card-hover text-theme-text border border-theme-border rounded-lg transition-colors flex items-center space-x-2"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Export</span>
-                </button>
-              )}
-              <button
-                onClick={runAnalysis}
-                disabled={isAnalyzing || config.symbols.length === 0 || config.signals.length === 0}
-                className="px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover disabled:bg-theme-text-muted disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center space-x-2"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Analyzing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-5 h-5" />
-                    <span>Run Analysis</span>
-                  </>
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                {results && (
+                  <button
+                    onClick={exportResults}
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-theme-card-secondary hover:bg-theme-card-hover text-theme-text border border-theme-border rounded-lg transition-colors flex items-center justify-center space-x-2 touch-manipulation min-h-[44px]"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="text-sm">Export</span>
+                  </button>
                 )}
-              </button>
+                <button
+                  onClick={runAnalysis}
+                  disabled={isAnalyzing || config.symbols.length === 0 || config.signals.length === 0}
+                  className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover disabled:bg-theme-text-muted disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center space-x-2 touch-manipulation min-h-[44px]"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                      <span className="text-sm sm:text-base">Analyzing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="text-sm sm:text-base">Run Analysis</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
