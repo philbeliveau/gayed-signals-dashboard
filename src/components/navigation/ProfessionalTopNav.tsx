@@ -49,15 +49,6 @@ export default function ProfessionalTopNav({
 
           {/* Right Side Controls */}
           <div className="flex items-center space-x-4 ml-6">
-            {/* Navigation Pills - for larger screens */}
-            <div className="hidden md:flex items-center space-x-3">
-              <button className="modern-pill">
-                Trader
-              </button>
-              <button className="modern-pill inactive">
-                Collector
-              </button>
-            </div>
 
             {/* Notifications */}
             <SignedIn>
@@ -86,15 +77,6 @@ export default function ProfessionalTopNav({
 
               <SignedIn>
                 <div className="flex items-center space-x-3">
-                  {/* User Greeting - Desktop Only */}
-                  <div className="hidden lg:block text-right">
-                    <div className="text-sm text-theme-text-muted">
-                      Hello 👋
-                    </div>
-                    <div className="text-sm font-semibold text-theme-text">
-                      {user?.firstName || 'Marco Rivera'}
-                    </div>
-                  </div>
 
                   {/* User Avatar */}
                   <div className="relative">
@@ -120,15 +102,6 @@ export default function ProfessionalTopNav({
           </div>
         </div>
 
-        {/* Mobile Navigation Pills */}
-        <div className="md:hidden mt-6 flex items-center justify-center space-x-4">
-          <button className="modern-pill text-sm px-5">
-            Trader
-          </button>
-          <button className="modern-pill inactive text-sm px-5">
-            Collector
-          </button>
-        </div>
       </div>
     </header>
   );
