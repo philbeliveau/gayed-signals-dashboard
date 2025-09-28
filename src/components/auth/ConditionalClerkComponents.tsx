@@ -5,22 +5,32 @@ import React from 'react';
 // Check if we're in a Clerk environment
 const hasClerk = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-// Dynamic imports that will work at runtime
+// Import Clerk components conditionally
 let ClerkComponents: any = {};
 
 if (hasClerk) {
   try {
-    const clerk = require('@clerk/nextjs');
+    // Use dynamic import for better handling
+    const {
+      useAuth: ClerkUseAuth,
+      useUser: ClerkUseUser,
+      SignedIn: ClerkSignedIn,
+      SignedOut: ClerkSignedOut,
+      SignInButton: ClerkSignInButton,
+      UserButton: ClerkUserButton,
+    } = require('@clerk/nextjs');
+
     ClerkComponents = {
-      useAuth: clerk.useAuth,
-      useUser: clerk.useUser,
-      SignedIn: clerk.SignedIn,
-      SignedOut: clerk.SignedOut,
-      SignInButton: clerk.SignInButton,
-      UserButton: clerk.UserButton,
+      useAuth: ClerkUseAuth,
+      useUser: ClerkUseUser,
+      SignedIn: ClerkSignedIn,
+      SignedOut: ClerkSignedOut,
+      SignInButton: ClerkSignInButton,
+      UserButton: ClerkUserButton,
     };
   } catch (error) {
-    console.warn('Clerk not available, using mock components');
+    console.warn('Clerk not available, using mock components:', error);
+    ClerkComponents = {};
   }
 }
 
@@ -44,9 +54,31 @@ const MockUserButton = ({ afterSignOutUrl, appearance }: any) => (
   </div>
 );
 
-// Export the appropriate components based on environment
-export const useAuth = ClerkComponents.useAuth || MockAuthHook;
-export const useUser = ClerkComponents.useUser || MockUserHook;
+// Export the appropriate components based on environment with error handling
+export const useAuth = () => {
+  if (ClerkComponents.useAuth) {
+    try {
+      return ClerkComponents.useAuth();
+    } catch (error) {
+      console.warn('Clerk useAuth error, falling back to mock:', error);
+      return MockAuthHook();
+    }
+  }
+  return MockAuthHook();
+};
+
+export const useUser = () => {
+  if (ClerkComponents.useUser) {
+    try {
+      return ClerkComponents.useUser();
+    } catch (error) {
+      console.warn('Clerk useUser error, falling back to mock:', error);
+      return MockUserHook();
+    }
+  }
+  return MockUserHook();
+};
+
 export const SignedIn = ClerkComponents.SignedIn || MockSignedIn;
 export const SignedOut = ClerkComponents.SignedOut || MockSignedOut;
 export const SignInButton = ClerkComponents.SignInButton || MockSignInButton;
