@@ -1,12 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Search, Bell, ChevronDown } from 'lucide-react';
+import React from 'react';
+import { Bell, ChevronDown } from 'lucide-react';
 import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { useAuthMode } from '@/lib/device-detection';
-import { getNavigationRoutes } from '@/lib/navigation';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
 import ThemeToggle from '../ThemeToggle';
 
 interface ProfessionalTopNavProps {
@@ -15,7 +12,7 @@ interface ProfessionalTopNavProps {
 }
 
 /**
- * Professional top navigation with search bar and user profile
+ * Professional top navigation with user profile
  * Matches the reference design with white background and professional styling
  */
 export default function ProfessionalTopNav({
@@ -25,45 +22,13 @@ export default function ProfessionalTopNav({
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const authMode = useAuthMode();
-  const pathname = usePathname();
-  const [searchValue, setSearchValue] = useState('');
-
-  // Get navigation routes (same as sidebar)
-  const isAdmin = false; // Can be enhanced with Clerk metadata
-  const navigationRoutes = getNavigationRoutes(isSignedIn || false, isAdmin);
-
-  // Check if route is active
-  const isActiveRoute = (routePath: string) => {
-    if (routePath === '/' && pathname === '/') return true;
-    if (routePath !== '/' && pathname.startsWith(routePath)) return true;
-    return false;
-  };
 
   return (
     <header className={`modern-topnav relative md:sticky top-0 z-40 ${className}`}>
       <div className="px-3 md:px-6 py-3 md:py-5">
-        <div className="flex items-center justify-between">
-          {/* Search Section - Mobile optimized */}
-          <div className="flex-1 max-w-lg">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 md:h-5 md:w-5 text-theme-primary" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search markets, signals, analysis..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                className="
-                  modern-search mobile-search-input block w-full pl-10 md:pl-12 pr-3 md:pr-4 py-2 md:py-3 text-theme-text placeholder-gray-500
-                  focus:outline-none text-sm md:text-base
-                "
-              />
-            </div>
-          </div>
-
-          {/* Right Side Controls - Mobile optimized */}
-          <div className="flex items-center space-x-2 md:space-x-4 ml-3 md:ml-6">
+        <div className="flex items-center justify-end">
+          {/* Controls - Mobile optimized */}
+          <div className="flex items-center space-x-2 md:space-x-4">
 
             {/* Notifications - Hidden on mobile */}
             <SignedIn>
