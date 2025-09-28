@@ -54,6 +54,12 @@ class Settings(BaseSettings):
         description="Access token expiration time in minutes"
     )
 
+    # Frontend API settings
+    FRONTEND_API_URL: str = Field(
+        default="http://localhost:3000",
+        description="Frontend API URL for MCP bridge communication"
+    )
+
     # CORS settings
     ALLOWED_ORIGINS: Union[List[str], str] = Field(
         default=["http://localhost:3000", "http://127.0.0.1:3000"],
