@@ -1,0 +1,88 @@
+'use client';
+
+import React from 'react';
+import { Bell, ChevronDown } from 'lucide-react';
+import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import { useAuthMode } from '@/lib/device-detection';
+import ThemeToggle from '../ThemeToggle';
+
+interface ProfessionalTopNavProps {
+  className?: string;
+  showThemeToggle?: boolean;
+}
+
+/**
+ * Professional top navigation with user profile
+ * Matches the reference design with white background and professional styling
+ */
+export default function ProfessionalTopNav({
+  className = '',
+  showThemeToggle = true
+}: ProfessionalTopNavProps) {
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const authMode = useAuthMode();
+
+  return (
+    <header className={`modern-topnav relative md:sticky top-0 z-40 ${className}`}>
+      <div className="px-3 md:px-6 py-3 md:py-5">
+        <div className="flex items-center justify-end">
+          {/* Controls - Mobile optimized */}
+          <div className="flex items-center space-x-2 md:space-x-4">
+
+            {/* Notifications - Hidden on mobile */}
+            <SignedIn>
+              <button className="modern-nav-button relative hidden md:block">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-400 ring-2 ring-theme-card animate-pulse"></span>
+              </button>
+            </SignedIn>
+
+            {/* Theme Toggle - Desktop only (mobile has it in bottom nav) */}
+            {showThemeToggle && (
+              <div className="hidden md:flex">
+                <ThemeToggle />
+              </div>
+            )}
+
+            {/* User Section */}
+            <div className="flex items-center space-x-2 md:space-x-3">
+              <SignedOut>
+                <SignInButton mode={authMode}>
+                  <button className="modern-pill px-3 md:px-6 py-2 text-sm md:text-base">
+                    Sign In
+                  </button>
+                </SignInButton>
+              </SignedOut>
+
+              <SignedIn>
+                <div className="flex items-center space-x-3">
+
+                  {/* User Avatar */}
+                  <div className="relative">
+                    <UserButton
+                      afterSignOutUrl="/"
+                      appearance={{
+                        elements: {
+                          avatarBox: "w-10 h-10 rounded-full ring-2 ring-theme-border hover:ring-theme-primary transition-all duration-200"
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {/* Additional Options - Desktop */}
+                  <div className="hidden xl:flex items-center space-x-2">
+                    <button className="p-1.5 text-theme-text-muted hover:text-theme-text transition-colors">
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </SignedIn>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </header>
+  );
+}

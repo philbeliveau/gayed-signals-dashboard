@@ -1,0 +1,161 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// UUID-Safe User Management (prevents Clerk ID conversion bugs)
+model User {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clerkUserId String    @unique @map("clerk_user_id")
+  email       String    @unique
+  firstName   String?   @map("first_name")
+  lastName    String?   @map("last_name")
+  imageUrl    String?   @map("image_url")
+  isActive    Boolean   @default(true) @map("is_active")
+  preferences Json?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  lastLoginAt DateTime? @map("last_login_at")
+
+  // Relations
+  agentSessions       AgentSession[]
+  conversationExports ConversationExport[]
+  userSubscriptions   UserSubscription[]
+
+  @@map("users")
+}
+
+// Agent Conversation Management
+model AgentSession {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String?       @map("user_id") @db.Uuid
+  sessionTitle  String        @map("session_title")
+  contentType   ContentType   @map("content_type")
+  contentSource String        @map("content_source")
+  contentUrl    String?       @map("content_url")
+  contentText   String        @map("content_text")
+  status        SessionStatus @default(INITIALIZED)
+  startedAt     DateTime      @default(now()) @map("started_at")
+  completedAt   DateTime?     @map("completed_at")
+  metadata      Json?
+
+  // Relations
+  user     User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages AgentMessage[]
+  exports  ConversationExport[]
+
+  @@map("agent_sessions")
+}
+
+// Individual agent messages in conversations
+model AgentMessage {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId      String    @map("session_id") @db.Uuid
+  agentType      AgentType @map("agent_type")
+  messageContent String    @map("message_content")
+  messageOrder   Int       @map("message_order")
+  timestamp      DateTime  @default(now())
+  confidence     Float?
+  sources        Json?
+  metadata       Json?
+
+  // Relations
+  session AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, messageOrder])
+  @@map("agent_messages")
+}
+
+// Export tracking for conversations
+model ConversationExport {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId    String       @map("session_id") @db.Uuid
+  userId       String?      @map("user_id") @db.Uuid
+  exportFormat ExportFormat @map("export_format")
+  exportedAt   DateTime     @default(now()) @map("exported_at")
+  filePath     String?      @map("file_path")
+  downloadUrl  String?      @map("download_url")
+  expiresAt    DateTime?    @map("expires_at")
+
+  // Relations
+  session AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("conversation_exports")
+}
+
+// Market signal cache for agent context
+model SignalCache {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  signalType  String   @map("signal_type")
+  signalValue Float    @map("signal_value")
+  confidence  Float    @default(0.5)
+  timestamp   DateTime @default(now())
+  expiresAt   DateTime @map("expires_at")
+  metadata    Json?
+  source      String?
+
+  @@index([signalType, timestamp])
+  @@index([expiresAt])
+  @@map("signal_cache")
+}
+
+// User subscription management
+model UserSubscription {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  subscriptionType String    @map("subscription_type")
+  status           String    @default("active")
+  startDate        DateTime  @default(now()) @map("start_date")
+  endDate          DateTime? @map("end_date")
+  metadata         Json?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_subscriptions")
+}
+
+// Enums
+enum ContentType {
+  SUBSTACK_ARTICLE
+  YOUTUBE_VIDEO
+  DIRECT_TEXT
+  RESEARCH_REPORT
+  MARKET_COMMENTARY
+}
+
+enum SessionStatus {
+  INITIALIZED
+  PROCESSING
+  AGENT_DEBATE
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum AgentType {
+  FINANCIAL_ANALYST
+  MARKET_CONTEXT
+  RISK_CHALLENGER
+  SYSTEM_ORCHESTRATOR
+}
+
+enum ExportFormat {
+  PDF
+  JSON
+  MARKDOWN
+  HTML
+  CSV
+}

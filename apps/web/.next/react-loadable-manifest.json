@@ -1,0 +1,27 @@
+{
+  "../../../node_modules/@clerk/nextjs/dist/cjs/app-router/client/ClerkProvider.js -> ./keyless-creator-reader.js": {
+    "id": 32074,
+    "files": [
+      "static/chunks/74.9f8936dcefa2de27.js"
+    ]
+  },
+  "../../../node_modules/@clerk/nextjs/dist/esm/app-router/client/ClerkProvider.js -> ./keyless-creator-reader.js": {
+    "id": 45273,
+    "files": [
+      "static/chunks/273.b243450ad8c1da4e.js"
+    ]
+  },
+  "../../../node_modules/@clerk/nextjs/dist/esm/app-router/client/keyless-cookie-sync.js -> ../keyless-actions.js": {
+    "id": 14502,
+    "files": [
+      "static/chunks/502.95b73ad1633e9040.js"
+    ]
+  },
+  "app/backtrader/page.tsx -> ../../components/UniversalStrategyChart": {
+    "id": 2466,
+    "files": [
+      "static/chunks/623-bb99236df3266048.js",
+      "static/chunks/466.4330f89435195824.js"
+    ]
+  }
+}
