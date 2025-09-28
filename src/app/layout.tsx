@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from "../components/auth/ConditionalClerkComponents";
+import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { UserPreferencesProvider } from "../contexts/UserPreferencesContext";
 import ProfessionalLayout from "../components/layout/ProfessionalLayout";

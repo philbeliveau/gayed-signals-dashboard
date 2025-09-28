@@ -15,7 +15,7 @@ import {
   Shield,
   BarChart3
 } from 'lucide-react';
-import { useAuth } from '../auth/ConditionalClerkComponents';
+import { useAuth } from '@clerk/nextjs';
 import { getNavigationRoutes } from '@/lib/navigation';
 
 interface ProfessionalSidebarProps {
