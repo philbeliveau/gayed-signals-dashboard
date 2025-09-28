@@ -851,46 +851,6 @@ export default function Dashboard() {
           </div>
         </ContentCard>
 
-        {/* Portfolio Summary */}
-        <ContentCard>
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            {/* Left: Portfolio Balance */}
-            <div className="flex-1">
-              <div className="text-sm text-theme-text-muted uppercase tracking-wide font-semibold mb-2">TOTAL BALANCE</div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                <div className="text-4xl lg:text-5xl font-bold text-theme-text">
-                  $180,512.85
-                </div>
-                <span className="text-sm font-medium text-theme-success bg-theme-success-bg px-3 py-1 rounded-full self-start">
-                  +2.45%
-                </span>
-              </div>
-              <div className="text-theme-text-muted">≈ 1.06 ETH</div>
-            </div>
-
-            {/* Right: Quick Actions */}
-            <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
-                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                  <TrendingDown className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-sm font-medium">Withdraw</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
-                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                  <ExternalLink className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-sm font-medium">Send</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-3 bg-theme-primary hover:bg-theme-primary-hover rounded-xl transition-colors">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <DollarSign className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-sm font-medium text-white">Invest</span>
-              </button>
-            </div>
-          </div>
-        </ContentCard>
 
         {/* Market Overview Section */}
         <CardGrid cols={4}>
