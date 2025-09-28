@@ -1,7 +1,7 @@
 'use client';
 
 interface UnifiedLoaderProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   className?: string;
 }
 
@@ -10,13 +10,15 @@ interface UnifiedLoaderProps {
  * Exact SVG structure from /public/UIverse/loading.html with rotating movement
  */
 export default function UnifiedLoader({
-  size = 'md',
+  size = 'xl',
   className = ''
 }: UnifiedLoaderProps) {
   const sizeClasses = {
     sm: 'w-12 h-12',
     md: 'w-14 h-14',
-    lg: 'w-20 h-20'
+    lg: 'w-20 h-20',
+    xl: 'w-32 h-32',
+    xxl: 'w-48 h-48'
   };
 
   return (
