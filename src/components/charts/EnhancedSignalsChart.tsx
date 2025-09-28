@@ -273,11 +273,11 @@ export default function EnhancedSignalsChart({
   // Get strength badge
   const getStrengthBadge = (strength: 'Strong' | 'Moderate' | 'Weak') => {
     const colors = {
-      Strong: 'bg-green-100 text-green-800',
-      Moderate: 'bg-yellow-100 text-yellow-800',
-      Weak: 'bg-red-100 text-red-800'
+      Strong: 'bg-theme-success-bg text-theme-success border border-theme-success-border',
+      Moderate: 'bg-theme-warning-bg text-theme-warning border border-theme-warning-border',
+      Weak: 'bg-theme-danger-bg text-theme-danger border border-theme-danger-border'
     };
-    
+
     return (
       <span className={`px-2 py-1 text-xs rounded-full ${colors[strength]}`}>
         {strength}
@@ -291,14 +291,14 @@ export default function EnhancedSignalsChart({
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+            <div className="p-2 bg-theme-primary-bg text-theme-primary rounded-lg">
               <Activity className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-theme-text">
                 Gayed Market Signals
               </h2>
-              <p className="text-gray-600">
+              <p className="text-theme-text-secondary">
                 Real-time analysis of all 5 market regime indicators
               </p>
             </div>
@@ -309,7 +309,7 @@ export default function EnhancedSignalsChart({
           <button
             onClick={() => fetchSignals()}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border rounded-lg hover:bg-theme-card-hover transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -317,7 +317,7 @@ export default function EnhancedSignalsChart({
           
           <button
             onClick={showAllSignalsHandler}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
           >
             <Eye className="w-4 h-4" />
             Show All 5
@@ -327,9 +327,9 @@ export default function EnhancedSignalsChart({
 
       {/* Consensus Signal */}
       {consensus && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <div className="bg-theme-card border border-theme-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Market Consensus</h3>
+            <h3 className="text-lg font-semibold text-theme-text">Market Consensus</h3>
             <div className="flex items-center gap-2">
               <div 
                 className="w-3 h-3 rounded-full"
@@ -343,22 +343,22 @@ export default function EnhancedSignalsChart({
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-theme-text">
                 {Math.round(consensus.confidence * 100)}%
               </div>
-              <div className="text-sm text-gray-600">Confidence</div>
+              <div className="text-sm text-theme-text-secondary">Confidence</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-theme-success">
                 {consensus.riskOnCount}
               </div>
-              <div className="text-sm text-gray-600">Risk-On</div>
+              <div className="text-sm text-theme-text-secondary">Risk-On</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-theme-danger">
                 {consensus.riskOffCount}
               </div>
-              <div className="text-sm text-gray-600">Risk-Off</div>
+              <div className="text-sm text-theme-text-secondary">Risk-Off</div>
             </div>
           </div>
         </div>
@@ -366,16 +366,16 @@ export default function EnhancedSignalsChart({
 
       {/* Individual Signals */}
       {signals.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Individual Signals</h3>
+        <div className="bg-theme-card border border-theme-border rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-theme-text mb-4">Individual Signals</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {signals.map((signal) => (
-              <div key={signal.id} className="border border-gray-200 rounded-lg p-4">
+              <div key={signal.id} className="border border-theme-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => toggleSignalVisibility(signal.type)}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-theme-text-muted hover:text-theme-text"
                     >
                       {visibleSignals.includes(signal.type) ? (
                         <Eye className="w-4 h-4" />
@@ -383,22 +383,22 @@ export default function EnhancedSignalsChart({
                         <EyeOff className="w-4 h-4" />
                       )}
                     </button>
-                    <span className="font-medium text-gray-900">{signal.name}</span>
+                    <span className="font-medium text-theme-text">{signal.name}</span>
                   </div>
                   <div className="flex items-center gap-1" style={{ color: getSignalColor(signal.signal) }}>
                     {getSignalIcon(signal.signal)}
                     <span className="text-sm font-medium">{signal.signal}</span>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-theme-text-secondary">
                     {Math.round(signal.confidence * 100)}% confident
                   </div>
                   {getStrengthBadge(signal.strength)}
                 </div>
-                
-                <div className="mt-2 text-xs text-gray-500">
+
+                <div className="mt-2 text-xs text-theme-text-muted">
                   {signal.description}
                 </div>
               </div>
@@ -410,17 +410,17 @@ export default function EnhancedSignalsChart({
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Period:</span>
-          <div className="flex bg-gray-50 border border-gray-200 rounded-lg p-1">
+          <Calendar className="w-4 h-4 text-theme-text-muted" />
+          <span className="text-sm font-medium text-theme-text">Period:</span>
+          <div className="flex bg-theme-bg-secondary border border-theme-border rounded-lg p-1">
             {PERIOD_OPTIONS.map(period => (
               <button
                 key={period.value}
                 onClick={() => handlePeriodChange(period.value)}
                 className={`px-3 py-1.5 text-sm rounded transition-all ${
                   selectedPeriod === period.value
-                    ? 'bg-white text-blue-600 shadow-sm font-medium'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-theme-card text-theme-primary shadow-sm font-medium'
+                    : 'text-theme-text-secondary hover:text-theme-text'
                 }`}
                 title={period.description}
               >
@@ -433,18 +433,18 @@ export default function EnhancedSignalsChart({
         <div className="flex items-center gap-2">
           <button
             onClick={hideAllSignalsHandler}
-            className="px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-3 py-1.5 text-sm text-theme-text-muted bg-theme-card border border-theme-border rounded-lg hover:bg-theme-card-hover transition-colors"
           >
             Hide All
           </button>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-theme-text-muted">
             {visibleSignals.length} of {SIGNAL_CONFIGS.length} visible
           </span>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="bg-white border border-gray-200 rounded-xl">
+      <div className="bg-theme-card border border-theme-border rounded-xl">
         <InteractiveEconomicChart
           data={chartData}
           seriesConfig={seriesConfig}
@@ -459,7 +459,7 @@ export default function EnhancedSignalsChart({
 
       {/* Status */}
       {lastUpdated && (
-        <div className="text-sm text-gray-500 text-center">
+        <div className="text-sm text-theme-text-muted text-center">
           Last updated: {formatDate(lastUpdated.toISOString(), 'short')}
         </div>
       )}

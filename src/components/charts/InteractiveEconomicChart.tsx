@@ -228,10 +228,10 @@ export default function InteractiveEconomicChart({
     );
 
     return (
-      <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl p-4 shadow-xl max-w-sm">
-        <div className="flex items-center gap-2 mb-3 border-b border-gray-100 pb-2">
-          <Calendar className="w-4 h-4 text-gray-500" />
-          <p className="font-semibold text-gray-900">
+      <div className="bg-theme-card backdrop-blur-sm border border-theme-border rounded-xl p-4 shadow-xl max-w-sm">
+        <div className="flex items-center gap-2 mb-3 border-b border-theme-border pb-2">
+          <Calendar className="w-4 h-4 text-theme-text-muted" />
+          <p className="font-semibold text-theme-text">
             {formatDate(label, 'long')}
           </p>
         </div>
@@ -245,18 +245,18 @@ export default function InteractiveEconomicChart({
               <div key={index} className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-3 h-3 rounded-full border-2 border-white shadow-sm"
+                    className="w-3 h-3 rounded-full border-2 border-theme-card shadow-sm"
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-theme-text-muted">
                     {series.name}
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm font-bold text-gray-900">
+                  <span className="text-sm font-bold text-theme-text">
                     {typeof item.value === 'number' ? item.value.toLocaleString() : item.value}
                   </span>
-                  <span className="text-xs text-gray-500 ml-1">
+                  <span className="text-xs text-theme-text-muted ml-1">
                     {series.unit}
                   </span>
                 </div>
@@ -266,8 +266,8 @@ export default function InteractiveEconomicChart({
         </div>
         
         {relevantData.length > 1 && (
-          <div className="mt-3 pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-1 text-xs text-gray-500">
+          <div className="mt-3 pt-2 border-t border-theme-border">
+            <div className="flex items-center gap-1 text-xs text-theme-text-muted">
               <Info className="w-3 h-3" />
               <span>Click series to focus • Double-click to isolate</span>
             </div>
@@ -282,9 +282,9 @@ export default function InteractiveEconomicChart({
     if (!isClient || filteredData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center space-y-3" style={{ height: '700px', minHeight: '700px', overflow: 'visible' }}>
-          <BarChart3 className="w-12 h-12 text-gray-300" />
-          <span className="text-gray-500 font-medium">No data available</span>
-          <span className="text-sm text-gray-400">Try adjusting your time range or series selection</span>
+          <BarChart3 className="w-12 h-12 text-theme-text-light" />
+          <span className="text-theme-text-muted font-medium">No data available</span>
+          <span className="text-sm text-theme-text-light">Try adjusting your time range or series selection</span>
         </div>
       );
     }
@@ -359,7 +359,7 @@ export default function InteractiveEconomicChart({
                     r: isFocused ? 6 : 4, 
                     stroke: series.color,
                     strokeWidth: 2,
-                    fill: 'white'
+                    fill: 'var(--theme-card)'
                   }}
                   strokeOpacity={baseOpacity}
                 />
@@ -380,7 +380,7 @@ export default function InteractiveEconomicChart({
                     r: isFocused ? 6 : 4, 
                     stroke: series.color, 
                     strokeWidth: 2, 
-                    fill: 'white',
+                    fill: 'var(--theme-card)',
                     filter: isFocused ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' : 'none'
                   }}
                   opacity={baseOpacity}
@@ -445,13 +445,13 @@ export default function InteractiveEconomicChart({
         
         {/* Chart Type Selection */}
         <div className="flex items-center gap-2">
-          <div className="flex bg-gray-50 border border-gray-200 rounded-lg p-1">
+          <div className="flex bg-theme-bg-tertiary border border-theme-border rounded-lg p-1">
             <button
               onClick={() => setChartType('line')}
               className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded transition-all ${
                 chartType === 'line'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-theme-card text-theme-primary shadow-sm'
+                  : 'text-theme-text-muted hover:text-theme-text'
               }`}
               title="Line Chart"
             >
@@ -462,8 +462,8 @@ export default function InteractiveEconomicChart({
               onClick={() => setChartType('area')}
               className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded transition-all ${
                 chartType === 'area'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-theme-card text-theme-primary shadow-sm'
+                  : 'text-theme-text-muted hover:text-theme-text'
               }`}
               title="Area Chart"
             >
@@ -474,8 +474,8 @@ export default function InteractiveEconomicChart({
               onClick={() => setChartType('composed')}
               className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded transition-all ${
                 chartType === 'composed'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-theme-card text-theme-primary shadow-sm'
+                  : 'text-theme-text-muted hover:text-theme-text'
               }`}
               title="Composed Chart"
             >
@@ -487,13 +487,13 @@ export default function InteractiveEconomicChart({
 
         {/* View Mode Selection */}
         <div className="flex items-center gap-2">
-          <div className="flex bg-gray-50 border border-gray-200 rounded-lg p-1">
+          <div className="flex bg-theme-bg-tertiary border border-theme-border rounded-lg p-1">
             <button
               onClick={() => setViewMode('overview')}
               className={`px-3 py-1.5 text-sm rounded transition-all ${
                 viewMode === 'overview'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-theme-card text-theme-primary shadow-sm'
+                  : 'text-theme-text-muted hover:text-theme-text'
               }`}
             >
               Overview
@@ -502,8 +502,8 @@ export default function InteractiveEconomicChart({
               onClick={() => setViewMode('focused')}
               className={`px-3 py-1.5 text-sm rounded transition-all ${
                 viewMode === 'focused'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-theme-card text-theme-primary shadow-sm'
+                  : 'text-theme-text-muted hover:text-theme-text'
               }`}
             >
               Focused
@@ -512,8 +512,8 @@ export default function InteractiveEconomicChart({
               onClick={() => setViewMode('comparison')}
               className={`px-3 py-1.5 text-sm rounded transition-all ${
                 viewMode === 'comparison'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-theme-card text-theme-primary shadow-sm'
+                  : 'text-theme-text-muted hover:text-theme-text'
               }`}
             >
               Compare
@@ -525,7 +525,7 @@ export default function InteractiveEconomicChart({
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={handleResetView}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-all"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm text-theme-text-muted hover:text-theme-text bg-theme-bg-tertiary hover:bg-gray-100 border border-theme-border rounded-lg transition-all"
             title="Reset View"
           >
             <RotateCcw className="w-4 h-4" />
@@ -533,10 +533,10 @@ export default function InteractiveEconomicChart({
           </button>
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className={`flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg transition-all ${
+            className={`flex items-center gap-1 px-3 py-1.5 text-sm border border-theme-border rounded-lg transition-all ${
               showSettings
                 ? 'bg-blue-50 text-blue-600 border-blue-200'
-                : 'text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100'
+                : 'text-theme-text-muted hover:text-theme-text bg-theme-bg-tertiary hover:bg-gray-100'
             }`}
             title="Chart Settings"
           >
@@ -549,9 +549,9 @@ export default function InteractiveEconomicChart({
       {/* Series Legend with Interactive Controls */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
-          <Focus className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Data Series</span>
-          <span className="text-xs text-gray-500">
+          <Focus className="w-4 h-4 text-theme-text-muted" />
+          <span className="text-sm font-medium text-theme-text-muted">Data Series</span>
+          <span className="text-xs text-theme-text-muted">
             ({displayedSeries.length} of {localSeriesConfig.length} visible)
           </span>
         </div>
@@ -559,13 +559,13 @@ export default function InteractiveEconomicChart({
         {/* Group by frequency */}
         <div className="space-y-3">
           {Object.entries(frequencyGroups).map(([frequency, seriesList]) => (
-            <div key={frequency} className="bg-gray-50 rounded-lg p-3">
+            <div key={frequency} className="bg-theme-bg-tertiary rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
                 <div 
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: FREQUENCY_COLORS[frequency as keyof typeof FREQUENCY_COLORS] }}
                 />
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                <span className="text-xs font-medium text-theme-text-muted uppercase tracking-wide">
                   {FREQUENCY_LABELS[frequency as keyof typeof FREQUENCY_LABELS]} Data
                 </span>
               </div>
@@ -578,8 +578,8 @@ export default function InteractiveEconomicChart({
                       series.visible
                         ? series.focused
                           ? 'bg-blue-50 border-blue-200 shadow-sm'
-                          : 'bg-white border-gray-200 hover:border-gray-300'
-                        : 'bg-gray-100 border-gray-200 opacity-60'
+                          : 'bg-theme-card border-theme-border hover:border-theme-border-hover'
+                        : 'bg-gray-100 border-theme-border opacity-60'
                     }`}
                     onClick={() => handleSeriesToggle(series.id)}
                     onDoubleClick={() => handleSeriesFocus(series.id)}
@@ -594,22 +594,22 @@ export default function InteractiveEconomicChart({
                         className="shrink-0"
                       >
                         {series.visible ? (
-                          <Eye className="w-4 h-4 text-gray-600" />
+                          <Eye className="w-4 h-4 text-theme-text-muted" />
                         ) : (
-                          <EyeOff className="w-4 h-4 text-gray-400" />
+                          <EyeOff className="w-4 h-4 text-theme-text-light" />
                         )}
                       </button>
                       
                       <div 
-                        className="w-3 h-3 rounded-full border border-white shadow-sm shrink-0"
+                        className="w-3 h-3 rounded-full border border-theme-card shadow-sm shrink-0"
                         style={{ backgroundColor: series.color }}
                       />
                       
                       <div className="min-w-0 flex-1">
-                        <span className="text-sm font-medium text-gray-900 truncate block">
+                        <span className="text-sm font-medium text-theme-text truncate block">
                           {series.name}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-theme-text-muted">
                           {series.unit}
                         </span>
                       </div>
@@ -641,15 +641,15 @@ export default function InteractiveEconomicChart({
         
         {/* Zoom Controls Overlay */}
         {zoomLevel !== 1 && (
-          <div className="absolute top-4 right-4 flex items-center gap-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg p-2">
+          <div className="absolute top-4 right-4 flex items-center gap-1 bg-theme-card backdrop-blur-sm border border-theme-border rounded-lg p-2">
             <button
               onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.25))}
               className="p-1 hover:bg-gray-100 rounded"
               title="Zoom Out"
             >
-              <ZoomOut className="w-4 h-4 text-gray-600" />
+              <ZoomOut className="w-4 h-4 text-theme-text-muted" />
             </button>
-            <span className="text-xs text-gray-600 px-2">
+            <span className="text-xs text-theme-text-muted px-2">
               {Math.round(zoomLevel * 100)}%
             </span>
             <button
@@ -657,14 +657,14 @@ export default function InteractiveEconomicChart({
               className="p-1 hover:bg-gray-100 rounded"
               title="Zoom In"
             >
-              <ZoomIn className="w-4 h-4 text-gray-600" />
+              <ZoomIn className="w-4 h-4 text-theme-text-muted" />
             </button>
           </div>
         )}
       </div>
 
       {/* Chart Footer */}
-      <div className="mt-4 text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
+      <div className="mt-4 text-xs text-theme-text-muted bg-theme-bg-tertiary rounded-lg p-3">
         <div className="flex flex-col sm:flex-row justify-between gap-2">
           <div>
             Interactive economic data from Federal Reserve Economic Data (FRED) • 
@@ -688,13 +688,13 @@ export default function InteractiveEconomicChart({
       {/* Settings Panel */}
       {showSettings && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-theme-card border border-theme-border rounded-xl shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Chart Settings</h3>
+                <h3 className="text-lg font-semibold text-theme-text">Chart Settings</h3>
                 <button
                   onClick={() => setShowSettings(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-theme-text-light hover:text-theme-text-muted"
                 >
                   ✕
                 </button>
@@ -702,7 +702,7 @@ export default function InteractiveEconomicChart({
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-theme-text-muted mb-2">
                     Multiple Y-Axes
                   </label>
                   <button
@@ -710,7 +710,7 @@ export default function InteractiveEconomicChart({
                     className={`w-full text-left p-3 rounded-lg border ${
                       allowMultipleYAxes
                         ? 'bg-blue-50 border-blue-200 text-blue-900'
-                        : 'bg-gray-50 border-gray-200 text-gray-700'
+                        : 'bg-theme-bg-tertiary border-theme-border text-theme-text-muted'
                     }`}
                   >
                     {allowMultipleYAxes ? 'Enabled' : 'Disabled'}
@@ -718,7 +718,7 @@ export default function InteractiveEconomicChart({
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-theme-text-muted mb-2">
                     Time Range Brush
                   </label>
                   <button
@@ -726,7 +726,7 @@ export default function InteractiveEconomicChart({
                     className={`w-full text-left p-3 rounded-lg border ${
                       showBrush
                         ? 'bg-blue-50 border-blue-200 text-blue-900'
-                        : 'bg-gray-50 border-gray-200 text-gray-700'
+                        : 'bg-theme-bg-tertiary border-theme-border text-theme-text-muted'
                     }`}
                   >
                     {showBrush ? 'Enabled' : 'Disabled'}

@@ -215,10 +215,10 @@ export default function EnhancedInteractiveHousingChart({
               <Home className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-theme-text">
                 {region} Housing Market Analysis
               </h2>
-              <p className="text-gray-600">
+              <p className="text-theme-text-muted">
                 Interactive visualization of housing market indicators
               </p>
             </div>
@@ -228,7 +228,7 @@ export default function EnhancedInteractiveHousingChart({
         <div className="flex items-center gap-2">
           <button
             onClick={handleRefresh}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border rounded-lg hover:bg-theme-card-hover transition-colors"
             title="Refresh Data"
           >
             <TrendingUp className="w-4 h-4" />
@@ -236,7 +236,7 @@ export default function EnhancedInteractiveHousingChart({
           </button>
           <button
             onClick={() => setShowExportModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border rounded-lg hover:bg-theme-card-hover transition-colors"
             title="Export Data"
           >
             <Download className="w-4 h-4" />
@@ -256,11 +256,11 @@ export default function EnhancedInteractiveHousingChart({
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="bg-theme-card border border-theme-border rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Case-Shiller Index <span className="text-xs text-gray-400">(CSUSHPINSA)</span></p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-theme-text-muted">Case-Shiller Index <span className="text-xs text-theme-text-light">(CSUSHPINSA)</span></p>
+                <p className="text-2xl font-bold text-theme-text">
                   {summary.currentPrice?.toFixed(1)}
                 </p>
               </div>
@@ -279,11 +279,11 @@ export default function EnhancedInteractiveHousingChart({
             </div>
           </div>
           
-          <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="bg-theme-card border border-theme-border rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Housing Starts <span className="text-xs text-gray-400">(HOUST)</span></p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-theme-text-muted">Housing Starts <span className="text-xs text-theme-text-light">(HOUST)</span></p>
+                <p className="text-2xl font-bold text-theme-text">
                   {summary.currentStarts?.toFixed(0)}K
                 </p>
               </div>
@@ -302,26 +302,26 @@ export default function EnhancedInteractiveHousingChart({
             </div>
           </div>
           
-          <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="bg-theme-card border border-theme-border rounded-xl p-4">
             <div>
-              <p className="text-sm text-gray-600">Months Supply <span className="text-xs text-gray-400">(MSACSR)</span></p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-theme-text-muted">Months Supply <span className="text-xs text-theme-text-light">(MSACSR)</span></p>
+              <p className="text-2xl font-bold text-theme-text">
                 {summary.currentSupply?.toFixed(1)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-theme-text-muted mt-1">
                 {summary.currentSupply && summary.currentSupply > 6 ? 'High' : 
                  summary.currentSupply && summary.currentSupply < 4 ? 'Low' : 'Balanced'}
               </p>
             </div>
           </div>
           
-          <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="bg-theme-card border border-theme-border rounded-xl p-4">
             <div>
-              <p className="text-sm text-gray-600">30-Year Mortgage</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-theme-text-muted">30-Year Mortgage</p>
+              <p className="text-2xl font-bold text-theme-text">
                 {summary.currentRate?.toFixed(2)}%
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-theme-text-muted mt-1">
                 Current average rate
               </p>
             </div>
@@ -334,17 +334,17 @@ export default function EnhancedInteractiveHousingChart({
         
         {/* Period Selection */}
         <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Time Period:</span>
-          <div className="flex bg-gray-50 border border-gray-200 rounded-lg p-1">
+          <Calendar className="w-4 h-4 text-theme-text-muted" />
+          <span className="text-sm font-medium text-theme-text">Time Period:</span>
+          <div className="flex bg-theme-card border border-theme-border rounded-lg p-1">
             {PERIOD_OPTIONS.map(period => (
               <button
                 key={period.value}
                 onClick={() => handlePeriodChange(period.value)}
                 className={`px-3 py-1.5 text-sm rounded transition-all ${
                   currentPeriod === period.value
-                    ? 'bg-white text-blue-600 shadow-sm font-medium'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-theme-card text-theme-primary shadow-sm font-medium'
+                    : 'text-theme-text-secondary hover:text-theme-text'
                 }`}
                 title={period.description}
               >
@@ -356,8 +356,8 @@ export default function EnhancedInteractiveHousingChart({
 
         {/* Quick Filters */}
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Quick Filters:</span>
+          <Filter className="w-4 h-4 text-theme-text-muted" />
+          <span className="text-sm font-medium text-theme-text">Quick Filters:</span>
           <div className="flex flex-wrap gap-2">
             {QUICK_FILTERS.map(filter => (
               <button
@@ -366,7 +366,7 @@ export default function EnhancedInteractiveHousingChart({
                 className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
                   selectedFilter === filter.id
                     ? 'bg-blue-50 text-blue-700 border-blue-200'
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                    : 'bg-theme-card text-theme-text-secondary border-theme-border hover:bg-theme-card-hover'
                 }`}
                 title={filter.description}
               >
@@ -379,15 +379,15 @@ export default function EnhancedInteractiveHousingChart({
         {/* Reset Button */}
         <button
           onClick={resetVisibility}
-          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors ml-auto"
+          className="flex items-center gap-2 px-4 py-2 text-sm text-theme-text-secondary bg-theme-card border border-theme-border rounded-lg hover:bg-theme-card-hover transition-colors ml-auto"
         >
           Reset View
         </button>
       </div>
 
       {/* Status Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-4 py-3 bg-gray-50 rounded-lg">
-        <div className="flex items-center gap-4 text-sm text-gray-600">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-4 py-3 bg-theme-card border border-theme-border rounded-lg">
+        <div className="flex items-center gap-4 text-sm text-theme-text-secondary">
           <span>
             <strong>{visibleSeries.length}</strong> of <strong>{seriesConfig.length}</strong> series visible
           </span>
@@ -399,7 +399,7 @@ export default function EnhancedInteractiveHousingChart({
         </div>
         
         {lastUpdated && (
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-theme-text-muted">
             Last updated: {formatDate(lastUpdated.toISOString(), 'short')}
           </div>
         )}
@@ -407,7 +407,7 @@ export default function EnhancedInteractiveHousingChart({
 
       {/* Interactive Chart */}
       <div 
-        className="bg-white border border-gray-200 rounded-xl" 
+        className="bg-theme-card border border-theme-border rounded-xl" 
         style={{ 
           minHeight: '800px', 
           height: 'auto',
@@ -431,7 +431,7 @@ export default function EnhancedInteractiveHousingChart({
       {/* Export Modal */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+          <div className="bg-theme-card border border-theme-border rounded-xl shadow-xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Export Data</h3>

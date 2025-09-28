@@ -54,7 +54,7 @@ export default function ProfessionalTopNav({
             <SignedIn>
               <button className="modern-nav-button relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-400 ring-2 ring-white animate-pulse"></span>
+                <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-400 ring-2 ring-theme-card animate-pulse"></span>
               </button>
             </SignedIn>
 
@@ -84,7 +84,7 @@ export default function ProfessionalTopNav({
                       afterSignOutUrl="/"
                       appearance={{
                         elements: {
-                          avatarBox: "w-10 h-10 rounded-full ring-2 ring-gray-200 hover:ring-theme-primary transition-all duration-200"
+                          avatarBox: "w-10 h-10 rounded-full ring-2 ring-theme-border hover:ring-theme-primary transition-all duration-200"
                         }
                       }}
                     />

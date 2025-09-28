@@ -640,10 +640,10 @@ export default function Dashboard() {
                   <div className={`p-2 rounded-lg ${selectedSignal.signal === 'Risk-On' ? 'bg-red-500/10' : 'bg-emerald-500/10'}`}>
                     {selectedSignal.signal === 'Risk-On' ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
                   </div>
-                  <h3 className="text-xl font-bold text-white">
+                  <h3 className="text-xl font-bold text-theme-text">
                     Alternative: {selectedSignal.signal === 'Risk-On' ? 'Risk-Off' : 'Risk-On'} Options
                   </h3>
-                  <div className="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs font-medium rounded-full">
+                  <div className="px-2 py-1 bg-theme-border/20 text-theme-text-muted text-xs font-medium rounded-full">
                     ALTERNATIVE
                   </div>
                 </div>
@@ -813,7 +813,7 @@ export default function Dashboard() {
 
         {/* Enhanced Consensus Panel */}
         {consensus && (
-          <ContentCard className="bg-gradient-to-br from-white to-gray-50">
+          <ContentCard className="consensus-gradient">
             <div className="text-center mb-8 sm:mb-12">
               {/* Header - mobile responsive */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
@@ -953,13 +953,13 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="w-7 h-7 sm:w-8 sm:h-8 bg-theme-primary rounded-full flex items-center justify-center flex-shrink-0">
-                    <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                    <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 text-theme-text" />
                   </div>
                 </div>
               </div>
 
               {/* Action button - mobile optimized */}
-              <button className="w-full bg-theme-text text-white py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold hover:bg-theme-text/90 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation min-h-[48px]">
+              <button className="w-full bg-theme-primary text-white py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold hover:bg-theme-primary-hover transition-colors flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation min-h-[48px]">
                 <span className="truncate">View ETF Recommendations</span>
                 <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               </button>
