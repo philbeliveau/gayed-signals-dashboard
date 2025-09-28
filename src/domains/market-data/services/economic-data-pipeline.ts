@@ -8,7 +8,7 @@
 import axios, { AxiosResponse } from 'axios';
 import { EconomicIndicator } from './housing-labor-processor';
 import { logger } from './production-logger';
-import { validateChartData, ValidationResult } from '../../src/utils/dataValidation';
+import { validateChartData, ValidationResult } from '@/utils/dataValidation';
 
 // Data source configuration
 export interface DataSourceConfig {

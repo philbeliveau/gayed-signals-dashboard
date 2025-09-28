@@ -14,7 +14,7 @@ import {
   Signal,
   TimeSeries
 } from '../types';
-import { SAFLAValidator, SafetyReport } from '../safety/safla-validator';
+import { SAFLAValidator, SafetyReport } from '@/domains/risk-management/utils/safla-validator';
 import { WalkForwardEngine } from './engines/walk-forward';
 import { MonteCarloEngine } from './engines/monte-carlo';
 import { CrossValidationEngine } from './engines/cross-validation';

@@ -5,7 +5,7 @@
 
 import { FactCheckOrchestrator, FactCheckOrchestrationConfig } from './base-architecture';
 import { ClaimExtractor } from './claim-extractor';
-import { RealDataEnforcer } from '../safety/real-data-enforcer';
+import { RealDataEnforcer } from '@/domains/risk-management/utils/real-data-enforcer';
 
 export class FastInitOrchestrator extends FactCheckOrchestrator {
   constructor(config: FactCheckOrchestrationConfig) {

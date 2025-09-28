@@ -7,7 +7,7 @@
  */
 
 import { ExtractedClaim, ClaimCategory } from '@/types/fact-check';
-import { RealDataEnforcer } from '../safety/real-data-enforcer';
+import { RealDataEnforcer } from '@/domains/risk-management/utils/real-data-enforcer';
 
 export interface ClaimExtractionOptions {
   maxClaims?: number;

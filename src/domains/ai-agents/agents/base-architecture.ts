@@ -17,7 +17,7 @@ import {
 } from '@/types/fact-check';
 import type { SourceEvidence } from '@/types/fact-check';
 import { ClaimExtractor, ClaimExtractionOptions } from './claim-extractor';
-import { RealDataEnforcer } from '../safety/real-data-enforcer';
+import { RealDataEnforcer } from '@/domains/risk-management/utils/real-data-enforcer';
 import { webSearchService, WebSearchResult } from '@/lib/fact-check/web-search-service';
 
 export interface FactCheckOrchestrationConfig {
