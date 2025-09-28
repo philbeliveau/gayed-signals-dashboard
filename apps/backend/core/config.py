@@ -2,7 +2,7 @@
 Configuration settings for the YouTube Video Insights API.
 """
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, ConfigDict
 from pydantic_settings import BaseSettings
 from typing import List, Optional, Union
 import os
@@ -15,13 +15,13 @@ class Settings(BaseSettings):
     # Database settings
     DATABASE_URL: str = Field(
         default="postgresql+asyncpg://user:password@localhost:5432/video_insights",
-        env="DATABASE_URL"
+        description="Database connection URL"
     )
-    
+
     # Redis settings for caching and Celery
     REDIS_URL: str = Field(
         default="redis://localhost:6379/0",
-        env="REDIS_URL"
+        description="Redis connection URL"
     )
     
     # Parsed Redis settings for individual components
@@ -47,17 +47,17 @@ class Settings(BaseSettings):
     # Authentication settings
     SECRET_KEY: str = Field(
         default="your-secret-key-change-in-production",
-        env="SECRET_KEY"
+        description="Secret key for JWT token generation"
     )
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
         default=30,
-        env="ACCESS_TOKEN_EXPIRE_MINUTES"
+        description="Access token expiration time in minutes"
     )
-    
+
     # CORS settings
     ALLOWED_ORIGINS: Union[List[str], str] = Field(
         default=["http://localhost:3000", "http://127.0.0.1:3000"],
-        env="ALLOWED_ORIGINS"
+        description="Allowed CORS origins"
     )
     
     @field_validator('ALLOWED_ORIGINS', 'CELERY_ACCEPT_CONTENT')
@@ -70,97 +70,97 @@ class Settings(BaseSettings):
     # API Keys
     OPENAI_API_KEY: Optional[str] = Field(
         default=None,
-        env="OPENAI_KEY"
+        description="OpenAI API key for LLM services"
+    )
+    OPENAI_ORG_ID: Optional[str] = Field(
+        default=None,
+        description="OpenAI organization ID"
     )
     ANTHROPIC_API_KEY: Optional[str] = Field(
         default=None,
-        env="ANTHROPIC_API_KEY"
+        description="Anthropic API key for Claude services"
     )
     FRED_API_KEY: Optional[str] = Field(
         default=None,
-        env="FRED_API_KEY",
         description="Federal Reserve Economic Data (FRED) API key"
     )
     TIINGO_API_KEY: Optional[str] = Field(
         default=None,
-        env="TIINGO_API_KEY",
         description="Tiingo financial data API key"
     )
     ALPHA_VANTAGE_KEY: Optional[str] = Field(
         default=None,
-        env="ALPHA_VANTAGE_KEY",
         description="Alpha Vantage financial data API key"
     )
     BUREAU_OF_STATISTIC_KEY: Optional[str] = Field(
         default=None,
-        env="BUREAU_OF_STATISTIC_KEY",
         description="Bureau of Labor Statistics API key"
     )
     
     # YouTube processing settings
     MAX_VIDEO_DURATION_MINUTES: int = Field(
         default=120,  # 2 hours max
-        env="MAX_VIDEO_DURATION_MINUTES"
+        description="Maximum video duration in minutes"
     )
     AUDIO_CHUNK_SIZE_MB: int = Field(
         default=20,
-        env="AUDIO_CHUNK_SIZE_MB"
+        description="Environment variable"
     )
     
     # File storage settings
     TEMP_DIR: str = Field(
         default="temp",
-        env="TEMP_DIR"
+        description="Environment variable"
     )
     
     # Celery worker settings
     CELERY_BROKER_URL: str = Field(
         default="redis://localhost:6379/1",
-        env="CELERY_BROKER_URL"
+        description="Environment variable"
     )
     CELERY_RESULT_BACKEND: str = Field(
         default="redis://localhost:6379/1",
-        env="CELERY_RESULT_BACKEND"
+        description="Environment variable"
     )
     
     # Enhanced Celery configuration
     CELERY_TASK_SERIALIZER: str = Field(
         default="json",
-        env="CELERY_TASK_SERIALIZER"
+        description="Environment variable"
     )
     CELERY_ACCEPT_CONTENT: Union[List[str], str] = Field(
         default=["json"],
-        env="CELERY_ACCEPT_CONTENT"
+        description="Environment variable"
     )
     CELERY_RESULT_SERIALIZER: str = Field(
         default="json",
-        env="CELERY_RESULT_SERIALIZER"
+        description="Environment variable"
     )
     CELERY_TIMEZONE: str = Field(
         default="UTC",
-        env="CELERY_TIMEZONE"
+        description="Environment variable"
     )
     CELERY_ENABLE_UTC: bool = Field(
         default=True,
-        env="CELERY_ENABLE_UTC"
+        description="Environment variable"
     )
     
     # Celery performance settings
     CELERY_WORKER_CONCURRENCY: int = Field(
         default=4,
-        env="CELERY_WORKER_CONCURRENCY"
+        description="Environment variable"
     )
     CELERY_WORKER_PREFETCH_MULTIPLIER: int = Field(
         default=1,
-        env="CELERY_WORKER_PREFETCH_MULTIPLIER"
+        description="Environment variable"
     )
     CELERY_TASK_SOFT_TIME_LIMIT: int = Field(
         default=1740,  # 29 minutes
-        env="CELERY_TASK_SOFT_TIME_LIMIT"
+        description="Environment variable"
     )
     CELERY_TASK_TIME_LIMIT: int = Field(
         default=1800,  # 30 minutes
-        env="CELERY_TASK_TIME_LIMIT"
+        description="Environment variable"
     )
     
     # Duplicate Celery configuration removed - using definitions above
@@ -168,77 +168,104 @@ class Settings(BaseSettings):
     # Performance settings
     MAX_CONCURRENT_DOWNLOADS: int = Field(
         default=3,
-        env="MAX_CONCURRENT_DOWNLOADS"
+        description="Environment variable"
     )
     MAX_CONCURRENT_TRANSCRIPTIONS: int = Field(
         default=5,
-        env="MAX_CONCURRENT_TRANSCRIPTIONS"
+        description="Environment variable"
     )
     
     # Worker performance settings (consolidated from duplicates)
     MAX_WORKERS: int = Field(
         default=4,
-        env="MAX_WORKERS"
+        description="Environment variable"
     )
     WORKER_TIMEOUT: int = Field(
         default=1800,  # 30 minutes (reduced from 1 hour for better resource management)
-        env="WORKER_TIMEOUT"
+        description="Environment variable"
     )
     
     # Database connection pool settings
     DB_POOL_SIZE: int = Field(
         default=20,
-        env="DB_POOL_SIZE"
+        description="Environment variable"
     )
     DB_MAX_OVERFLOW: int = Field(
         default=40,
-        env="DB_MAX_OVERFLOW"
+        description="Environment variable"
     )
     DB_POOL_TIMEOUT: int = Field(
         default=45,
-        env="DB_POOL_TIMEOUT"
+        description="Environment variable"
     )
     
     # Redis connection pool settings
     REDIS_POOL_SIZE: int = Field(
         default=100,
-        env="REDIS_POOL_SIZE"
+        description="Environment variable"
     )
     REDIS_POOL_TIMEOUT: int = Field(
         default=10,
-        env="REDIS_POOL_TIMEOUT"
+        description="Environment variable"
     )
     
     # Cache optimization settings
     CACHE_COMPRESSION_THRESHOLD: int = Field(
         default=1024,  # Compress data larger than 1KB
-        env="CACHE_COMPRESSION_THRESHOLD"
+        description="Environment variable"
     )
     CACHE_WARM_ON_STARTUP: bool = Field(
         default=True,
-        env="CACHE_WARM_ON_STARTUP"
+        description="Environment variable"
     )
     
     # Memory management settings
     MAX_MEMORY_USAGE_MB: int = Field(
         default=1024,  # 1GB
-        env="MAX_MEMORY_USAGE_MB"
+        description="Environment variable"
     )
     MEMORY_CHECK_INTERVAL: int = Field(
         default=5,
-        env="MEMORY_CHECK_INTERVAL"
+        description="Environment variable"
     )
     
+    # AutoGen Configuration
+    ENABLE_AUTOGEN_AGENTS: bool = Field(
+        default=True,
+        description="Environment variable"
+    )
+    ENABLE_WEBSOCKET_STREAMING: bool = Field(
+        default=True,
+        description="Environment variable"
+    )
+    AUTOGEN_MODEL: str = Field(
+        default="gpt-4",
+        description="Environment variable"
+    )
+    AUTOGEN_TEMPERATURE: float = Field(
+        default=0.1,
+        description="Environment variable"
+    )
+    AUTOGEN_MAX_TOKENS: int = Field(
+        default=500,
+        description="Environment variable"
+    )
+    AUTOGEN_TIMEOUT: int = Field(
+        default=30,
+        description="Environment variable"
+    )
+
     # Environment
     ENVIRONMENT: str = Field(
         default="development",
-        env="ENVIRONMENT"
+        description="Environment variable"
     )
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "allow"  # Allow extra environment variables
+    model_config = ConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="allow"  # Allow extra environment variables
+    )
     
     def get_database_url_sync(self) -> str:
         """Get synchronous database URL for non-async operations."""
@@ -248,6 +275,17 @@ class Settings(BaseSettings):
         """Get Redis URL for specific database number."""
         parsed = urlparse(self.REDIS_URL)
         return f"redis://{parsed.hostname}:{parsed.port or 6379}/{db_number}"
+
+    def get_autogen_config(self) -> dict:
+        """Get AutoGen configuration for agent initialization."""
+        return {
+            "model": self.AUTOGEN_MODEL,
+            "api_key": self.OPENAI_API_KEY,
+            "organization": self.OPENAI_ORG_ID,
+            "temperature": self.AUTOGEN_TEMPERATURE,
+            "max_tokens": self.AUTOGEN_MAX_TOKENS,
+            "timeout": self.AUTOGEN_TIMEOUT,
+        }
 
 
 # Global settings instance

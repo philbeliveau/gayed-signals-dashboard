@@ -17,7 +17,7 @@ from models.database import User, Video, Transcript, Summary, Folder
 from services.youtube_service import youtube_service
 from services.cache_service import CacheService
 from tasks.video_tasks import process_youtube_video, batch_process_playlist
-from pydantic import BaseModel, HttpUrl, Field
+from pydantic import BaseModel, HttpUrl, Field, ConfigDict
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -55,9 +55,8 @@ class VideoResponse(BaseModel):
     folder_id: Optional[UUID]
     has_transcript: bool = False
     has_summary: bool = False
-    
-    class Config:
-        from_attributes = True
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VideoDetailResponse(VideoResponse):

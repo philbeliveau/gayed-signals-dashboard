@@ -16,7 +16,7 @@ from core.database import get_db
 from core.security import get_current_user_optional
 from models.database import User, PromptTemplate
 from services.cache_service import CacheService
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -33,11 +33,12 @@ class PromptTemplateCreate(BaseModel):
     is_public: bool = Field(default=False, description="Whether this template can be used by other users")
     variables: List[str] = Field(default=[], description="List of variable names used in the template")
 
-    @validator('variables')
-    def validate_variables(cls, v, values):
+    @field_validator('variables')
+    @classmethod
+    def validate_variables(cls, v, info):
         """Validate that all variables in the list are actually used in the prompt."""
-        if 'prompt_text' in values:
-            prompt_text = values['prompt_text']
+        if info.data and 'prompt_text' in info.data:
+            prompt_text = info.data['prompt_text']
             # Find all variables in the prompt text (format: {variable_name})
             used_variables = re.findall(r'\{(\w+)\}', prompt_text)
             
@@ -76,9 +77,8 @@ class PromptTemplateResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     is_owner: bool = True
-    
-    class Config:
-        from_attributes = True
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PromptValidationRequest(BaseModel):

@@ -15,7 +15,7 @@ from core.database import get_db
 from core.security import get_current_user_optional
 from models.database import User, Folder, Video
 from services.cache_service import CacheService
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -46,9 +46,8 @@ class FolderResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     video_count: int = 0
-    
-    class Config:
-        from_attributes = True
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FolderWithVideos(FolderResponse):

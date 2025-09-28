@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional, Dict, Any, Union
 from uuid import UUID
 from datetime import datetime, timedelta
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import logging
 import asyncio
 from enum import Enum
@@ -74,7 +74,8 @@ class EconomicDataPoint(BaseModel):
     source: DataSource = Field(..., description="Data source")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
 
-    @validator('date')
+    @field_validator('date')
+    @classmethod
     def validate_date(cls, v):
         try:
             datetime.fromisoformat(v.replace('Z', '+00:00'))
@@ -91,7 +92,8 @@ class TimeSeriesQuery(BaseModel):
     frequency: Optional[DataFrequency] = Field(DataFrequency.WEEKLY, description="Data frequency")
     seasonally_adjusted: bool = Field(True, description="Whether to return seasonally adjusted data")
 
-    @validator('start_date', 'end_date')
+    @field_validator('start_date', 'end_date')
+    @classmethod
     def validate_dates(cls, v):
         if v is not None:
             try:
