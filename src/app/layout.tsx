@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from '@clerk/nextjs';
+import { ConditionalClerkProvider } from "../components/auth/ClerkWrapper";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { UserPreferencesProvider } from "../contexts/UserPreferencesContext";
 import ProfessionalLayout from "../components/layout/ProfessionalLayout";
@@ -36,11 +36,16 @@ export const viewport = {
   colorScheme: "light dark",
 };
 
+// Force dynamic rendering to avoid Clerk issues during build
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -54,17 +59,20 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased touch-manipulation`}
         suppressHydrationWarning
       >
-        <ClerkProvider
-          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-        >
+        <ConditionalClerkProvider publishableKey={clerkPublishableKey}>
           <ThemeProvider>
             <UserPreferencesProvider>
               <ProfessionalLayout>
+                {!clerkPublishableKey && (
+                  <div className="fixed top-4 left-4 right-4 z-50 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+                    <strong>Demo Mode:</strong> Authentication disabled - Clerk environment variables not configured
+                  </div>
+                )}
                 {children}
               </ProfessionalLayout>
             </UserPreferencesProvider>
           </ThemeProvider>
-        </ClerkProvider>
+        </ConditionalClerkProvider>
       </body>
     </html>
   );

@@ -3,8 +3,27 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { useAuthMode } from '@/lib/device-detection';
 
+// Force dynamic rendering to avoid build-time Clerk issues
+export const dynamic = 'force-dynamic';
+
 export default function TestSignIn() {
   const authMode = useAuthMode();
+
+  // Check if Clerk is available
+  const hasClerk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  if (!hasClerk) {
+    return (
+      <div className="min-h-screen bg-theme-bg text-theme-text p-4 sm:p-6">
+        <div className="max-w-md mx-auto mt-16 sm:mt-20 space-y-6 sm:space-y-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-center">Test Sign-In</h1>
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+            <strong>Demo Mode:</strong> Authentication is disabled. Configure Clerk environment variables to enable authentication.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-theme-bg text-theme-text p-4 sm:p-6">
