@@ -19,12 +19,17 @@ packages/**/node_modules/
 # next.js
 /.next/
 /out/
-# Monorepo specific
+# Monorepo specific - more comprehensive patterns
 apps/**/.next/
+apps/**/.next/**
 apps/**/out/
 apps/**/dist/
 packages/**/.next/
+packages/**/.next/**
 packages/**/dist/
+# Next.js build artifacts
+**/.next/
+**/.next/**
 # Python temp and compiled
 apps/**/temp/
 apps/**/__pycache__/
@@ -179,3 +184,14 @@ public
 
 .playwright-mcp
 /src/generated/prisma
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# QA and documentation (optional - comment out if you want to track these)
+# docs/qa/
+# *.gate.yml
+
+apps/web/.next
