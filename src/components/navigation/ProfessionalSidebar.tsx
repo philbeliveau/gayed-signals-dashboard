@@ -67,10 +67,10 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
       {/* Ultra Slim Sidebar - Always Collapsed */}
       <div className="flex flex-col w-[70px] h-full">
         {/* Trading Logo */}
-        <div className="flex items-center justify-center h-16 border-b border-gray-600/30">
+        <div className="flex items-center justify-center h-16 border-b border-theme-border/30">
           <div className="nav-item-container relative">
             <Link href="/" className="modern-nav-container w-12 h-12 flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-white" />
+              <BarChart3 className="w-6 h-6 text-theme-sidebar-text" />
             </Link>
             <div className="nav-tooltip">Trading Hub</div>
           </div>
@@ -100,7 +100,7 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
         </nav>
 
         {/* Bottom section for live data indicator */}
-        <div className="px-2 py-4 border-t border-gray-600/30">
+        <div className="px-2 py-4 border-t border-theme-border/30">
           <div className="nav-item-container relative flex justify-center">
             <div className="modern-nav-button">
               <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>

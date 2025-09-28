@@ -239,7 +239,7 @@ export default function FolderManager({ selectedFolder, onFolderSelect, classNam
             <button
               onClick={createFolder}
               disabled={!newFolderName.trim()}
-              className="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+              className="flex items-center space-x-1 px-3 py-1 bg-theme-primary text-white rounded text-sm hover:bg-theme-primary-hover disabled:bg-theme-text-muted transition-colors"
             >
               <Check className="w-3 h-3" />
               <span>Create</span>
@@ -252,7 +252,7 @@ export default function FolderManager({ selectedFolder, onFolderSelect, classNam
                 setNewFolderColor('#3B82F6');
                 setError(null);
               }}
-              className="flex items-center space-x-1 px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition-colors"
+              className="flex items-center space-x-1 px-3 py-1 bg-theme-text-muted text-white rounded text-sm hover:bg-theme-text-muted/80 transition-colors"
             >
               <X className="w-3 h-3" />
               <span>Cancel</span>
@@ -271,7 +271,7 @@ export default function FolderManager({ selectedFolder, onFolderSelect, classNam
         }`}
       >
         <div className="flex items-center space-x-2">
-          <Folder className="w-4 h-4 text-gray-500" />
+          <Folder className="w-4 h-4 text-theme-text-muted" />
           <span className="text-sm font-medium text-theme-text">Root</span>
         </div>
         <span className="text-xs text-theme-text-muted">

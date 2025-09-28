@@ -20,7 +20,7 @@ export default function ProfessionalLayout({
   showThemeToggle = true
 }: ProfessionalLayoutProps) {
   return (
-    <div className={`min-h-screen bg-white ${className}`}>
+    <div className={`min-h-screen bg-theme-bg ${className}`}>
       {/* Left Sidebar */}
       <ProfessionalSidebar />
 
@@ -30,7 +30,7 @@ export default function ProfessionalLayout({
         <ProfessionalTopNav showThemeToggle={showThemeToggle} />
 
         {/* Page Content */}
-        <main className="p-6 bg-gray-50 min-h-screen">
+        <main className="p-6 bg-theme-bg-tertiary min-h-screen">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
@@ -61,13 +61,13 @@ export function ContentCard({
   return (
     <div
       className={`
-        bg-white rounded-theme shadow-theme-card border border-gray-100
+        bg-theme-card rounded-theme shadow-theme-card border border-theme-border
         ${hoverable ? 'hover:shadow-theme-card-hover transition-all duration-200 cursor-pointer' : ''}
         ${className}
       `}
     >
       {(title || subtitle) && (
-        <div className="px-6 py-4 border-b border-gray-100">
+        <div className="px-6 py-4 border-b border-theme-border">
           {title && (
             <h3 className="text-lg font-semibold text-theme-text">{title}</h3>
           )}

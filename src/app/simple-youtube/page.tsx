@@ -177,7 +177,7 @@ For example: 'Focus on investment strategies mentioned' or 'Summarize the key fi
               <button
                 type="submit"
                 disabled={processing || !url.trim()}
-                className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500
+                className="w-full sm:w-auto px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover disabled:bg-theme-text-muted
                          text-white rounded-lg transition-colors flex items-center justify-center space-x-2
                          touch-manipulation min-h-[44px]"
               >

@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
+import UnifiedLoader from '../ui/UnifiedLoader';
 
 interface ChartWrapperProps {
   children: ReactNode;
@@ -39,9 +40,8 @@ export default function ChartWrapper({
   if (loading) {
     return (
       <div className={`chart-loading ${className}`} style={{ height, minHeight: height }}>
-        <div className="flex flex-col items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary mb-2"></div>
-          <div className="text-theme-text-muted text-sm">Loading chart...</div>
+        <div className="flex items-center justify-center h-full">
+          <UnifiedLoader message="Loading chart..." size="md" />
         </div>
       </div>
     );
@@ -62,9 +62,8 @@ export default function ChartWrapper({
   if (!mounted) {
     return (
       <div className={`chart-loading ${className}`} style={{ height, minHeight: height }}>
-        <div className="flex flex-col items-center justify-center h-full">
-          <div className="animate-pulse bg-theme-bg-secondary h-8 w-32 rounded mb-2"></div>
-          <div className="text-theme-text-muted text-sm">Initializing chart...</div>
+        <div className="flex items-center justify-center h-full">
+          <UnifiedLoader message="Initializing chart..." size="md" />
         </div>
       </div>
     );

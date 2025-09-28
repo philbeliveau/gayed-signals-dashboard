@@ -5,6 +5,7 @@ import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, Ac
 import Link from 'next/link';
 import { useTheme } from '../contexts/ThemeContext';
 import { PageHeader, ContentCard, CardGrid, StatsCard } from '../components/layout/ProfessionalLayout';
+import UnifiedLoader from '../components/ui/UnifiedLoader';
 // import AgentDebateView from '../components/AgentDebateView';
 
 interface Signal {
@@ -723,9 +724,12 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center">
         <div className="text-center bg-theme-card border border-theme-border rounded-2xl p-12 shadow-xl max-w-md mx-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-theme-border border-t-theme-primary mx-auto mb-6"></div>
-          <div className="text-xl font-bold text-theme-text mb-2">Loading market signals...</div>
-          <div className="text-theme-text-muted">Analyzing market regime data</div>
+          <UnifiedLoader
+            message="Loading market signals..."
+            size="lg"
+            className="mb-4"
+          />
+          <div className="text-theme-text-muted text-sm">Analyzing market regime data</div>
         </div>
       </div>
     );
