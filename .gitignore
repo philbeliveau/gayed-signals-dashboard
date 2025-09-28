@@ -3,6 +3,9 @@
 # dependencies
 /node_modules
 /.pnp
+# Monorepo node_modules
+apps/**/node_modules/
+packages/**/node_modules/
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -16,6 +19,16 @@
 # next.js
 /.next/
 /out/
+# Monorepo specific
+apps/**/.next/
+apps/**/out/
+apps/**/dist/
+packages/**/.next/
+packages/**/dist/
+# Python temp and compiled
+apps/**/temp/
+apps/**/__pycache__/
+apps/**/*.pyc
 
 # production
 /build
