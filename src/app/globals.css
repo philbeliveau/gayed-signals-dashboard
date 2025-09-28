@@ -2,33 +2,41 @@
 
 /* Light Theme Variables */
 :root.light {
-  /* Background Colors */
-  --theme-bg: #f4f6f8;
-  --theme-bg-secondary: #fefefe;
-  --theme-bg-tertiary: #f1f5f9;
+  /* Background Colors - Updated to match reference design */
+  --theme-bg: #FFFFFF;
+  --theme-bg-secondary: #FFFFFF;
+  --theme-bg-tertiary: #F8FAFC;
+
+  /* Sidebar Colors - Dark theme for left navigation */
+  --theme-sidebar-bg: #2D3748;
+  --theme-sidebar-text: #E2E8F0;
+  --theme-sidebar-text-muted: #A0AEC0;
+  --theme-sidebar-active: #3182CE;
   
-  /* Card Colors */
-  --theme-card: #fefefe;
-  --theme-card-hover: #f9fafb;
-  --theme-card-secondary: #f8fafc;
+  /* Card Colors - Pure white with professional shadows */
+  --theme-card: #FFFFFF;
+  --theme-card-hover: #FFFFFF;
+  --theme-card-secondary: #FFFFFF;
+  --theme-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --theme-card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   
   /* Border Colors */
   --theme-border: #e2e8f0;
   --theme-border-hover: #cbd5e1;
   --theme-border-focus: #3b82f6;
   
-  /* Text Colors */
-  --theme-text: #1f2937;
-  --theme-text-secondary: #4b5563;
-  --theme-text-muted: #6b7280;
-  --theme-text-light: #9ca3af;
+  /* Text Colors - Updated for better contrast */
+  --theme-text: #1A202C;
+  --theme-text-secondary: #4A5568;
+  --theme-text-muted: #718096;
+  --theme-text-light: #A0AEC0;
   
-  /* Primary Professional Colors */
-  --theme-primary: #3b82f6;
-  --theme-primary-hover: #2563eb;
-  --theme-primary-light: #60a5fa;
-  --theme-primary-bg: #eff6ff;
-  --theme-primary-border: #93c5fd;
+  /* Primary Professional Colors - Updated to match reference blue */
+  --theme-primary: #3182CE;
+  --theme-primary-hover: #2B6CB0;
+  --theme-primary-light: #4299E1;
+  --theme-primary-bg: #EBF8FF;
+  --theme-primary-border: #90CDF4;
   
   /* Accent Colors */
   --theme-accent: #3b82f6;
@@ -92,12 +100,12 @@
   --theme-text-muted: #a5a5a5;
   --theme-text-light: #8a8a8a;
   
-  /* Primary Professional Colors */
-  --theme-primary: #3b82f6;
-  --theme-primary-hover: #2563eb;
-  --theme-primary-light: #60a5fa;
-  --theme-primary-bg: #eff6ff;
-  --theme-primary-border: #93c5fd;
+  /* Primary Professional Colors - Updated to match reference blue */
+  --theme-primary: #3182CE;
+  --theme-primary-hover: #2B6CB0;
+  --theme-primary-light: #4299E1;
+  --theme-primary-bg: #EBF8FF;
+  --theme-primary-border: #90CDF4;
   
   /* Accent Colors */
   --theme-accent: #3b82f6;
@@ -140,22 +148,28 @@
 
 /* Default to light theme matching reference design */
 :root {
-  --theme-bg: #f4f6f8;
-  --theme-bg-secondary: #fefefe;
-  --theme-bg-tertiary: #f1f5f9;
-  --theme-card: #fefefe;
-  --theme-card-hover: #f9fafb;
-  --theme-card-secondary: #f8fafc;
+  --theme-bg: #FFFFFF;
+  --theme-bg-secondary: #FFFFFF;
+  --theme-bg-tertiary: #F8FAFC;
+  --theme-card: #FFFFFF;
+  --theme-card-hover: #FFFFFF;
+  --theme-card-secondary: #FFFFFF;
+  --theme-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --theme-card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --theme-sidebar-bg: #2D3748;
+  --theme-sidebar-text: #E2E8F0;
+  --theme-sidebar-text-muted: #A0AEC0;
+  --theme-sidebar-active: #3182CE;
   --theme-border: #e2e8f0;
   --theme-border-hover: #cbd5e1;
   --theme-border-focus: #3b82f6;
-  --theme-text: #1f2937;
-  --theme-text-secondary: #4b5563;
-  --theme-text-muted: #6b7280;
-  --theme-text-light: #9ca3af;
-  --theme-primary: #3b82f6;
-  --theme-primary-hover: #2563eb;
-  --theme-primary-light: #60a5fa;
+  --theme-text: #1A202C;
+  --theme-text-secondary: #4A5568;
+  --theme-text-muted: #718096;
+  --theme-text-light: #A0AEC0;
+  --theme-primary: #3182CE;
+  --theme-primary-hover: #2B6CB0;
+  --theme-primary-light: #4299E1;
   --theme-primary-bg: #eff6ff;
   --theme-primary-border: #93c5fd;
   --theme-accent: #3b82f6;
@@ -1037,6 +1051,20 @@ main {
 .bg-theme-risk-on-bg { background-color: var(--theme-risk-on-bg) !important; }
 .bg-theme-risk-off-bg { background-color: var(--theme-risk-off-bg) !important; }
 .bg-theme-neutral-bg { background-color: var(--theme-neutral-bg) !important; }
+
+/* Professional Layout Utilities */
+.bg-theme-sidebar { background-color: var(--theme-sidebar-bg) !important; }
+.text-theme-sidebar { color: var(--theme-sidebar-text) !important; }
+.text-theme-sidebar-muted { color: var(--theme-sidebar-text-muted) !important; }
+.bg-theme-sidebar-active { background-color: var(--theme-sidebar-active) !important; }
+
+/* Professional Card Shadows */
+.shadow-theme-card { box-shadow: var(--theme-card-shadow) !important; }
+.shadow-theme-card-hover { box-shadow: var(--theme-card-shadow-hover) !important; }
+
+/* Professional Border Radius */
+.rounded-theme { border-radius: 12px !important; }
+.rounded-theme-sm { border-radius: 8px !important; }
 
 /* Landscape Mobile Optimizations */
 @media (max-width: 768px) and (orientation: landscape) {

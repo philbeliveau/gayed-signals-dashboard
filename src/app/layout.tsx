@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { UserPreferencesProvider } from "../contexts/UserPreferencesContext";
-import AuthNavigation from "../components/navigation/AuthNavigation";
+import ProfessionalLayout from "../components/layout/ProfessionalLayout";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -54,15 +54,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased touch-manipulation`}
         suppressHydrationWarning
       >
-        <ClerkProvider 
+        <ClerkProvider
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
         >
           <ThemeProvider>
             <UserPreferencesProvider>
-              <AuthNavigation />
-              <main>
+              <ProfessionalLayout>
                 {children}
-              </main>
+              </ProfessionalLayout>
             </UserPreferencesProvider>
           </ThemeProvider>
         </ClerkProvider>
