@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 import { Search, Bell, ChevronDown } from 'lucide-react';
 import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { useAuthMode } from '@/lib/device-detection';
+import { getNavigationRoutes } from '@/lib/navigation';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import ThemeToggle from '../ThemeToggle';
 
 interface ProfessionalTopNavProps {
@@ -22,7 +25,19 @@ export default function ProfessionalTopNav({
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const authMode = useAuthMode();
+  const pathname = usePathname();
   const [searchValue, setSearchValue] = useState('');
+
+  // Get navigation routes (same as sidebar)
+  const isAdmin = false; // Can be enhanced with Clerk metadata
+  const navigationRoutes = getNavigationRoutes(isSignedIn || false, isAdmin);
+
+  // Check if route is active
+  const isActiveRoute = (routePath: string) => {
+    if (routePath === '/' && pathname === '/') return true;
+    if (routePath !== '/' && pathname.startsWith(routePath)) return true;
+    return false;
+  };
 
   return (
     <header className={`modern-topnav relative md:sticky top-0 z-40 ${className}`}>
@@ -40,7 +55,7 @@ export default function ProfessionalTopNav({
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 className="
-                  modern-search block w-full pl-10 md:pl-12 pr-3 md:pr-4 py-2 md:py-3 text-theme-text placeholder-gray-500
+                  modern-search mobile-search-input block w-full pl-10 md:pl-12 pr-3 md:pr-4 py-2 md:py-3 text-theme-text placeholder-gray-500
                   focus:outline-none text-sm md:text-base
                 "
               />
@@ -58,9 +73,9 @@ export default function ProfessionalTopNav({
               </button>
             </SignedIn>
 
-            {/* Theme Toggle */}
+            {/* Theme Toggle - Desktop only (mobile has it in bottom nav) */}
             {showThemeToggle && (
-              <div className="hidden sm:block">
+              <div className="hidden md:flex">
                 <ThemeToggle />
               </div>
             )}

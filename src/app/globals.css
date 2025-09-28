@@ -798,34 +798,133 @@ main {
   overflow: visible !important;
 }
 
-/* Responsive chart containers */
+/* Mobile Chart Optimizations */
+.mobile-chart-wrapper {
+  /* Ensure proper touch scrolling on mobile charts */
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* Mobile-specific chart adjustments */
 @media (max-width: 768px) {
   .chart-container {
-    min-height: 500px !important;
+    min-height: 300px !important;
+    padding: 0.5rem;
   }
-  
+
   .chart-responsive-wrapper {
-    min-height: 500px !important;
+    min-height: 300px !important;
   }
-  
+
   .recharts-responsive-container {
-    height: 400px !important;
-    min-height: 400px !important;
+    min-height: 300px !important;
+  }
+
+  /* Optimize chart text for mobile */
+  .recharts-cartesian-axis-tick-value {
+    font-size: 10px !important;
+  }
+
+  /* Improve legend spacing on mobile */
+  .recharts-legend-wrapper {
+    padding-top: 0.5rem !important;
+  }
+
+  /* Make tooltips more mobile-friendly */
+  .recharts-tooltip-wrapper {
+    pointer-events: none;
   }
 }
 
 @media (max-width: 640px) {
   .chart-container {
-    min-height: 400px !important;
+    min-height: 250px !important;
+    padding: 0.25rem;
   }
-  
+
   .chart-responsive-wrapper {
-    min-height: 400px !important;
+    min-height: 250px !important;
   }
-  
+
   .recharts-responsive-container {
-    height: 350px !important;
-    min-height: 350px !important;
+    min-height: 250px !important;
+  }
+
+  /* Ultra-compact mobile view */
+  .recharts-cartesian-axis-tick-value {
+    font-size: 9px !important;
+  }
+
+  /* Hide legends on very small screens */
+  .recharts-legend-wrapper {
+    display: none !important;
+  }
+
+  /* Ensure touch targets are adequate */
+  .recharts-dot {
+    r: 4 !important;
+  }
+
+  .recharts-active-dot {
+    r: 6 !important;
+  }
+}
+
+/* Chart Loading Optimizations for Mobile */
+@media (max-width: 640px) {
+  .chart-loading {
+    min-height: 250px !important;
+    padding: 1rem;
+  }
+
+  .chart-error {
+    min-height: 250px !important;
+    padding: 1rem;
+  }
+
+  .chart-loading .animate-spin {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+}
+
+/* Mobile Chart Container Scroll Indicators */
+.mobile-chart-wrapper::-webkit-scrollbar {
+  height: 4px;
+}
+
+.mobile-chart-wrapper::-webkit-scrollbar-track {
+  background: var(--theme-bg-secondary);
+  border-radius: 2px;
+}
+
+.mobile-chart-wrapper::-webkit-scrollbar-thumb {
+  background: var(--theme-border);
+  border-radius: 2px;
+}
+
+.mobile-chart-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-text-muted);
+}
+
+/* Touch-friendly chart interactions */
+@media (max-width: 640px) {
+  .chart-container {
+    /* Prevent zoom on double-tap */
+    touch-action: pan-x pan-y;
+  }
+
+  /* Larger touch targets for mobile */
+  .recharts-reference-dot circle,
+  .recharts-dot {
+    cursor: pointer;
+    stroke-width: 2;
+  }
+
+  /* Improve tooltip positioning for mobile */
+  .recharts-tooltip-wrapper {
+    z-index: 1000;
   }
 }
 
@@ -884,6 +983,9 @@ main {
   min-height: 44px;
   min-width: 44px;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Touch feedback animations */
@@ -1643,9 +1745,72 @@ main {
   .cl-modalContent {
     color-scheme: dark;
   }
-  
+
   /* Fix dark mode input styling on mobile */
   .cl-formFieldInput {
     color-scheme: dark !important;
   }
+}
+
+/* =================================================================
+ * MOBILE BOTTOM NAVIGATION ENHANCEMENTS
+ * =================================================================*/
+
+/* Bottom navigation spacing for safe areas */
+.safe-bottom-nav {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Mobile bottom navigation styling */
+.mobile-bottom-nav {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+:root.dark .mobile-bottom-nav {
+  background: rgba(26, 26, 26, 0.95);
+}
+
+/* Mobile bottom navigation improvements */
+@media (max-width: 768px) {
+  /* Bottom navigation accessibility */
+  .mobile-bottom-nav-item {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: all 0.2s ease;
+    min-height: 64px; /* Thumb-friendly size */
+    min-width: 64px;
+  }
+
+  .mobile-bottom-nav-item:active {
+    transform: scale(0.95);
+  }
+
+  /* Better mobile search input */
+  .mobile-search-input {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 12px 16px;
+    border-radius: 12px;
+  }
+
+  /* Bottom navigation icon animations */
+  .bottom-nav-icon {
+    transition: transform 0.2s ease;
+  }
+
+  .bottom-nav-icon.active {
+    transform: scale(1.1);
+  }
+
+  /* Haptic feedback simulation */
+  .bottom-nav-haptic:active {
+    animation: haptic-pulse 0.15s ease-out;
+  }
+}
+
+@keyframes haptic-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
 }

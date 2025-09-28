@@ -210,31 +210,31 @@ export default function VixDefensiveSignal({
   const vixInterpretation = currentSignal ? getVixInterpretation(currentSignal.vixLevel) : null;
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-xl p-6 ${className}`}>
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-red-100 text-red-600 rounded-lg">
-            <Shield className="w-6 h-6" />
+    <div className={`bg-white border border-gray-200 rounded-xl p-3 sm:p-6 ${className}`}>
+      {/* Header - mobile optimized */}
+      <div className="flex flex-col sm:flex-row items-start justify-between mb-4 sm:mb-6 gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <div className="p-1.5 sm:p-2 bg-red-100 text-red-600 rounded-lg flex-shrink-0">
+            <Shield className="w-4 h-4 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
               VIX Defensive Signal
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600 leading-tight">
               Counter-intuitive VIX interpretation for market timing
             </p>
           </div>
         </div>
-        
+
         {currentSignal && (
-          <div className="text-right">
-            <div 
+          <div className="text-left sm:text-right flex-shrink-0">
+            <div
               className="flex items-center gap-2 text-sm font-medium mb-1"
               style={{ color: SIGNAL_COLORS[currentSignal.signal] }}
             >
               {getSignalIcon(currentSignal.signal)}
-              {currentSignal.signal}
+              <span className="truncate">{currentSignal.signal}</span>
             </div>
             <div className="text-xs text-gray-500">
               {Math.round(currentSignal.confidence * 100)}% confidence
@@ -243,23 +243,23 @@ export default function VixDefensiveSignal({
         )}
       </div>
 
-      {/* Current Status */}
+      {/* Current Status - mobile optimized */}
       {currentSignal && vixInterpretation && (
-        <div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
           <div className="text-center">
-            <div className="text-lg font-semibold text-gray-900">
+            <div className="text-sm sm:text-lg font-semibold text-gray-900">
               {currentSignal.vixLevel.toFixed(2)}
             </div>
             <div className="text-xs text-gray-600">Current VIX</div>
           </div>
           <div className="text-center">
-            <div className={`text-lg font-semibold ${vixInterpretation.color}`}>
+            <div className={`text-sm sm:text-lg font-semibold ${vixInterpretation.color}`}>
               {vixInterpretation.level}
             </div>
             <div className="text-xs text-gray-600">VIX Level</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-semibold text-gray-900">
+            <div className="text-sm sm:text-lg font-semibold text-gray-900">
               {currentSignal.strength}
             </div>
             <div className="text-xs text-gray-600">Signal Strength</div>

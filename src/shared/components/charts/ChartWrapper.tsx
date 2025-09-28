@@ -71,34 +71,34 @@ export default function ChartWrapper({
   }
 
   return (
-    <div className={`bg-theme-card border border-theme-border rounded-xl p-6 ${className}`} style={{ overflow: 'visible' }}>
-      {/* Header */}
+    <div className={`bg-theme-card border border-theme-border rounded-xl p-3 sm:p-6 ${className}`} style={{ overflow: 'visible' }}>
+      {/* Header - mobile optimized */}
       {(title || description) && (
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           {title && (
-            <h3 className="text-lg font-semibold text-theme-text mb-1">{title}</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-theme-text mb-1">{title}</h3>
           )}
           {description && (
-            <p className="text-sm text-theme-text-muted">{description}</p>
+            <p className="text-xs sm:text-sm text-theme-text-muted">{description}</p>
           )}
         </div>
       )}
-      
-      {/* Chart Container */}
-      <div 
+
+      {/* Chart Container - mobile responsive heights */}
+      <div
         className="chart-container relative"
-        style={{ 
-          height: 'auto', 
-          minHeight: '800px', 
+        style={{
+          height: 'auto',
+          minHeight: '300px', // Mobile: 300px
           width: '100%',
           overflow: 'visible'
         }}
       >
-        <div 
-          className="chart-responsive-wrapper h-full w-full" 
-          style={{ 
-            height: 'auto', 
-            minHeight: '800px',
+        <div
+          className="chart-responsive-wrapper h-full w-full mobile-chart-wrapper"
+          style={{
+            height: 'auto',
+            minHeight: '300px', // Mobile: 300px
             overflow: 'visible'
           }}
         >

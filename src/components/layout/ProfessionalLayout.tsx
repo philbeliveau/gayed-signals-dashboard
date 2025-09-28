@@ -3,6 +3,7 @@
 import React from 'react';
 import ProfessionalSidebar from '../navigation/ProfessionalSidebar';
 import ProfessionalTopNav from '../navigation/ProfessionalTopNav';
+import MobileBottomNav from '../navigation/MobileBottomNav';
 
 interface ProfessionalLayoutProps {
   children: React.ReactNode;
@@ -24,18 +25,21 @@ export default function ProfessionalLayout({
       {/* Left Sidebar */}
       <ProfessionalSidebar />
 
-      {/* Main Content Area - Fixed for mobile */}
-      <div className="pl-0 md:pl-[70px]">
+      {/* Main Content Area - No padding on mobile, desktop padding for sidebar */}
+      <div className="md:pl-[70px]">
         {/* Top Navigation */}
         <ProfessionalTopNav showThemeToggle={showThemeToggle} />
 
-        {/* Page Content - Mobile optimized */}
-        <main className="p-3 md:p-6 bg-theme-bg-tertiary min-h-screen">
+        {/* Page Content - Mobile optimized with bottom nav spacing */}
+        <main className="p-3 md:p-6 bg-theme-bg-tertiary min-h-screen pb-20 md:pb-6">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }
