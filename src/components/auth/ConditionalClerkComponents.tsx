@@ -3,12 +3,14 @@
 import React from 'react';
 
 // Check if we're in a Clerk environment
-const hasClerk = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const hasClerkEnv = typeof process !== 'undefined' &&
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== 'your-clerk-publishable-key-here';
 
 // Import Clerk components conditionally
 let ClerkComponents: any = {};
 
-if (hasClerk) {
+if (hasClerkEnv) {
   try {
     // Use dynamic import for better handling
     const {
@@ -56,27 +58,31 @@ const MockUserButton = ({ afterSignOutUrl, appearance }: any) => (
 
 // Export the appropriate components based on environment with error handling
 export const useAuth = () => {
-  if (ClerkComponents.useAuth) {
-    try {
-      return ClerkComponents.useAuth();
-    } catch (error) {
-      console.warn('Clerk useAuth error, falling back to mock:', error);
-      return MockAuthHook();
-    }
+  // Always use mock during SSR or if Clerk isn't properly initialized
+  if (typeof window === 'undefined' || !hasClerkEnv || !ClerkComponents.useAuth) {
+    return MockAuthHook();
   }
-  return MockAuthHook();
+
+  try {
+    return ClerkComponents.useAuth();
+  } catch (error) {
+    console.warn('Clerk useAuth error, falling back to mock:', error);
+    return MockAuthHook();
+  }
 };
 
 export const useUser = () => {
-  if (ClerkComponents.useUser) {
-    try {
-      return ClerkComponents.useUser();
-    } catch (error) {
-      console.warn('Clerk useUser error, falling back to mock:', error);
-      return MockUserHook();
-    }
+  // Always use mock during SSR or if Clerk isn't properly initialized
+  if (typeof window === 'undefined' || !hasClerkEnv || !ClerkComponents.useUser) {
+    return MockUserHook();
   }
-  return MockUserHook();
+
+  try {
+    return ClerkComponents.useUser();
+  } catch (error) {
+    console.warn('Clerk useUser error, falling back to mock:', error);
+    return MockUserHook();
+  }
 };
 
 export const SignedIn = ClerkComponents.SignedIn || MockSignedIn;
