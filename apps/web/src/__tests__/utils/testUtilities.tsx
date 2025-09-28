@@ -178,12 +178,12 @@ export const submitForm = async (buttonText = /submit|login|register/i) => {
 }
 
 // Custom assertions
-export const expectAuthState = (expectedState: Partial<MockAuthState>) => {
+export const useExpectAuthState = (expectedState: Partial<MockAuthState>) => {
   const context = React.useContext(MockAuthContext)
   if (!context) {
     throw new Error('MockAuthContext not found')
   }
-  
+
   Object.entries(expectedState).forEach(([key, value]) => {
     expect(context[key as keyof MockAuthState]).toEqual(value)
   })
