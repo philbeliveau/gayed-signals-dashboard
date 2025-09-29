@@ -284,6 +284,13 @@ class Settings(BaseSettings):
 
     def get_autogen_config(self) -> dict:
         """Get AutoGen configuration for agent initialization."""
+        # Validate API key exists and is properly formatted (SEC-001 fix)
+        if not self.OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY is required for AutoGen functionality")
+
+        if not self.OPENAI_API_KEY.startswith(("sk-", "sk-proj-")):
+            raise ValueError("OPENAI_API_KEY must be a valid OpenAI API key format")
+
         return {
             "model": self.AUTOGEN_MODEL,
             "api_key": self.OPENAI_API_KEY,
@@ -292,6 +299,71 @@ class Settings(BaseSettings):
             "max_tokens": self.AUTOGEN_MAX_TOKENS,
             "timeout": self.AUTOGEN_TIMEOUT,
         }
+
+    def mask_sensitive_data(self, data: dict) -> dict:
+        """
+        Mask sensitive information for logging/responses (SEC-001 fix).
+
+        Args:
+            data: Dictionary potentially containing sensitive information
+
+        Returns:
+            Dictionary with sensitive fields masked
+        """
+        if not data:
+            return {}
+
+        masked_data = data.copy()
+        sensitive_fields = [
+            'api_key', 'openai_api_key', 'anthropic_api_key',
+            'fred_api_key', 'tiingo_api_key', 'alpha_vantage_key',
+            'secret_key', 'password', 'token', 'bearer'
+        ]
+
+        for key, value in masked_data.items():
+            if any(sensitive in key.lower() for sensitive in sensitive_fields):
+                if isinstance(value, str) and len(value) > 4:
+                    masked_data[key] = f"{value[:4]}***MASKED***"
+                else:
+                    masked_data[key] = "***MASKED***"
+
+        return masked_data
+
+    def validate_api_keys(self) -> dict:
+        """
+        Validate that required API keys are present and properly formatted (SEC-001 fix).
+
+        Returns:
+            Dictionary with validation results
+        """
+        validation_results = {
+            "openai_api_key": {
+                "present": bool(self.OPENAI_API_KEY),
+                "valid_format": bool(self.OPENAI_API_KEY and self.OPENAI_API_KEY.startswith(("sk-", "sk-proj-"))),
+                "masked_value": f"{self.OPENAI_API_KEY[:4]}***" if self.OPENAI_API_KEY else None
+            },
+            "fred_api_key": {
+                "present": bool(self.FRED_API_KEY),
+                "valid_format": bool(self.FRED_API_KEY and len(self.FRED_API_KEY) >= 20),
+                "masked_value": f"{self.FRED_API_KEY[:4]}***" if self.FRED_API_KEY else None
+            },
+            "tiingo_api_key": {
+                "present": bool(self.TIINGO_API_KEY),
+                "valid_format": bool(self.TIINGO_API_KEY and len(self.TIINGO_API_KEY) >= 20),
+                "masked_value": f"{self.TIINGO_API_KEY[:4]}***" if self.TIINGO_API_KEY else None
+            }
+        }
+
+        # Add overall validation status
+        validation_results["overall_status"] = {
+            "critical_keys_present": validation_results["openai_api_key"]["present"],
+            "all_keys_valid_format": all(
+                result["valid_format"] for result in validation_results.values()
+                if isinstance(result, dict) and "valid_format" in result and result["present"]
+            )
+        }
+
+        return validation_results
 
 
 # Global settings instance

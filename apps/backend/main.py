@@ -21,7 +21,7 @@ from sqlalchemy import text
 
 from core.config import settings
 from core.database import engine, create_db_and_tables
-from api.routes import videos, folders, prompts, economic_data, simple_youtube, autogen_agents
+from api.routes import videos, folders, prompts, economic_data, simple_youtube, autogen_agents, conversations
 from models.database import Base
 
 # Configure logging
@@ -87,6 +87,12 @@ app.include_router(
     autogen_agents.router,
     prefix="/api/v1/autogen",
     tags=["autogen-agents"]
+)
+
+app.include_router(
+    conversations.router,
+    prefix="/api/v1",
+    tags=["autogen-conversations"]
 )
 
 

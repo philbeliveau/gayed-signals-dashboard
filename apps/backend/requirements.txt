@@ -26,9 +26,9 @@ PyJWT==2.8.0
 celery==5.3.4
 redis==5.0.8
 
-# AutoGen Stack
-autogen-agentchat==0.2.36
-autogen-ext[openai]==latest
+# AutoGen Stack - Pinned versions for compatibility (TECH-001 fix)
+autogen-agentchat>=0.2.36,<0.3.0
+autogen-ext[openai]>=0.2.0,<0.3.0
 
 # YouTube and media processing
 yt-dlp>=2025.06.30
