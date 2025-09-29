@@ -94,73 +94,45 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
-  clerkUserId: 'clerkUserId',
+  clerkId: 'clerkId',
   email: 'email',
   firstName: 'firstName',
   lastName: 'lastName',
-  imageUrl: 'imageUrl',
-  isActive: 'isActive',
-  preferences: 'preferences',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  lastLoginAt: 'lastLoginAt'
+  updatedAt: 'updatedAt'
 };
 
-exports.Prisma.AgentSessionScalarFieldEnum = {
+exports.Prisma.ConversationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  sessionTitle: 'sessionTitle',
   contentType: 'contentType',
-  contentSource: 'contentSource',
+  contentTitle: 'contentTitle',
+  contentContent: 'contentContent',
   contentUrl: 'contentUrl',
-  contentText: 'contentText',
+  contentAuthor: 'contentAuthor',
+  contentPublishedAt: 'contentPublishedAt',
+  contentMetadata: 'contentMetadata',
   status: 'status',
-  startedAt: 'startedAt',
+  consensusReached: 'consensusReached',
+  finalRecommendation: 'finalRecommendation',
+  confidenceScore: 'confidenceScore',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
   completedAt: 'completedAt',
   metadata: 'metadata'
 };
 
 exports.Prisma.AgentMessageScalarFieldEnum = {
   id: 'id',
-  sessionId: 'sessionId',
+  conversationId: 'conversationId',
   agentType: 'agentType',
-  messageContent: 'messageContent',
+  agentName: 'agentName',
+  content: 'content',
+  confidenceLevel: 'confidenceLevel',
   messageOrder: 'messageOrder',
+  citedSources: 'citedSources',
+  signalReferences: 'signalReferences',
   timestamp: 'timestamp',
-  confidence: 'confidence',
-  sources: 'sources',
-  metadata: 'metadata'
-};
-
-exports.Prisma.ConversationExportScalarFieldEnum = {
-  id: 'id',
-  sessionId: 'sessionId',
-  userId: 'userId',
-  exportFormat: 'exportFormat',
-  exportedAt: 'exportedAt',
-  filePath: 'filePath',
-  downloadUrl: 'downloadUrl',
-  expiresAt: 'expiresAt'
-};
-
-exports.Prisma.SignalCacheScalarFieldEnum = {
-  id: 'id',
-  signalType: 'signalType',
-  signalValue: 'signalValue',
-  confidence: 'confidence',
-  timestamp: 'timestamp',
-  expiresAt: 'expiresAt',
-  metadata: 'metadata',
-  source: 'source'
-};
-
-exports.Prisma.UserSubscriptionScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  subscriptionType: 'subscriptionType',
-  status: 'status',
-  startDate: 'startDate',
-  endDate: 'endDate',
   metadata: 'metadata'
 };
 
@@ -169,8 +141,7 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
-exports.Prisma.NullableJsonNullValueInput = {
-  DbNull: Prisma.DbNull,
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -179,55 +150,22 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
 };
 
-exports.Prisma.NullsOrder = {
-  first: 'first',
-  last: 'last'
-};
-exports.ContentType = exports.$Enums.ContentType = {
-  SUBSTACK_ARTICLE: 'SUBSTACK_ARTICLE',
-  YOUTUBE_VIDEO: 'YOUTUBE_VIDEO',
-  DIRECT_TEXT: 'DIRECT_TEXT',
-  RESEARCH_REPORT: 'RESEARCH_REPORT',
-  MARKET_COMMENTARY: 'MARKET_COMMENTARY'
-};
-
-exports.SessionStatus = exports.$Enums.SessionStatus = {
-  INITIALIZED: 'INITIALIZED',
-  PROCESSING: 'PROCESSING',
-  AGENT_DEBATE: 'AGENT_DEBATE',
-  COMPLETED: 'COMPLETED',
-  FAILED: 'FAILED',
-  CANCELLED: 'CANCELLED'
-};
-
-exports.AgentType = exports.$Enums.AgentType = {
-  FINANCIAL_ANALYST: 'FINANCIAL_ANALYST',
-  MARKET_CONTEXT: 'MARKET_CONTEXT',
-  RISK_CHALLENGER: 'RISK_CHALLENGER',
-  SYSTEM_ORCHESTRATOR: 'SYSTEM_ORCHESTRATOR'
-};
-
-exports.ExportFormat = exports.$Enums.ExportFormat = {
-  PDF: 'PDF',
-  JSON: 'JSON',
-  MARKDOWN: 'MARKDOWN',
-  HTML: 'HTML',
-  CSV: 'CSV'
-};
 
 exports.Prisma.ModelName = {
   User: 'User',
-  AgentSession: 'AgentSession',
-  AgentMessage: 'AgentMessage',
-  ConversationExport: 'ConversationExport',
-  SignalCache: 'SignalCache',
-  UserSubscription: 'UserSubscription'
+  Conversation: 'Conversation',
+  AgentMessage: 'AgentMessage'
 };
 /**
  * Create the Client
@@ -240,7 +178,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/src/generated/prisma",
+      "value": "/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/apps/web/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -254,7 +192,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/prisma/schema.prisma",
+    "sourceFilePath": "/Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/apps/web/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -277,13 +215,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// UUID-Safe User Management (prevents Clerk ID conversion bugs)\nmodel User {\n  id          String    @id @default(dbgenerated(\"gen_random_uuid()\")) @db.Uuid\n  clerkUserId String    @unique @map(\"clerk_user_id\")\n  email       String    @unique\n  firstName   String?   @map(\"first_name\")\n  lastName    String?   @map(\"last_name\")\n  imageUrl    String?   @map(\"image_url\")\n  isActive    Boolean   @default(true) @map(\"is_active\")\n  preferences Json?\n  createdAt   DateTime  @default(now()) @map(\"created_at\")\n  updatedAt   DateTime  @updatedAt @map(\"updated_at\")\n  lastLoginAt DateTime? @map(\"last_login_at\")\n\n  // Relations\n  agentSessions       AgentSession[]\n  conversationExports ConversationExport[]\n  userSubscriptions   UserSubscription[]\n\n  @@map(\"users\")\n}\n\n// Agent Conversation Management\nmodel AgentSession {\n  id            String        @id @default(dbgenerated(\"gen_random_uuid()\")) @db.Uuid\n  userId        String?       @map(\"user_id\") @db.Uuid\n  sessionTitle  String        @map(\"session_title\")\n  contentType   ContentType   @map(\"content_type\")\n  contentSource String        @map(\"content_source\")\n  contentUrl    String?       @map(\"content_url\")\n  contentText   String        @map(\"content_text\")\n  status        SessionStatus @default(INITIALIZED)\n  startedAt     DateTime      @default(now()) @map(\"started_at\")\n  completedAt   DateTime?     @map(\"completed_at\")\n  metadata      Json?\n\n  // Relations\n  user     User?                @relation(fields: [userId], references: [id], onDelete: SetNull)\n  messages AgentMessage[]\n  exports  ConversationExport[]\n\n  @@map(\"agent_sessions\")\n}\n\n// Individual agent messages in conversations\nmodel AgentMessage {\n  id             String    @id @default(dbgenerated(\"gen_random_uuid()\")) @db.Uuid\n  sessionId      String    @map(\"session_id\") @db.Uuid\n  agentType      AgentType @map(\"agent_type\")\n  messageContent String    @map(\"message_content\")\n  messageOrder   Int       @map(\"message_order\")\n  timestamp      DateTime  @default(now())\n  confidence     Float?\n  sources        Json?\n  metadata       Json?\n\n  // Relations\n  session AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)\n\n  @@index([sessionId, messageOrder])\n  @@map(\"agent_messages\")\n}\n\n// Export tracking for conversations\nmodel ConversationExport {\n  id           String       @id @default(dbgenerated(\"gen_random_uuid()\")) @db.Uuid\n  sessionId    String       @map(\"session_id\") @db.Uuid\n  userId       String?      @map(\"user_id\") @db.Uuid\n  exportFormat ExportFormat @map(\"export_format\")\n  exportedAt   DateTime     @default(now()) @map(\"exported_at\")\n  filePath     String?      @map(\"file_path\")\n  downloadUrl  String?      @map(\"download_url\")\n  expiresAt    DateTime?    @map(\"expires_at\")\n\n  // Relations\n  session AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)\n  user    User?        @relation(fields: [userId], references: [id], onDelete: SetNull)\n\n  @@map(\"conversation_exports\")\n}\n\n// Market signal cache for agent context\nmodel SignalCache {\n  id          String   @id @default(dbgenerated(\"gen_random_uuid()\")) @db.Uuid\n  signalType  String   @map(\"signal_type\")\n  signalValue Float    @map(\"signal_value\")\n  confidence  Float    @default(0.5)\n  timestamp   DateTime @default(now())\n  expiresAt   DateTime @map(\"expires_at\")\n  metadata    Json?\n  source      String?\n\n  @@index([signalType, timestamp])\n  @@index([expiresAt])\n  @@map(\"signal_cache\")\n}\n\n// User subscription management\nmodel UserSubscription {\n  id               String    @id @default(dbgenerated(\"gen_random_uuid()\")) @db.Uuid\n  userId           String    @map(\"user_id\") @db.Uuid\n  subscriptionType String    @map(\"subscription_type\")\n  status           String    @default(\"active\")\n  startDate        DateTime  @default(now()) @map(\"start_date\")\n  endDate          DateTime? @map(\"end_date\")\n  metadata         Json?\n\n  // Relations\n  user User @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@map(\"user_subscriptions\")\n}\n\n// Enums\nenum ContentType {\n  SUBSTACK_ARTICLE\n  YOUTUBE_VIDEO\n  DIRECT_TEXT\n  RESEARCH_REPORT\n  MARKET_COMMENTARY\n}\n\nenum SessionStatus {\n  INITIALIZED\n  PROCESSING\n  AGENT_DEBATE\n  COMPLETED\n  FAILED\n  CANCELLED\n}\n\nenum AgentType {\n  FINANCIAL_ANALYST\n  MARKET_CONTEXT\n  RISK_CHALLENGER\n  SYSTEM_ORCHESTRATOR\n}\n\nenum ExportFormat {\n  PDF\n  JSON\n  MARKDOWN\n  HTML\n  CSV\n}\n",
-  "inlineSchemaHash": "fb8df0e872054ec4d0a37dbc61f6fda9168c919a7c77c153072e4fcb0597c7c5",
+  "inlineSchema": "// Prisma schema for AutoGen Financial Intelligence Demo\n// Maps to conversation_models.py Pydantic models\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// User management integrated with Clerk authentication\nmodel User {\n  id        String   @id @default(cuid())\n  clerkId   String   @unique\n  email     String?\n  firstName String?\n  lastName  String?\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  // Relationships\n  conversations Conversation[]\n\n  @@map(\"users\")\n}\n\n// Core conversation session - maps to ConversationSession Pydantic model\nmodel Conversation {\n  id     String @id @default(cuid())\n  userId String\n  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  // Content source information - maps to ContentSource Pydantic model\n  contentType        String // ContentSourceType enum: \"text\", \"substack_article\", \"youtube_video\", etc.\n  contentTitle       String    @db.VarChar(500)\n  contentContent     String    @db.Text // Main content text\n  contentUrl         String?\n  contentAuthor      String?   @db.VarChar(200)\n  contentPublishedAt DateTime?\n  contentMetadata    Json      @default(\"{}\")\n\n  // Conversation state - maps to ConversationStatus enum\n  status              String  @default(\"initialized\") // \"initialized\", \"running\", \"paused\", \"completed\", \"error\", \"cancelled\"\n  consensusReached    Boolean @default(false)\n  finalRecommendation String? @db.Text\n  confidenceScore     Float?  @db.Real\n\n  // Timing\n  createdAt   DateTime  @default(now())\n  updatedAt   DateTime  @updatedAt\n  completedAt DateTime?\n\n  // Metadata for additional conversation data\n  metadata Json @default(\"{}\")\n\n  // Relationships\n  messages AgentMessage[]\n\n  // Performance indexes for common query patterns\n  @@index([userId, createdAt])\n  @@index([status, createdAt])\n  @@index([contentType, createdAt])\n  @@map(\"conversations\")\n}\n\n// Individual agent messages within conversations - maps to AgentMessage Pydantic model\nmodel AgentMessage {\n  id             String       @id @default(cuid())\n  conversationId String\n  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)\n\n  // Agent information - maps to AgentType enum\n  agentType String // \"financial_analyst\", \"market_context\", \"risk_challenger\"\n  agentName String @db.VarChar(100)\n\n  // Message content\n  content         String @db.Text\n  confidenceLevel Float? @db.Real\n  messageOrder    Int\n\n  // References and sources - arrays for financial analysis citations\n  citedSources     String[] @default([])\n  signalReferences String[] @default([])\n\n  // Timing\n  timestamp DateTime @default(now())\n\n  // Metadata for additional message data\n  metadata Json @default(\"{}\")\n\n  // Performance indexes for conversation retrieval and agent analysis\n  @@index([conversationId, messageOrder])\n  @@index([agentType, timestamp])\n  @@index([timestamp])\n  @@map(\"agent_messages\")\n}\n",
+  "inlineSchemaHash": "2a0de03606453a3744370c09c8b1402606e560e7b2644f163bed98c6aec6f120",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clerkUserId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"clerk_user_id\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstName\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"first_name\"},{\"name\":\"lastName\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"last_name\"},{\"name\":\"imageUrl\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"image_url\"},{\"name\":\"isActive\",\"kind\":\"scalar\",\"type\":\"Boolean\",\"dbName\":\"is_active\"},{\"name\":\"preferences\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"created_at\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"updated_at\"},{\"name\":\"lastLoginAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"last_login_at\"},{\"name\":\"agentSessions\",\"kind\":\"object\",\"type\":\"AgentSession\",\"relationName\":\"AgentSessionToUser\"},{\"name\":\"conversationExports\",\"kind\":\"object\",\"type\":\"ConversationExport\",\"relationName\":\"ConversationExportToUser\"},{\"name\":\"userSubscriptions\",\"kind\":\"object\",\"type\":\"UserSubscription\",\"relationName\":\"UserToUserSubscription\"}],\"dbName\":\"users\"},\"AgentSession\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"user_id\"},{\"name\":\"sessionTitle\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"session_title\"},{\"name\":\"contentType\",\"kind\":\"enum\",\"type\":\"ContentType\",\"dbName\":\"content_type\"},{\"name\":\"contentSource\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"content_source\"},{\"name\":\"contentUrl\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"content_url\"},{\"name\":\"contentText\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"content_text\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"SessionStatus\"},{\"name\":\"startedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"started_at\"},{\"name\":\"completedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"completed_at\"},{\"name\":\"metadata\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"AgentSessionToUser\"},{\"name\":\"messages\",\"kind\":\"object\",\"type\":\"AgentMessage\",\"relationName\":\"AgentMessageToAgentSession\"},{\"name\":\"exports\",\"kind\":\"object\",\"type\":\"ConversationExport\",\"relationName\":\"AgentSessionToConversationExport\"}],\"dbName\":\"agent_sessions\"},\"AgentMessage\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sessionId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"session_id\"},{\"name\":\"agentType\",\"kind\":\"enum\",\"type\":\"AgentType\",\"dbName\":\"agent_type\"},{\"name\":\"messageContent\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"message_content\"},{\"name\":\"messageOrder\",\"kind\":\"scalar\",\"type\":\"Int\",\"dbName\":\"message_order\"},{\"name\":\"timestamp\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"confidence\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"sources\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"metadata\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"session\",\"kind\":\"object\",\"type\":\"AgentSession\",\"relationName\":\"AgentMessageToAgentSession\"}],\"dbName\":\"agent_messages\"},\"ConversationExport\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sessionId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"session_id\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"user_id\"},{\"name\":\"exportFormat\",\"kind\":\"enum\",\"type\":\"ExportFormat\",\"dbName\":\"export_format\"},{\"name\":\"exportedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"exported_at\"},{\"name\":\"filePath\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"file_path\"},{\"name\":\"downloadUrl\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"download_url\"},{\"name\":\"expiresAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"expires_at\"},{\"name\":\"session\",\"kind\":\"object\",\"type\":\"AgentSession\",\"relationName\":\"AgentSessionToConversationExport\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ConversationExportToUser\"}],\"dbName\":\"conversation_exports\"},\"SignalCache\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"signalType\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"signal_type\"},{\"name\":\"signalValue\",\"kind\":\"scalar\",\"type\":\"Float\",\"dbName\":\"signal_value\"},{\"name\":\"confidence\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"timestamp\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"expiresAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"expires_at\"},{\"name\":\"metadata\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"source\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":\"signal_cache\"},\"UserSubscription\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"user_id\"},{\"name\":\"subscriptionType\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"subscription_type\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"startDate\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"start_date\"},{\"name\":\"endDate\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"end_date\"},{\"name\":\"metadata\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToUserSubscription\"}],\"dbName\":\"user_subscriptions\"}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clerkId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"conversations\",\"kind\":\"object\",\"type\":\"Conversation\",\"relationName\":\"ConversationToUser\"}],\"dbName\":\"users\"},\"Conversation\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ConversationToUser\"},{\"name\":\"contentType\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contentTitle\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contentContent\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contentUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contentAuthor\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contentPublishedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"contentMetadata\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"consensusReached\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"finalRecommendation\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"confidenceScore\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"completedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"metadata\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"messages\",\"kind\":\"object\",\"type\":\"AgentMessage\",\"relationName\":\"AgentMessageToConversation\"}],\"dbName\":\"conversations\"},\"AgentMessage\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"conversationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"conversation\",\"kind\":\"object\",\"type\":\"Conversation\",\"relationName\":\"AgentMessageToConversation\"},{\"name\":\"agentType\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"agentName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"confidenceLevel\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"messageOrder\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"citedSources\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"signalReferences\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"timestamp\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"metadata\",\"kind\":\"scalar\",\"type\":\"Json\"}],\"dbName\":\"agent_messages\"}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

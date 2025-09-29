@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema for AutoGen Financial Intelligence Demo
+// Maps to conversation_models.py Pydantic models
 
 generator client {
   provider = "prisma-client-js"
@@ -14,148 +11,89 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// UUID-Safe User Management (prevents Clerk ID conversion bugs)
+// User management integrated with Clerk authentication
 model User {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clerkUserId String    @unique @map("clerk_user_id")
-  email       String    @unique
-  firstName   String?   @map("first_name")
-  lastName    String?   @map("last_name")
-  imageUrl    String?   @map("image_url")
-  isActive    Boolean   @default(true) @map("is_active")
-  preferences Json?
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  lastLoginAt DateTime? @map("last_login_at")
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String?
+  firstName String?
+  lastName  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relations
-  agentSessions       AgentSession[]
-  conversationExports ConversationExport[]
-  userSubscriptions   UserSubscription[]
+  // Relationships
+  conversations Conversation[]
 
   @@map("users")
 }
 
-// Agent Conversation Management
-model AgentSession {
-  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId        String?       @map("user_id") @db.Uuid
-  sessionTitle  String        @map("session_title")
-  contentType   ContentType   @map("content_type")
-  contentSource String        @map("content_source")
-  contentUrl    String?       @map("content_url")
-  contentText   String        @map("content_text")
-  status        SessionStatus @default(INITIALIZED)
-  startedAt     DateTime      @default(now()) @map("started_at")
-  completedAt   DateTime?     @map("completed_at")
-  metadata      Json?
+// Core conversation session - maps to ConversationSession Pydantic model
+model Conversation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Relations
-  user     User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // Content source information - maps to ContentSource Pydantic model
+  contentType        String // ContentSourceType enum: "text", "substack_article", "youtube_video", etc.
+  contentTitle       String    @db.VarChar(500)
+  contentContent     String    @db.Text // Main content text
+  contentUrl         String?
+  contentAuthor      String?   @db.VarChar(200)
+  contentPublishedAt DateTime?
+  contentMetadata    Json      @default("{}")
+
+  // Conversation state - maps to ConversationStatus enum
+  status              String  @default("initialized") // "initialized", "running", "paused", "completed", "error", "cancelled"
+  consensusReached    Boolean @default(false)
+  finalRecommendation String? @db.Text
+  confidenceScore     Float?  @db.Real
+
+  // Timing
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  // Metadata for additional conversation data
+  metadata Json @default("{}")
+
+  // Relationships
   messages AgentMessage[]
-  exports  ConversationExport[]
 
-  @@map("agent_sessions")
+  // Performance indexes for common query patterns
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([contentType, createdAt])
+  @@map("conversations")
 }
 
-// Individual agent messages in conversations
+// Individual agent messages within conversations - maps to AgentMessage Pydantic model
 model AgentMessage {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sessionId      String    @map("session_id") @db.Uuid
-  agentType      AgentType @map("agent_type")
-  messageContent String    @map("message_content")
-  messageOrder   Int       @map("message_order")
-  timestamp      DateTime  @default(now())
-  confidence     Float?
-  sources        Json?
-  metadata       Json?
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  // Relations
-  session AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  // Agent information - maps to AgentType enum
+  agentType String // "financial_analyst", "market_context", "risk_challenger"
+  agentName String @db.VarChar(100)
 
-  @@index([sessionId, messageOrder])
+  // Message content
+  content         String @db.Text
+  confidenceLevel Float? @db.Real
+  messageOrder    Int
+
+  // References and sources - arrays for financial analysis citations
+  citedSources     String[] @default([])
+  signalReferences String[] @default([])
+
+  // Timing
+  timestamp DateTime @default(now())
+
+  // Metadata for additional message data
+  metadata Json @default("{}")
+
+  // Performance indexes for conversation retrieval and agent analysis
+  @@index([conversationId, messageOrder])
+  @@index([agentType, timestamp])
+  @@index([timestamp])
   @@map("agent_messages")
-}
-
-// Export tracking for conversations
-model ConversationExport {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sessionId    String       @map("session_id") @db.Uuid
-  userId       String?      @map("user_id") @db.Uuid
-  exportFormat ExportFormat @map("export_format")
-  exportedAt   DateTime     @default(now()) @map("exported_at")
-  filePath     String?      @map("file_path")
-  downloadUrl  String?      @map("download_url")
-  expiresAt    DateTime?    @map("expires_at")
-
-  // Relations
-  session AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  user    User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@map("conversation_exports")
-}
-
-// Market signal cache for agent context
-model SignalCache {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  signalType  String   @map("signal_type")
-  signalValue Float    @map("signal_value")
-  confidence  Float    @default(0.5)
-  timestamp   DateTime @default(now())
-  expiresAt   DateTime @map("expires_at")
-  metadata    Json?
-  source      String?
-
-  @@index([signalType, timestamp])
-  @@index([expiresAt])
-  @@map("signal_cache")
-}
-
-// User subscription management
-model UserSubscription {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId           String    @map("user_id") @db.Uuid
-  subscriptionType String    @map("subscription_type")
-  status           String    @default("active")
-  startDate        DateTime  @default(now()) @map("start_date")
-  endDate          DateTime? @map("end_date")
-  metadata         Json?
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("user_subscriptions")
-}
-
-// Enums
-enum ContentType {
-  SUBSTACK_ARTICLE
-  YOUTUBE_VIDEO
-  DIRECT_TEXT
-  RESEARCH_REPORT
-  MARKET_COMMENTARY
-}
-
-enum SessionStatus {
-  INITIALIZED
-  PROCESSING
-  AGENT_DEBATE
-  COMPLETED
-  FAILED
-  CANCELLED
-}
-
-enum AgentType {
-  FINANCIAL_ANALYST
-  MARKET_CONTEXT
-  RISK_CHALLENGER
-  SYSTEM_ORCHESTRATOR
-}
-
-enum ExportFormat {
-  PDF
-  JSON
-  MARKDOWN
-  HTML
-  CSV
 }

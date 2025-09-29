@@ -122,73 +122,45 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
-  clerkUserId: 'clerkUserId',
+  clerkId: 'clerkId',
   email: 'email',
   firstName: 'firstName',
   lastName: 'lastName',
-  imageUrl: 'imageUrl',
-  isActive: 'isActive',
-  preferences: 'preferences',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  lastLoginAt: 'lastLoginAt'
+  updatedAt: 'updatedAt'
 };
 
-exports.Prisma.AgentSessionScalarFieldEnum = {
+exports.Prisma.ConversationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  sessionTitle: 'sessionTitle',
   contentType: 'contentType',
-  contentSource: 'contentSource',
+  contentTitle: 'contentTitle',
+  contentContent: 'contentContent',
   contentUrl: 'contentUrl',
-  contentText: 'contentText',
+  contentAuthor: 'contentAuthor',
+  contentPublishedAt: 'contentPublishedAt',
+  contentMetadata: 'contentMetadata',
   status: 'status',
-  startedAt: 'startedAt',
+  consensusReached: 'consensusReached',
+  finalRecommendation: 'finalRecommendation',
+  confidenceScore: 'confidenceScore',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
   completedAt: 'completedAt',
   metadata: 'metadata'
 };
 
 exports.Prisma.AgentMessageScalarFieldEnum = {
   id: 'id',
-  sessionId: 'sessionId',
+  conversationId: 'conversationId',
   agentType: 'agentType',
-  messageContent: 'messageContent',
+  agentName: 'agentName',
+  content: 'content',
+  confidenceLevel: 'confidenceLevel',
   messageOrder: 'messageOrder',
+  citedSources: 'citedSources',
+  signalReferences: 'signalReferences',
   timestamp: 'timestamp',
-  confidence: 'confidence',
-  sources: 'sources',
-  metadata: 'metadata'
-};
-
-exports.Prisma.ConversationExportScalarFieldEnum = {
-  id: 'id',
-  sessionId: 'sessionId',
-  userId: 'userId',
-  exportFormat: 'exportFormat',
-  exportedAt: 'exportedAt',
-  filePath: 'filePath',
-  downloadUrl: 'downloadUrl',
-  expiresAt: 'expiresAt'
-};
-
-exports.Prisma.SignalCacheScalarFieldEnum = {
-  id: 'id',
-  signalType: 'signalType',
-  signalValue: 'signalValue',
-  confidence: 'confidence',
-  timestamp: 'timestamp',
-  expiresAt: 'expiresAt',
-  metadata: 'metadata',
-  source: 'source'
-};
-
-exports.Prisma.UserSubscriptionScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  subscriptionType: 'subscriptionType',
-  status: 'status',
-  startDate: 'startDate',
-  endDate: 'endDate',
   metadata: 'metadata'
 };
 
@@ -197,8 +169,7 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
-exports.Prisma.NullableJsonNullValueInput = {
-  DbNull: Prisma.DbNull,
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -207,55 +178,22 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
 };
 
-exports.Prisma.NullsOrder = {
-  first: 'first',
-  last: 'last'
-};
-exports.ContentType = exports.$Enums.ContentType = {
-  SUBSTACK_ARTICLE: 'SUBSTACK_ARTICLE',
-  YOUTUBE_VIDEO: 'YOUTUBE_VIDEO',
-  DIRECT_TEXT: 'DIRECT_TEXT',
-  RESEARCH_REPORT: 'RESEARCH_REPORT',
-  MARKET_COMMENTARY: 'MARKET_COMMENTARY'
-};
-
-exports.SessionStatus = exports.$Enums.SessionStatus = {
-  INITIALIZED: 'INITIALIZED',
-  PROCESSING: 'PROCESSING',
-  AGENT_DEBATE: 'AGENT_DEBATE',
-  COMPLETED: 'COMPLETED',
-  FAILED: 'FAILED',
-  CANCELLED: 'CANCELLED'
-};
-
-exports.AgentType = exports.$Enums.AgentType = {
-  FINANCIAL_ANALYST: 'FINANCIAL_ANALYST',
-  MARKET_CONTEXT: 'MARKET_CONTEXT',
-  RISK_CHALLENGER: 'RISK_CHALLENGER',
-  SYSTEM_ORCHESTRATOR: 'SYSTEM_ORCHESTRATOR'
-};
-
-exports.ExportFormat = exports.$Enums.ExportFormat = {
-  PDF: 'PDF',
-  JSON: 'JSON',
-  MARKDOWN: 'MARKDOWN',
-  HTML: 'HTML',
-  CSV: 'CSV'
-};
 
 exports.Prisma.ModelName = {
   User: 'User',
-  AgentSession: 'AgentSession',
-  AgentMessage: 'AgentMessage',
-  ConversationExport: 'ConversationExport',
-  SignalCache: 'SignalCache',
-  UserSubscription: 'UserSubscription'
+  Conversation: 'Conversation',
+  AgentMessage: 'AgentMessage'
 };
 
 /**
