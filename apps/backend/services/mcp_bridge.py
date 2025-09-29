@@ -118,7 +118,7 @@ class MCPBridgeClient:
     """Client for connecting to MCP services through Next.js bridge"""
 
     def __init__(self):
-        self.base_url = settings.FRONTEND_API_URL
+        self.base_url = settings.FRONTEND_URL  # Use consistent FRONTEND_URL setting
         self.session: Optional[aiohttp.ClientSession] = None
         self.cache = MCPCacheManager()
 

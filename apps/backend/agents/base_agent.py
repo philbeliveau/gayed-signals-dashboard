@@ -68,6 +68,14 @@ class BaseFinancialAgent(AssistantAgent):
         self._model_config = model_config
         self._logger = logging.getLogger(f"{__name__}.{name}")
 
+        # Store system message for compatibility
+        self._system_message_text = system_message
+
+    @property
+    def system_message(self) -> str:
+        """Get the system message for compatibility with test expectations."""
+        return self._system_message_text
+
     async def a_generate_reply(self, messages, sender, **kwargs):
         """
         Generate reply with enhanced error handling and logging.
@@ -106,5 +114,5 @@ class BaseFinancialAgent(AssistantAgent):
             "model": self._model_config.get("model"),
             "temperature": self._model_config.get("temperature"),
             "max_tokens": self._model_config.get("max_tokens"),
-            "system_message_length": len(self.system_message) if self.system_message else 0
+            "system_message_length": len(str(self._system_messages)) if hasattr(self, '_system_messages') and self._system_messages else 0
         }
