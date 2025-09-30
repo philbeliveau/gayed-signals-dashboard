@@ -74,12 +74,51 @@ export interface ConversationSession {
   metadata?: {
     originalContent?: string;
     processingTime?: number;
-    signalContext?: any;
+    signalContext?: Record<string, unknown>;
   };
 }
 
 // Live conversation types for WebSocket streaming
 export type ConversationStatus = 'initializing' | 'active' | 'completed' | 'error';
+
+export interface DataSource {
+  source: string;
+  url: string;
+  timestamp: string;
+  authenticated: boolean;
+}
+
+export interface DataIntegrity {
+  validated: boolean;
+  sources: string[];
+  lastValidated: string;
+  checksum: string;
+}
+
+export interface FactCheckDetails {
+  claim: string;
+  verified: boolean;
+  sources: string[];
+  confidence: number;
+}
+
+export interface LinkValidation {
+  url: string;
+  accessible: boolean;
+  httpsSecure: boolean;
+  domainVerified: boolean;
+  lastChecked: string;
+}
+
+export interface SAFLAValidation {
+  sourceAuthenticated: boolean;
+  factValidated: boolean;
+  linkVerified: boolean;
+  authorityConfirmed: boolean;
+  score: number;
+  factCheckDetails?: FactCheckDetails;
+  linkValidation?: LinkValidation;
+}
 
 export interface LiveConversationMessage {
   id: string;
@@ -88,7 +127,11 @@ export interface LiveConversationMessage {
   content: string;
   timestamp: number;
   confidence?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
+  // Financial data integrity fields
+  dataSources?: DataSource[];
+  dataIntegrity?: DataIntegrity;
+  saflaValidation?: SAFLAValidation;
 }
 
 export interface ConversationResult {
@@ -105,7 +148,7 @@ export interface ConversationResult {
 
 export interface WebSocketMessage {
   type: 'agent-message' | 'conversation-status' | 'conversation-complete' | 'error' | 'heartbeat';
-  data?: any;
+  data?: Record<string, unknown>;
   timestamp: number;
   sessionId?: string;
 }

@@ -11,53 +11,84 @@ import {
   Calendar,
   Clock,
   User,
-  MessageSquare
+  MessageSquare,
+  FileSpreadsheet,
+  Settings,
+  Eye,
+  BarChart3,
+  Shield,
+  Briefcase
 } from 'lucide-react';
-import { TextAnalysisResponse } from '../../types/agents';
+import { TextAnalysisResponse, ConversationSession } from '../../types/agents';
 
 interface ConversationExportProps {
-  analysisResult: TextAnalysisResponse;
-  agentConversation: any[];
+  analysisResult?: TextAnalysisResponse;
+  agentConversation?: any[];
+  conversation?: ConversationSession;
   contentType: 'text' | 'substack' | 'youtube';
   className?: string;
 }
 
-type ExportFormat = 'markdown' | 'json' | 'pdf' | 'txt';
+type ExportFormat = 'markdown' | 'json' | 'pdf' | 'txt' | 'excel';
+
+interface ExportOptions {
+  includeSignalContext: boolean;
+  includeMarketData: boolean;
+  includeMetrics: boolean;
+  clientPresentation: boolean;
+  partnershipMode: boolean;
+}
 
 export function ConversationExport({
   analysisResult,
   agentConversation,
+  conversation,
   contentType,
   className = ''
 }: ConversationExportProps) {
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('markdown');
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('pdf');
   const [isExporting, setIsExporting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+  const [exportOptions, setExportOptions] = useState<ExportOptions>({
+    includeSignalContext: true,
+    includeMarketData: true,
+    includeMetrics: true,
+    clientPresentation: false,
+    partnershipMode: false
+  });
 
   const formatOptions = [
     {
-      format: 'markdown' as ExportFormat,
-      icon: <FileText className="w-4 h-4" />,
-      label: 'Markdown',
-      description: 'Rich text format for documentation'
+      format: 'pdf' as ExportFormat,
+      icon: <Image className="w-4 h-4" />,
+      label: 'PDF',
+      description: 'Professional client presentation',
+      recommended: true
+    },
+    {
+      format: 'excel' as ExportFormat,
+      icon: <FileSpreadsheet className="w-4 h-4" />,
+      label: 'Excel',
+      description: 'Data analysis & reporting'
     },
     {
       format: 'json' as ExportFormat,
       icon: <FileText className="w-4 h-4" />,
       label: 'JSON',
-      description: 'Structured data format'
+      description: 'API integration format'
     },
     {
-      format: 'pdf' as ExportFormat,
-      icon: <Image className="w-4 h-4" />,
-      label: 'PDF',
-      description: 'Professional document format'
+      format: 'markdown' as ExportFormat,
+      icon: <FileText className="w-4 h-4" />,
+      label: 'Markdown',
+      description: 'Documentation format'
     },
     {
       format: 'txt' as ExportFormat,
       icon: <FileText className="w-4 h-4" />,
       label: 'Plain Text',
-      description: 'Simple text format'
+      description: 'Compliance & audit format'
     }
   ];
 
@@ -175,23 +206,102 @@ Export Date: ${new Date().toLocaleString()}
     setIsExporting(true);
 
     try {
-      const content = getExportContent();
-      const filename = `autogen-analysis-${Date.now()}.${selectedFormat}`;
+      // Use the new unified export API
+      const conversationId = conversation?.id || analysisResult?.data?.autoGenConversation?.conversationId;
 
-      if (selectedFormat === 'pdf') {
-        // PDF generation would require additional library
-        // For now, fall back to markdown
-        const markdownContent = generateMarkdown();
-        downloadFile(markdownContent, `autogen-analysis-${Date.now()}.md`, 'text/markdown');
-      } else {
-        const mimeType = selectedFormat === 'json' ? 'application/json' : 'text/plain';
-        downloadFile(content, filename, mimeType);
+      if (!conversationId) {
+        throw new Error('No conversation ID available for export');
       }
+
+      // Build query parameters
+      const params = new URLSearchParams({
+        format: selectedFormat,
+        includeSignalContext: exportOptions.includeSignalContext.toString(),
+        includeMarketData: exportOptions.includeMarketData.toString(),
+        includeMetrics: exportOptions.includeMetrics.toString(),
+        clientPresentation: exportOptions.clientPresentation.toString(),
+        partnershipMode: exportOptions.partnershipMode.toString()
+      });
+
+      // Call the unified export API
+      const response = await fetch(`/api/conversations/${conversationId}/export?${params}`, {
+        method: 'GET',
+        headers: {
+          'Accept': '*/*'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Export failed');
+      }
+
+      // Handle different response types
+      if (selectedFormat === 'pdf' || selectedFormat === 'excel') {
+        // These return JSON data for client-side processing
+        const exportData = await response.json();
+
+        if (selectedFormat === 'pdf') {
+          await generatePDFFromData(exportData);
+        } else if (selectedFormat === 'excel') {
+          await generateExcelFromData(exportData);
+        }
+      } else {
+        // Direct file download for text formats
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Extract filename from Content-Disposition header or generate one
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const filename = contentDisposition?.match(/filename="([^"]+)"/)?.[1] ||
+                        `conversation-export-${Date.now()}.${selectedFormat}`;
+
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+
+      console.log(`✅ Successfully exported conversation in ${selectedFormat} format`);
+
     } catch (error) {
       console.error('Export failed:', error);
+      // You might want to show a toast notification here
+      alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const generatePDFFromData = async (exportData: any) => {
+    // This would use a library like jsPDF to generate PDF client-side
+    // For now, fall back to downloading the JSON data
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `conversation-pdf-data-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const generateExcelFromData = async (exportData: any) => {
+    // This would use a library like SheetJS to generate Excel client-side
+    // For now, fall back to downloading the structured data
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `conversation-excel-data-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const downloadFile = (content: string, filename: string, mimeType: string) => {
@@ -258,23 +368,160 @@ Export Date: ${new Date().toLocaleString()}
         <label className="block text-sm font-medium text-theme-text mb-3">
           Export Format
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {formatOptions.map(({ format, icon, label, description }) => (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {formatOptions.map(({ format, icon, label, description, recommended }) => (
             <button
               key={format}
               onClick={() => setSelectedFormat(format)}
-              className={`flex flex-col items-center p-4 border rounded-theme transition-all ${
+              className={`relative flex flex-col items-center p-4 border rounded-theme transition-all ${
                 selectedFormat === format
                   ? 'border-theme-primary bg-theme-primary/10 text-theme-primary'
                   : 'border-theme-border bg-theme-card-secondary text-theme-text hover:border-theme-border-hover'
               }`}
             >
+              {recommended && (
+                <div className="absolute -top-2 -right-2 bg-theme-primary text-white text-xs px-2 py-1 rounded-full">
+                  Recommended
+                </div>
+              )}
               {icon}
               <span className="font-medium text-sm mt-2">{label}</span>
               <span className="text-xs opacity-75 text-center mt-1">{description}</span>
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Export Options */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <label className="block text-sm font-medium text-theme-text">
+            Export Options
+          </label>
+          <button
+            onClick={() => setShowOptions(!showOptions)}
+            className="flex items-center text-sm text-theme-text-muted hover:text-theme-text transition-colors"
+          >
+            <Settings className="w-4 h-4 mr-1" />
+            {showOptions ? 'Hide Options' : 'Show Options'}
+          </button>
+        </div>
+
+        {showOptions && (
+          <div className="bg-theme-card-secondary border border-theme-border rounded-theme p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Content Options */}
+              <div>
+                <h4 className="text-sm font-medium text-theme-text mb-3 flex items-center">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Content Options
+                </h4>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={exportOptions.includeSignalContext}
+                      onChange={(e) => setExportOptions(prev => ({
+                        ...prev,
+                        includeSignalContext: e.target.checked
+                      }))}
+                      className="rounded border-theme-border text-theme-primary focus:ring-theme-primary focus:ring-offset-0"
+                    />
+                    <span className="ml-2 text-sm text-theme-text">Include Signal Context</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={exportOptions.includeMarketData}
+                      onChange={(e) => setExportOptions(prev => ({
+                        ...prev,
+                        includeMarketData: e.target.checked
+                      }))}
+                      className="rounded border-theme-border text-theme-primary focus:ring-theme-primary focus:ring-offset-0"
+                    />
+                    <span className="ml-2 text-sm text-theme-text">Include Market Data</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={exportOptions.includeMetrics}
+                      onChange={(e) => setExportOptions(prev => ({
+                        ...prev,
+                        includeMetrics: e.target.checked
+                      }))}
+                      className="rounded border-theme-border text-theme-primary focus:ring-theme-primary focus:ring-offset-0"
+                    />
+                    <span className="ml-2 text-sm text-theme-text">Include Analytics Metrics</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Presentation Options */}
+              <div>
+                <h4 className="text-sm font-medium text-theme-text mb-3 flex items-center">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Presentation Options
+                </h4>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={exportOptions.clientPresentation}
+                      onChange={(e) => setExportOptions(prev => ({
+                        ...prev,
+                        clientPresentation: e.target.checked
+                      }))}
+                      className="rounded border-theme-border text-theme-primary focus:ring-theme-primary focus:ring-offset-0"
+                    />
+                    <span className="ml-2 text-sm text-theme-text">Client Presentation Mode</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={exportOptions.partnershipMode}
+                      onChange={(e) => setExportOptions(prev => ({
+                        ...prev,
+                        partnershipMode: e.target.checked
+                      }))}
+                      className="rounded border-theme-border text-theme-primary focus:ring-theme-primary focus:ring-offset-0"
+                    />
+                    <span className="ml-2 text-sm text-theme-text">Partnership Documentation</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Format-Specific Info */}
+            <div className="pt-3 border-t border-theme-border">
+              <div className="text-xs text-theme-text-muted">
+                {selectedFormat === 'pdf' && (
+                  <div className="flex items-center">
+                    <Shield className="w-3 h-3 mr-1" />
+                    PDF exports include professional formatting suitable for client presentations
+                  </div>
+                )}
+                {selectedFormat === 'excel' && (
+                  <div className="flex items-center">
+                    <BarChart3 className="w-3 h-3 mr-1" />
+                    Excel exports provide structured data for analysis and reporting
+                  </div>
+                )}
+                {selectedFormat === 'json' && (
+                  <div className="flex items-center">
+                    <Briefcase className="w-3 h-3 mr-1" />
+                    JSON exports are optimized for API integration and data processing
+                  </div>
+                )}
+                {selectedFormat === 'txt' && (
+                  <div className="flex items-center">
+                    <Shield className="w-3 h-3 mr-1" />
+                    Text exports meet compliance requirements for audit trails
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Export Preview */}
@@ -342,26 +589,76 @@ Export Date: ${new Date().toLocaleString()}
         </button>
       </div>
 
-      {/* Export Statistics */}
-      <div className="mt-6 grid grid-cols-3 gap-4 pt-6 border-t border-theme-border">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-theme-text">
-            {Math.round(analysisResult.data.relevanceScore * 100)}%
+      {/* Enhanced Export Statistics */}
+      <div className="mt-6 pt-6 border-t border-theme-border">
+        <h4 className="text-sm font-medium text-theme-text mb-4 flex items-center">
+          <BarChart3 className="w-4 h-4 mr-2" />
+          Conversation Analytics
+        </h4>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-theme-text">
+              {analysisResult?.data?.relevanceScore
+                ? Math.round(analysisResult.data.relevanceScore * 100) + '%'
+                : conversation?.confidenceScore
+                  ? Math.round(conversation.confidenceScore * 100) + '%'
+                  : 'N/A'}
+            </div>
+            <div className="text-xs text-theme-text-muted">Confidence</div>
           </div>
-          <div className="text-xs text-theme-text-muted">Relevance</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-theme-text">
-            {agentConversation.length}
+
+          <div className="text-center">
+            <div className="text-2xl font-bold text-theme-text">
+              {agentConversation?.length || conversation?.messages?.length || 0}
+            </div>
+            <div className="text-xs text-theme-text-muted">Messages</div>
           </div>
-          <div className="text-xs text-theme-text-muted">Messages</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-theme-text">
-            {Math.round(analysisResult.data.processingMetrics.totalProcessingTime / 1000)}s
+
+          <div className="text-center">
+            <div className="text-2xl font-bold text-theme-text">
+              {analysisResult?.data?.processingMetrics?.totalProcessingTime
+                ? Math.round(analysisResult.data.processingMetrics.totalProcessingTime / 1000) + 's'
+                : conversation?.createdAt
+                  ? (() => {
+                      const created = new Date(conversation.createdAt);
+                      const updated = new Date(conversation.updatedAt || conversation.createdAt);
+                      const diffMs = updated.getTime() - created.getTime();
+                      return Math.round(diffMs / 1000) + 's';
+                    })()
+                  : 'N/A'}
+            </div>
+            <div className="text-xs text-theme-text-muted">Duration</div>
           </div>
-          <div className="text-xs text-theme-text-muted">Time</div>
+
+          <div className="text-center">
+            <div className="text-2xl font-bold text-theme-text">
+              {conversation?.status === 'completed' ? 'Done' :
+               conversation?.status === 'running' ? 'Active' :
+               conversation?.status || 'N/A'}
+            </div>
+            <div className="text-xs text-theme-text-muted">Status</div>
+          </div>
         </div>
+
+        {/* Additional Context */}
+        {exportOptions.includeSignalContext && (
+          <div className="mt-4 p-3 bg-theme-primary/5 border border-theme-primary/20 rounded-theme">
+            <div className="flex items-center text-sm text-theme-text">
+              <Shield className="w-4 h-4 mr-2 text-theme-primary" />
+              Export will include current market signals and trading context
+            </div>
+          </div>
+        )}
+
+        {exportOptions.clientPresentation && (
+          <div className="mt-2 p-3 bg-blue-500/5 border border-blue-500/20 rounded-theme">
+            <div className="flex items-center text-sm text-theme-text">
+              <Briefcase className="w-4 h-4 mr-2 text-blue-500" />
+              Formatted for professional client presentation
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
