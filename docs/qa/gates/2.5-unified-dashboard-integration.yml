@@ -1,0 +1,69 @@
+schema: 1
+story: '2.5'
+story_title: 'unified-dashboard-integration'
+gate: CONCERNS
+status_reason: 'UPDATED REVIEW: Tests exist but failing (25/27 failures), build system CSS dependency persists, backend Pydantic errors blocking test execution. Quality implementation undermined by infrastructure issues.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2025-09-30T23:45:00Z'
+
+top_issues:
+  - id: 'TEST-001'
+    severity: high
+    finding: 'UnifiedContentInput tests exist but 25/27 failing due to component/test mismatches (tab styling, placeholders, accessibility)'
+    suggested_action: 'Fix test assertions to match actual component implementation or adjust component to match test expectations'
+    suggested_owner: 'dev'
+  - id: 'BUILD-001'
+    severity: high
+    finding: 'Build still fails despite CSS file creation - hardcoded dependency persists in bundle'
+    suggested_action: 'Investigate build system hardcoded CSS dependency and implement proper resolution'
+    suggested_owner: 'dev'
+  - id: 'BACKEND-001'
+    severity: high
+    finding: 'Pydantic model_config field name conflicts preventing all backend tests from running'
+    suggested_action: 'Fix Pydantic V2 migration errors in conversations.py and other model files'
+    suggested_owner: 'dev'
+  - id: 'LINT-001'
+    severity: medium
+    finding: 'Extensive linting violations: 218 frontend warnings/errors, thousands of backend style violations'
+    suggested_action: 'Establish linting baseline and fix critical violations systematically'
+    suggested_owner: 'dev'
+
+waiver: { active: false }
+
+quality_score: 50
+expires: '2025-10-14T15:45:00Z'
+
+evidence:
+  tests_reviewed: 27
+  risks_identified: 4
+  trace:
+    ac_covered: [1, 2, 4, 5, 6, 9, 10, 12]  # ACs with working implementation
+    ac_gaps: [3, 7, 8, 11]  # ACs affected by test failures or dependencies
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'Proper Clerk authentication, comprehensive input validation with Zod schemas, robust URL validation'
+  performance:
+    status: CONCERNS
+    notes: 'Cannot validate due to build failures, mobile optimization code present but untested'
+  reliability:
+    status: CONCERNS
+    notes: 'Good error handling patterns but no tests to verify resilience under failure conditions'
+  maintainability:
+    status: PASS
+    notes: 'Excellent code organization, strong TypeScript usage, clean component architecture'
+
+recommendations:
+  immediate:
+    - action: 'Fix build system module resolution errors'
+      refs: ['src/domains/market-data/index.ts', 'build pipeline']
+    - action: 'Add comprehensive test suite for new components'
+      refs: ['src/components/agents/*.tsx', 'src/app/api/content/unified/route.ts']
+    - action: 'Resolve missing CSS dependency causing build failures'
+      refs: ['api/browser/default-stylesheet.css']
+  future:
+    - action: 'Complete Epic 3.1 WebSocket integration for true real-time features'
+      refs: ['WebSocket infrastructure', 'real-time conversation streaming']
+    - action: 'Add performance monitoring for new dashboard features'
+      refs: ['UnifiedContentInput performance', 'processing status updates']

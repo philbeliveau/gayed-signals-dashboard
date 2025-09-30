@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 
 // Validation schemas following existing patterns
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<SubstackE
     const contentId = generateContentId()
 
     // TODO: Trigger AutoGen conversation if requested (Epic 1 dependency)
-    let autoGenTriggered = false
+    const autoGenTriggered = false
     let conversationId: string | undefined
 
     if (options.triggerAutoGen) {
