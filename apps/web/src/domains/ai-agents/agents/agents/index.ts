@@ -14,6 +14,7 @@ export { FinancialAgent } from './financial-agent';
 export { SocialAgent } from './social-agent';
 export { GovernmentAgent } from './government-agent';
 export { MarketContextAgent } from './market-context-agent';
+export { RiskChallengerAgent } from './risk-challenger-agent';
 
 // Agent factory for dynamic instantiation
 export const createAgent = (agentType: string) => {
@@ -30,13 +31,15 @@ export const createAgent = (agentType: string) => {
       return new (require('./government-agent').GovernmentAgent)();
     case 'MARKET_CONTEXT':
       return new (require('./market-context-agent').MarketContextAgent)();
+    case 'RISK_CHALLENGER':
+      return new (require('./risk-challenger-agent').RiskChallengerAgent)();
     default:
       throw new Error(`Unknown agent type: ${agentType}`);
   }
 };
 
 // Get all agent types
-export const getAllAgentTypes = () => ['ACADEMIC', 'NEWS', 'FINANCIAL', 'SOCIAL', 'GOVERNMENT', 'MARKET_CONTEXT'];
+export const getAllAgentTypes = () => ['ACADEMIC', 'NEWS', 'FINANCIAL', 'SOCIAL', 'GOVERNMENT', 'MARKET_CONTEXT', 'RISK_CHALLENGER'];
 
 // Get MCP requirements for all agents
 export const getAllMcpRequirements = () => {
@@ -72,7 +75,12 @@ export const getAllMcpRequirements = () => {
   // web-search already added
   // perplexity already added
   // brave-search already added
-  
+
+  // Risk Challenger Agent MCP services
+  // perplexity already added
+  // mcp-trader already added
+  // web-search already added
+
   return Array.from(allRequirements);
 };
 

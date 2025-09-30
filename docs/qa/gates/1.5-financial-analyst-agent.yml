@@ -1,24 +1,33 @@
 schema: 1
 story: "1.5"
 story_title: "financial-analyst-agent"
-gate: PASS
-status_reason: "All critical issues resolved. 100% test pass rate achieved with proper AutoGen integration and comprehensive functionality validation."
+gate: CONCERNS
+status_reason: "FRED service configuration fixed but validation blocked by database dependency issues. Core API key issue resolved, test improvement needed."
 reviewer: "Quinn (Test Architect)"
-updated: "2025-01-28T19:15:00Z"
+updated: "2025-01-28T20:15:00Z"
 
 waiver: { active: false }
 
-top_issues: []  # All previous issues resolved
+top_issues:
+  - id: "DB-001"
+    severity: medium
+    finding: "Database configuration prevents FRED service testing - psycopg2 async driver issue"
+    suggested_action: "Update database configuration to use async-compatible driver or provide test environment"
+  - id: "REDIS-001"
+    severity: low
+    finding: "Redis connection issues in FRED integration tests (non-blocking for basic functionality)"
+    suggested_action: "Configure Redis for development environment or mock Redis dependencies in tests"
 
 risk_summary:
-  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  totals: { critical: 0, high: 0, medium: 1, low: 1 }
   recommendations:
     must_fix: []
     monitor:
-      - "API endpoint performance under load"
-      - "Long-term conversation context memory usage"
+      - "Database configuration for async compatibility"
+      - "FRED service end-to-end testing in proper environment"
+      - "Redis configuration for caching functionality"
 
-quality_score: 95  # Excellent implementation with comprehensive testing
+quality_score: 85  # Fixed core FRED issue, remaining issues are infrastructure/testing
 
 evidence:
   tests_reviewed: 19

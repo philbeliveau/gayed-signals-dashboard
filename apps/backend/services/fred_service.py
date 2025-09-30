@@ -20,6 +20,7 @@ import pandas as pd
 from fredapi import Fred
 from sqlalchemy import select, and_
 from core.database import async_session_maker
+from core.config import settings
 from services.cache_service import cache_service
 
 logger = logging.getLogger(__name__)
@@ -141,6 +142,9 @@ class FREDService:
         self.rate_limiter = FREDRateLimiter()
         self.executor = ThreadPoolExecutor(max_workers=4)  # For async execution
 
+        # FRED API configuration
+        self.base_url = "https://api.stlouisfed.org/fred"
+
         # Cache TTL settings
         self.DAILY_CACHE_TTL = 60 * 60 * 24      # 24 hours for daily data
         self.WEEKLY_CACHE_TTL = 60 * 60 * 12     # 12 hours for weekly data
@@ -152,14 +156,14 @@ class FREDService:
         self.last_error_time = None
 
     def _get_api_key(self) -> str:
-        """Get FRED API key from environment variable."""
-        api_key = os.environ.get('FRED_API_KEY')
+        """Get FRED API key from settings configuration."""
+        api_key = settings.FRED_API_KEY
         if not api_key:
             logger.warning(
-                "FRED_API_KEY not found in environment variables. "
-                "Please set FRED_API_KEY in your .env file or system environment."
+                "FRED_API_KEY not configured in settings. "
+                "Please set FRED_API_KEY in your .env file or configuration."
             )
-            raise ValueError("FRED_API_KEY environment variable is required")
+            raise ValueError("FRED_API_KEY is required for FRED service functionality")
         return api_key
 
     @property

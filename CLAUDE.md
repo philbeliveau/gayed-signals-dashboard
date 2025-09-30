@@ -16,6 +16,80 @@ Transform the existing Gayed Signals Dashboard into an AutoGen-powered demonstra
 - **Domain Architecture** - Clean separation: `trading-signals/`, `ai-agents/`, `market-data/`
 - **Production Infrastructure** - SAFLA safety system, real data validation, monitoring
 
+## 🚨 CRITICAL: REAL DATA ONLY ENFORCEMENT
+
+### **FINANCIAL-GRADE DATA INTEGRITY REQUIREMENTS**
+
+**NO FALLBACK DATA POLICY**: This project enforces strict financial-grade data integrity. ALL agents must operate exclusively with REAL data from actual external services:
+
+#### **REAL DATA SOURCES REQUIRED**:
+- **FRED API**: Live Federal Reserve economic data only - NO synthetic economic indicators
+- **Perplexity MCP**: Real-time market intelligence only - NO simulated market news
+- **OpenAI GPT**: Actual GPT-4 responses only - NO placeholder or mock responses
+- **Web Search Services**: Live web search results only - NO fabricated news articles
+- **Yahoo Finance**: Real market data only - NO synthetic price feeds
+
+#### **PROHIBITED PRACTICES**:
+- ❌ **NO Mock Data in Production**: Never use placeholder, synthetic, or estimated data
+- ❌ **NO Fallback Responses**: Never generate fake data when real sources are unavailable
+- ❌ **NO Synthetic Economic Data**: Never create artificial employment, inflation, or market indicators
+- ❌ **NO Simulated Market News**: Never fabricate breaking news or market analysis
+- ❌ **NO Placeholder Content**: Never use "example.com" or test data in production
+
+#### **REQUIRED BEHAVIOR WHEN DATA UNAVAILABLE**:
+- ✅ **Explicit Transparency**: "FRED API currently unavailable - analysis proceeding without employment data"
+- ✅ **Confidence Degradation**: Reduce confidence scores when real data sources are missing
+- ✅ **Source Attribution**: Specify exactly which data sources are accessible/inaccessible
+- ✅ **Graceful Degradation**: Continue operation with reduced capability, never fabricate data
+
+#### **ENFORCEMENT MECHANISMS**:
+- **SAFLA Protocol**: Source Authentication, Fact validation, Link verification, Authority checking
+- **Data Provenance Tracking**: Every data point must have verifiable real-world source
+- **Audit Trail Requirements**: All data access attempts must be logged with success/failure status
+- **Test Environment Exceptions**: Mock data ONLY allowed in test environments with explicit markers
+
+#### **EXAMPLE CORRECT PATTERNS**:
+```typescript
+// ✅ CORRECT: Explicit unavailability with no fallback
+if (!this.fredClient) {
+  console.log('⚠️ FRED API unavailable - no economic indicators accessed');
+  dataAvailability.missingDataSources.push('FRED Economic Data');
+  dataAvailability.confidenceReduction += 25;
+  return [];
+}
+
+// ✅ CORRECT: Transparent error handling
+catch (error) {
+  console.error('❌ Perplexity API failed:', error);
+  console.log('⚠️ Market intelligence unavailable - no synthetic fallback');
+  return [];
+}
+```
+
+#### **EXAMPLE PROHIBITED PATTERNS**:
+```typescript
+// ❌ PROHIBITED: Synthetic fallback data
+if (!this.fredClient) {
+  return [{ value: 3.7, source: 'estimated' }]; // NEVER DO THIS
+}
+
+// ❌ PROHIBITED: Fabricated responses
+catch (error) {
+  return "Based on typical market conditions..."; // NEVER DO THIS
+}
+```
+
+### **TESTING REQUIREMENTS WITH REAL DATA**
+
+All tests involving external services (Perplexity, FRED, GPT, etc.) must use REAL data connections:
+
+- **Integration Tests**: Must connect to actual API endpoints
+- **Agent Tests**: Must validate real data extraction capabilities
+- **Performance Tests**: Must measure actual API response times
+- **Error Handling Tests**: Must test real API failure scenarios
+
+**Exception**: Unit tests may use mocks, but integration and end-to-end tests MUST use real services.
+
 ### 🎯 **Strategic Direction**
 - **Partnership Strategy** - Target integration with wealth management platforms (Croesus: 19,000+ users, $2T AUM)
 - **AutoGen Enhancement** - Convert existing agent framework to Microsoft AutoGen for transparent debates
@@ -151,3 +225,22 @@ Transform the existing Gayed Signals Dashboard into an AutoGen-powered demonstra
 2. **Epic 1 Planning** - Detailed story breakdown for AutoGen framework conversion
 3. **Technical Spike** - 1-week proof-of-concept integrating AutoGen with existing MCP services
 4. **Partnership Research** - Gather Croesus integration technical requirements
+
+---
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+## 🚨 CRITICAL: REAL DATA ONLY ENFORCEMENT
+**FINANCIAL-GRADE DATA INTEGRITY**: ALL AI agents must use REAL data from actual external services:
+- FRED API: Live Federal Reserve economic data ONLY - NO synthetic indicators
+- Perplexity MCP: Real-time market intelligence ONLY - NO simulated news
+- OpenAI GPT: Actual GPT-4 responses ONLY - NO placeholder responses
+- Web Search: Live search results ONLY - NO fabricated articles
+- NEVER use fallback, synthetic, estimated, or mock data
+- ALWAYS report explicitly when real data sources are unavailable
+- ALWAYS reduce confidence when missing real data sources
+- Tests with external services MUST use REAL API connections
