@@ -8,6 +8,9 @@ export interface VideoSummaryRequest {
   user_prompt?: string;
   summary_mode: 'bullet' | 'executive' | 'action_items' | 'timeline' | 'custom';
   folder_id?: string;
+  // AutoGen integration options
+  trigger_autogen_debate?: boolean;
+  include_signal_context?: boolean;
 }
 
 export interface Video {
@@ -68,6 +71,10 @@ export interface VideoSummaryResponse {
   video: Video;
   task_id?: string;
   estimated_completion_time?: number;
+  // AutoGen integration results
+  autogen_conversation_id?: string;
+  autogen_status?: string;
+  financial_relevance_score?: number;
 }
 
 export interface VideoDetails {
@@ -171,6 +178,9 @@ export interface VideoInputProps {
   onSubmit: (request: VideoSummaryRequest) => Promise<void>;
   isProcessing: boolean;
   folders: Folder[];
+  // AutoGen options
+  showAutoGenOptions?: boolean;
+  defaultTriggerAutoGen?: boolean;
 }
 
 export interface TranscriptViewerProps {
@@ -254,4 +264,38 @@ export class SummarizationError extends VideoInsightsError {
   constructor(reason: string) {
     super(`Summarization failed: ${reason}`, 'SUMMARIZATION_ERROR', 500);
   }
+}
+
+// AutoGen Integration Types
+export interface AutoGenConversationResult {
+  conversation_id: string;
+  status: 'initialized' | 'running' | 'completed' | 'error';
+  financial_relevance_score: number;
+  created_at: string;
+  agent_messages?: AutoGenMessage[];
+}
+
+export interface AutoGenMessage {
+  id: string;
+  agent_type: 'financial_analyst' | 'market_context' | 'risk_challenger';
+  agent_name: string;
+  content: string;
+  confidence_level?: number;
+  timestamp: string;
+  message_order: number;
+}
+
+export interface FinancialRelevanceAnalysis {
+  relevance_score: number;
+  financial_topics: string[];
+  market_relevance: boolean;
+  investment_relevance: boolean;
+  reasoning: string;
+}
+
+export interface VideoWithAutoGen extends Video {
+  autogen_conversation_id?: string;
+  autogen_status?: string;
+  financial_relevance_score?: number;
+  has_financial_analysis?: boolean;
 }

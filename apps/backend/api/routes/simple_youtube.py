@@ -24,6 +24,9 @@ from datetime import datetime
 from core.database import get_db
 from core.security import get_current_user_optional
 from models.database import User, Video, Transcript, Summary, Folder
+from services.autogen_orchestrator import AutoGenOrchestrator
+from models.conversation_models import ContentSource, ContentSourceType
+from core.config import settings
 
 # Import the same libraries as the working test script
 try:
@@ -47,6 +50,9 @@ class SimpleVideoRequest(BaseModel):
     custom_context: Optional[str] = None
     folder_id: Optional[UUID] = None
     save_to_database: bool = False
+    # AutoGen integration options
+    trigger_autogen_debate: bool = False
+    include_signal_context: bool = False
 
 class SimpleVideoResponse(BaseModel):
     success: bool
@@ -58,6 +64,10 @@ class SimpleVideoResponse(BaseModel):
     error: str = ""
     video_id: Optional[str] = None
     folder_name: Optional[str] = None
+    # AutoGen integration results
+    autogen_conversation_id: Optional[str] = None
+    autogen_status: Optional[str] = None
+    financial_relevance_score: Optional[float] = None
 
 class SimpleYouTubeProcessor:
     """Direct copy of the working test script logic"""
@@ -150,10 +160,65 @@ class SimpleYouTubeProcessor:
         logger.info(f"✅ Transcription completed: {len(transcript)} characters")
         return transcript
     
+    def analyze_financial_relevance(self, title, transcript):
+        """Analyze financial relevance of video content for AutoGen triggering."""
+        logger.info("🔍 Analyzing financial relevance...")
+
+        prompt = f"""Analyze the financial relevance of this video content and provide a relevance score.
+
+Video Title: {title}
+Transcript: {transcript[:1000]}...
+
+Please analyze this content for financial relevance and respond with a JSON object containing:
+1. "relevance_score": A float between 0.0 and 1.0 (1.0 = highly relevant to financial markets/investing)
+2. "financial_topics": List of specific financial topics mentioned
+3. "market_relevance": Boolean indicating if content relates to market conditions
+4. "investment_relevance": Boolean indicating if content relates to investment strategies
+5. "reasoning": Brief explanation of the score
+
+Financial topics to look for:
+- Stock market analysis, trading strategies
+- Economic indicators, monetary policy
+- Investment advice, portfolio management
+- Market volatility, risk management
+- Corporate earnings, financial analysis
+- Cryptocurrency, commodities, bonds
+- Real estate investing
+- Economic forecasting
+
+Respond only with valid JSON."""
+
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a financial content analyst that evaluates video relevance for financial professionals. Always respond with valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=400,
+                temperature=0.1
+            )
+
+            import json
+            analysis = json.loads(response.choices[0].message.content)
+            logger.info(f"✅ Financial relevance analyzed: {analysis.get('relevance_score', 0.0)}")
+            return analysis
+
+        except Exception as e:
+            logger.warning(f"⚠️ Financial relevance analysis failed: {e}")
+            # Return default low relevance
+            return {
+                "relevance_score": 0.1,
+                "financial_topics": [],
+                "market_relevance": False,
+                "investment_relevance": False,
+                "reasoning": "Analysis failed - defaulting to low relevance"
+            }
+
     def generate_summary(self, transcript, mode="bullet", custom_context=None):
         """Generate summary - now supports custom context"""
         logger.info("🤖 Starting summary generation...")
-        
+
         # Custom context takes precedence
         if custom_context:
             prompt = f"""Please provide a comprehensive summary of the following video transcript based on this specific context: {custom_context}
@@ -166,19 +231,19 @@ Summary:"""
             prompt = f"""Please provide a comprehensive summary of the following video transcript in bullet point format.
 
 Structure your summary as follows:
-1. Overview: 
+1. Overview:
 Brief overview of what the video is about
 
-2. Key Insights: 
+2. Key Insights:
    - Main point 1 with specific details
    - Main point 2 with specific details
    - Main point 3 with specific details
    - Additional important insights
 
-3. Actionable Items: 
+3. Actionable Items:
    - Specific actions or recommendations mentioned
 
-4. Impact/Relevance: 
+4. Impact/Relevance:
 Why this information is important or useful
 
 Transcript:
@@ -198,7 +263,7 @@ Transcript:
 {transcript}
 
 Summary:"""
-        
+
         response = self.openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -208,7 +273,7 @@ Summary:"""
             max_tokens=1000,
             temperature=0.3
         )
-        
+
         summary = response.choices[0].message.content
         logger.info(f"✅ Summary generated: {len(summary)} characters")
         return summary
@@ -222,26 +287,31 @@ Summary:"""
         except Exception as e:
             logger.warning(f"⚠️  Could not remove temporary directory: {e}")
     
-    def process_video(self, url, summary_mode="bullet", custom_context=None):
-        """Complete processing pipeline - now supports custom context"""
+    def process_video(self, url, summary_mode="bullet", custom_context=None, trigger_autogen=False):
+        """Complete processing pipeline - now supports AutoGen integration"""
         logger.info("🚀 Starting YouTube video processing...")
         start_time = time.time()
         url_str = str(url)  # Convert Pydantic URL to string
-        
+
         try:
             # Step 1: Download audio
             audio_file, title = self.download_audio(url_str)
-            
+
             # Step 2: Transcribe
             transcript = self.transcribe_audio(audio_file)
-            
+
             # Step 3: Generate summary
             summary = self.generate_summary(transcript, summary_mode, custom_context)
-            
+
+            # Step 4: Analyze financial relevance if AutoGen is requested
+            financial_relevance = None
+            if trigger_autogen:
+                financial_relevance = self.analyze_financial_relevance(title, transcript)
+
             processing_time = time.time() - start_time
             logger.info(f"✅ Processing completed in {processing_time:.1f} seconds")
-            
-            return {
+
+            result = {
                 'success': True,
                 'url': url_str,
                 'title': title,
@@ -250,11 +320,17 @@ Summary:"""
                 'processing_time': processing_time,
                 'error': ''
             }
-            
+
+            # Add financial relevance data if analyzed
+            if financial_relevance:
+                result['financial_relevance'] = financial_relevance
+
+            return result
+
         except Exception as e:
             processing_time = time.time() - start_time
             logger.error(f"❌ Processing failed: {e}")
-            
+
             return {
                 'success': False,
                 'url': url_str,
@@ -264,7 +340,7 @@ Summary:"""
                 'processing_time': processing_time,
                 'error': str(e)
             }
-        
+
         finally:
             self.cleanup()
 
@@ -354,6 +430,63 @@ async def save_video_to_database(
             detail=f"Failed to save video: {str(e)}"
         )
 
+async def trigger_autogen_conversation(
+    title: str,
+    transcript: str,
+    summary: str,
+    url: str,
+    user_id: str,
+    financial_relevance: Dict
+) -> Optional[Dict[str, str]]:
+    """Trigger AutoGen conversation for financially relevant video content."""
+    try:
+        # Check if AutoGen is enabled and content is relevant enough
+        if not settings.ENABLE_AUTOGEN_AGENTS:
+            logger.info("AutoGen agents disabled - skipping conversation")
+            return None
+
+        relevance_score = financial_relevance.get('relevance_score', 0.0)
+        if relevance_score < 0.6:  # Threshold for triggering AutoGen
+            logger.info(f"Financial relevance too low ({relevance_score:.2f}) - skipping AutoGen")
+            return None
+
+        # Initialize AutoGen orchestrator
+        orchestrator = AutoGenOrchestrator(settings.get_autogen_config())
+
+        # Create content source for AutoGen
+        content_source = ContentSource(
+            type=ContentSourceType.YOUTUBE_VIDEO,
+            title=title,
+            content=f"TRANSCRIPT:\n{transcript}\n\nSUMMARY:\n{summary}",
+            url=url,
+            metadata={
+                "financial_relevance": financial_relevance,
+                "source": "youtube_transcript_integration",
+                "processing_timestamp": datetime.utcnow().isoformat()
+            }
+        )
+
+        # Create conversation session
+        session = await orchestrator.create_session(
+            content=content_source,
+            user_id=user_id
+        )
+
+        # Start the debate automatically
+        await orchestrator.start_debate(session.id)
+
+        logger.info(f"✅ AutoGen conversation initiated: {session.id}")
+
+        return {
+            "conversation_id": session.id,
+            "status": session.status,
+            "relevance_score": relevance_score
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Failed to trigger AutoGen conversation: {e}")
+        return None
+
 @router.post("/simple-process", response_model=SimpleVideoResponse)
 async def simple_process_video(
     request: SimpleVideoRequest,
@@ -363,19 +496,23 @@ async def simple_process_video(
     """
     Simple synchronous YouTube processing that works like the test script.
     Returns complete results immediately - no polling needed!
-    Now supports saving to folders and database persistence.
+    Now supports saving to folders, database persistence, and AutoGen integration.
     """
     try:
         processor = SimpleYouTubeProcessor()
         result = processor.process_video(
-            request.youtube_url, 
-            request.summary_mode, 
-            request.custom_context
+            request.youtube_url,
+            request.summary_mode,
+            request.custom_context,
+            trigger_autogen=request.trigger_autogen_debate
         )
-        
+
         video_id = None
         folder_name = None
-        
+        autogen_conversation_id = None
+        autogen_status = None
+        financial_relevance_score = None
+
         # Save to database if requested and processing was successful
         if request.save_to_database and result['success'] and current_user:
             try:
@@ -393,13 +530,52 @@ async def simple_process_video(
                 logger.error(f"⚠️  Processing succeeded but failed to save to database: {save_error}")
                 # Don't fail the request, just log the error
                 result['error'] = f"Processing succeeded but saving failed: {str(save_error)}"
-        
-        # Add database info to response
+
+        # Trigger AutoGen conversation if requested and content is financially relevant
+        if (request.trigger_autogen_debate and result['success'] and
+            'financial_relevance' in result and current_user):
+            try:
+                autogen_result = await trigger_autogen_conversation(
+                    title=result['title'],
+                    transcript=result['transcript'],
+                    summary=result['summary'],
+                    url=result['url'],
+                    user_id=current_user.id,
+                    financial_relevance=result['financial_relevance']
+                )
+
+                if autogen_result:
+                    autogen_conversation_id = autogen_result['conversation_id']
+                    autogen_status = autogen_result['status']
+                    financial_relevance_score = autogen_result['relevance_score']
+                    logger.info(f"✅ AutoGen conversation created: {autogen_conversation_id}")
+                else:
+                    logger.info("⚠️ AutoGen conversation not triggered (low relevance or disabled)")
+
+            except Exception as autogen_error:
+                logger.error(f"⚠️ AutoGen conversation failed: {autogen_error}")
+                # Don't fail the request, just log the error
+                if 'error' in result:
+                    result['error'] += f" | AutoGen failed: {str(autogen_error)}"
+                else:
+                    result['error'] = f"AutoGen conversation failed: {str(autogen_error)}"
+
+        # Extract financial relevance score if available
+        if 'financial_relevance' in result:
+            financial_relevance_score = result['financial_relevance'].get('relevance_score')
+
+        # Add database and AutoGen info to response
         result['video_id'] = video_id
         result['folder_name'] = folder_name
-        
+        result['autogen_conversation_id'] = autogen_conversation_id
+        result['autogen_status'] = autogen_status
+        result['financial_relevance_score'] = financial_relevance_score
+
+        # Remove internal financial_relevance data from response
+        result.pop('financial_relevance', None)
+
         return SimpleVideoResponse(**result)
-        
+
     except Exception as e:
         logger.error(f"Simple processing failed: {e}")
         raise HTTPException(
