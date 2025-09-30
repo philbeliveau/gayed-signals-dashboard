@@ -280,6 +280,10 @@ class Settings(BaseSettings):
         default="http://localhost:3000",
         description="Frontend application URL for API calls"
     )
+    WEB_APP_URL: str = Field(
+        default="http://localhost:3000",
+        description="Web application URL for internal API calls"
+    )
 
     # Environment
     ENVIRONMENT: str = Field(

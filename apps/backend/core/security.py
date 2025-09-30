@@ -34,3 +34,10 @@ async def get_current_user(token: str = Depends(security)) -> str:
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user_id
+
+async def get_current_user_id(token: str = Depends(security)) -> str:
+    """
+    Required authentication - returns user ID or raises exception.
+    Alias for get_current_user for compatibility.
+    """
+    return await get_current_user(token)

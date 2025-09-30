@@ -21,7 +21,7 @@ from sqlalchemy import text
 
 from core.config import settings
 from core.database import engine, create_db_and_tables
-from api.routes import videos, folders, prompts, economic_data, simple_youtube, autogen_agents, conversations
+from api.routes import videos, folders, prompts, economic_data, simple_youtube, autogen_agents, conversations, content_triggers
 from api.v1 import conversations as conversations_v1
 from models.database import Base
 
@@ -101,6 +101,12 @@ app.include_router(
     conversations_v1.router,
     prefix="/api/v1",
     tags=["conversation-orchestrator"]
+)
+
+# Content triggers API for Story 2.1
+app.include_router(
+    content_triggers.router,
+    tags=["content-triggers"]
 )
 
 
