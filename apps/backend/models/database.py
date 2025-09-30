@@ -441,5 +441,105 @@ def create_search_indexes():
         
         # Economic data composite indexes for common queries
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_data_series_value_date ON economic_data_points(series_id, numeric_value, observation_date DESC) WHERE numeric_value IS NOT NULL;",
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_series_latest_data ON economic_data_points(series_id, observation_date DESC, created_at DESC);"
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_economic_series_latest_data ON economic_data_points(series_id, observation_date DESC, created_at DESC);",
+
+        # Conversation system performance indexes
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversations_user_status ON conversation_sessions(user_id, status);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversations_created_at ON conversation_sessions(created_at DESC);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversations_content_type ON conversation_sessions(content_type);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversations_status_created ON conversation_sessions(status, created_at DESC);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversations_consensus ON conversation_sessions(consensus_reached, confidence_score);",
+
+        # Conversation message performance indexes
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversation_messages_session_order ON conversation_messages(session_id, message_order);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversation_messages_agent_created ON conversation_messages(agent_id, created_at DESC);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversation_messages_session_created ON conversation_messages(session_id, created_at DESC);",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversation_messages_agent_confidence ON conversation_messages(agent_id, confidence);",
+
+        # Conversation full-text search
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversations_content_fulltext ON conversation_sessions USING gin(to_tsvector('english', content_title || ' ' || content_text));",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversation_messages_content_fulltext ON conversation_messages USING gin(to_tsvector('english', content));"
     ]
+
+
+# Conversation system database models for persistence
+class ConversationSession(Base):
+    """SQLAlchemy model for persisting AutoGen conversation sessions."""
+
+    __tablename__ = "conversation_sessions"
+
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(SQLiteUUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+
+    # Content source information
+    content_title = Column(String(500), nullable=False)
+    content_type = Column(String(50), nullable=False)  # text, youtube, substack, etc.
+    content_text = Column(Text, nullable=False)
+    content_url = Column(String(500))
+    content_author = Column(String(200))
+    content_published_at = Column(DateTime(timezone=True))
+    content_metadata = Column(JSON, default=dict)
+
+    # Conversation status and control
+    status = Column(String(20), default="initializing", nullable=False)
+    consensus_reached = Column(Boolean, default=False)
+    final_recommendation = Column(Text)
+    confidence_score = Column(Integer)  # 0-100
+
+    # Signal context from trading system
+    signal_context = Column(JSON, default=dict)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
+    completed_at = Column(DateTime(timezone=True))
+
+    # Relationships
+    user = relationship("User", backref="conversation_sessions")
+    messages = relationship("ConversationMessage", back_populates="session", cascade="all, delete-orphan")
+
+    # Constraints and indexes
+    __table_args__ = (
+        Index("idx_conversations_user_status", "user_id", "status"),
+        Index("idx_conversations_created_at", "created_at"),
+        Index("idx_conversations_content_type", "content_type"),
+        Index("idx_conversations_status_created", "status", "created_at"),
+    )
+
+
+class ConversationMessage(Base):
+    """SQLAlchemy model for individual agent messages in conversations."""
+
+    __tablename__ = "conversation_messages"
+
+    id = Column(SQLiteUUID(), primary_key=True, default=uuid.uuid4)
+    session_id = Column(SQLiteUUID(), ForeignKey("conversation_sessions.id", ondelete="CASCADE"), nullable=False)
+
+    # Agent information
+    agent_id = Column(String(100), nullable=False)  # financial_analyst, market_context, risk_challenger
+    agent_name = Column(String(100), nullable=False)
+
+    # Message content
+    content = Column(Text, nullable=False)
+    message_type = Column(String(50), default="analysis")  # analysis, context, challenge, consensus
+    confidence = Column(Integer, default=70)  # 0-100
+    message_order = Column(Integer, nullable=False)
+
+    # Message metadata
+    cited_sources = Column(JSON, default=list)
+    signal_references = Column(JSON, default=list)
+    message_metadata = Column(JSON, default=dict)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), default=func.now())
+
+    # Relationships
+    session = relationship("ConversationSession", back_populates="messages")
+
+    # Constraints and indexes
+    __table_args__ = (
+        Index("idx_conversation_messages_session_order", "session_id", "message_order"),
+        Index("idx_conversation_messages_agent_created", "agent_id", "created_at"),
+        Index("idx_conversation_messages_session_created", "session_id", "created_at"),
+        UniqueConstraint("session_id", "message_order", name="unique_message_order_per_session"),
+    )

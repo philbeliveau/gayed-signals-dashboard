@@ -22,6 +22,7 @@ from sqlalchemy import text
 from core.config import settings
 from core.database import engine, create_db_and_tables
 from api.routes import videos, folders, prompts, economic_data, simple_youtube, autogen_agents, conversations
+from api.v1 import conversations as conversations_v1
 from models.database import Base
 
 # Configure logging
@@ -93,6 +94,13 @@ app.include_router(
     conversations.router,
     prefix="/api/v1",
     tags=["autogen-conversations"]
+)
+
+# New v1 conversations API for Story 1.8
+app.include_router(
+    conversations_v1.router,
+    prefix="/api/v1",
+    tags=["conversation-orchestrator"]
 )
 
 
