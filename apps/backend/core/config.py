@@ -18,6 +18,20 @@ class Settings(BaseSettings):
         description="Database connection URL"
     )
 
+    @property
+    def processed_database_url(self) -> str:
+        """Process DATABASE_URL to ensure proper async driver format."""
+        url = self.DATABASE_URL
+        # Convert Railway/standard postgresql:// to async format
+        if url.startswith("postgresql://") and not url.startswith("postgresql+asyncpg://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://")
+
+        # Convert sslmode parameter to ssl for asyncpg
+        if "sslmode=require" in url:
+            url = url.replace("sslmode=require", "ssl=require")
+
+        return url
+
     # Redis settings for caching and Celery
     REDIS_URL: str = Field(
         default="redis://localhost:6379/0",

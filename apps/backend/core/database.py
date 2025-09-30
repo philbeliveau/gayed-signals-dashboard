@@ -36,7 +36,7 @@ else:
 
 # Create async database engine
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    settings.processed_database_url,
     poolclass=poolclass,
     echo=False,  # Disable SQL logging in production
     **pool_kwargs
@@ -51,7 +51,7 @@ async_session_maker = async_sessionmaker(
 )
 
 # Create synchronous database engine for Celery workers
-sync_database_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+sync_database_url = settings.processed_database_url.replace("postgresql+asyncpg://", "postgresql://")
 sync_engine = create_engine(
     sync_database_url,
     poolclass=poolclass,
@@ -114,9 +114,11 @@ async def create_db_and_tables():
     try:
         # Import all models to ensure they're registered
         from models.database import (
-            User, Video, Transcript, Summary, 
+            User, Video, Transcript, Summary,
             Folder, PromptTemplate, ProcessingJob,
-            EconomicSeries, EconomicDataPoint, create_search_indexes
+            EconomicSeries, EconomicDataPoint,
+            ConversationSession, ConversationMessage,
+            create_search_indexes
         )
         
         async with engine.begin() as conn:
