@@ -147,3 +147,23 @@ export interface WebSocketServerConfig {
     };
   };
 }
+
+// Explicit exports for build system
+export type {
+  BaseWebSocketEvent,
+  EventChannel,
+  ConversationEvent,
+  SignalEvent,
+  MonitoringEvent,
+  SystemEvent,
+  WebSocketEvent,
+  SubscriptionRequest,
+  SubscriptionResponse,
+  WebSocketAuthContext,
+  ConnectionState,
+  RateLimitConfig,
+  WebSocketError,
+  AuthenticatedSocket,
+  TypedClientSocket,
+  WebSocketServerConfig
+};

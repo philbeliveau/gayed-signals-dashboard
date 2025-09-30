@@ -77,3 +77,35 @@ export interface ConversationSession {
     signalContext?: any;
   };
 }
+
+// Live conversation types for WebSocket streaming
+export type ConversationStatus = 'initializing' | 'active' | 'completed' | 'error';
+
+export interface LiveConversationMessage {
+  id: string;
+  sessionId: string;
+  agent: string;
+  content: string;
+  timestamp: number;
+  confidence?: number;
+  metadata?: Record<string, any>;
+}
+
+export interface ConversationResult {
+  consensusReached: boolean;
+  finalRecommendation: string;
+  confidenceLevel: number;
+  keyInsights: string[];
+  processingMetrics?: {
+    totalTime: number;
+    messageCount: number;
+    averageConfidence: number;
+  };
+}
+
+export interface WebSocketMessage {
+  type: 'agent-message' | 'conversation-status' | 'conversation-complete' | 'error' | 'heartbeat';
+  data?: any;
+  timestamp: number;
+  sessionId?: string;
+}

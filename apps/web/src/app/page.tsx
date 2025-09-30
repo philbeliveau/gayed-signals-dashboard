@@ -6,6 +6,10 @@ import Link from 'next/link';
 import { useTheme } from '../contexts/ThemeContext';
 import { PageHeader, ContentCard, CardGrid, StatsCard } from '../components/layout/ProfessionalLayout';
 import UnifiedLoader from '../components/ui/UnifiedLoader';
+import UnifiedContentInput from '../components/agents/UnifiedContentInput';
+import ProcessingStatusDisplay from '../components/agents/ProcessingStatusDisplay';
+import ConversationExport from '../components/agents/ConversationExport';
+import { AnalysisType, TextAnalysisResponse } from '../types/agents';
 // import AgentDebateView from '../components/AgentDebateView';
 
 interface Signal {
@@ -419,6 +423,14 @@ export default function Dashboard() {
   const [agentConversation, setAgentConversation] = useState<AgentMessage[]>([]);
   const [reasoning, setReasoning] = useState<string[]>([]);
   const [transparentDecision, setTransparentDecision] = useState(false);
+  // Text analysis state
+  const [textAnalysisLoading, setTextAnalysisLoading] = useState(false);
+  const [textAnalysisResult, setTextAnalysisResult] = useState<TextAnalysisResponse | null>(null);
+  // Processing status state
+  const [processingStage, setProcessingStage] = useState<'extraction' | 'validation' | 'analysis' | 'complete'>('extraction');
+  const [processingProgress, setProcessingProgress] = useState(0);
+  const [currentContentType, setCurrentContentType] = useState<'text' | 'substack' | 'youtube'>('text');
+  const [currentAnalysisType, setCurrentAnalysisType] = useState<AnalysisType>('COMPREHENSIVE');
   // Mobile optimization states
   const [isInteracting, setIsInteracting] = useState(false);
 
@@ -539,6 +551,19 @@ export default function Dashboard() {
     return ETF_RECOMMENDATIONS[key] || null;
   };
 
+  const getContentTypeLabel = (contentType: string) => {
+    switch (contentType) {
+      case 'text':
+        return 'Direct Text';
+      case 'substack':
+        return 'Substack Article';
+      case 'youtube':
+        return 'YouTube Video';
+      default:
+        return 'Content';
+    }
+  };
+
   const handleSignalClick = (signal: Signal) => {
     // Prevent multiple rapid clicks on mobile
     if (isInteracting) return;
@@ -555,6 +580,100 @@ export default function Dashboard() {
     setShowETFModal(false);
     setSelectedSignal(null);
   };
+
+  // Handle unified content submission (text, Substack URLs, YouTube videos)
+  const handleContentSubmission = useCallback(async (content: string, analysisType: AnalysisType, contentType?: 'text' | 'substack' | 'youtube') => {
+    setTextAnalysisLoading(true);
+    setTextAnalysisResult(null);
+    setError(null);
+    setCurrentContentType(contentType || 'text');
+    setCurrentAnalysisType(analysisType);
+
+    // Simulate processing stages with realistic timing
+    const simulateProcessingStages = async () => {
+      // Stage 1: Extraction
+      setProcessingStage('extraction');
+      setProcessingProgress(10);
+      await new Promise(resolve => setTimeout(resolve, contentType === 'text' ? 500 : 1500));
+
+      // Stage 2: Validation
+      setProcessingStage('validation');
+      setProcessingProgress(25);
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Stage 3: Analysis (longest stage)
+      setProcessingStage('analysis');
+      setProcessingProgress(40);
+
+      // Simulate agent processing with incremental progress
+      const analysisSteps = analysisType === 'QUICK' ? 3 : analysisType === 'COMPREHENSIVE' ? 6 : 4;
+      for (let i = 0; i < analysisSteps; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setProcessingProgress(40 + ((i + 1) / analysisSteps) * 50);
+      }
+
+      // Stage 4: Complete
+      setProcessingStage('complete');
+      setProcessingProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 300));
+    };
+
+    try {
+      // Start processing simulation
+      const processingPromise = simulateProcessingStages();
+
+      const response = await fetch('/api/content/unified', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content,
+          contentType: contentType || 'text',
+          analysisType,
+          includeSignalContext: true
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Analysis failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      // Wait for processing simulation to complete
+      await processingPromise;
+
+      if (result.success) {
+        // Convert unified API response to match existing TextAnalysisResponse format
+        const convertedResult: TextAnalysisResponse = {
+          success: true,
+          data: {
+            textId: result.data.contentId,
+            relevanceScore: result.data.relevanceScore,
+            financialCategories: [], // Will be populated by backend in future updates
+            autoGenConversation: result.data.autoGenConversation,
+            processingMetrics: result.data.processingMetrics
+          }
+        };
+
+        setTextAnalysisResult(convertedResult);
+        setTransparentDecision(true);
+        // Update agent conversation state with new messages
+        if (result.data.autoGenConversation.agentResponses) {
+          setAgentConversation(result.data.autoGenConversation.agentResponses);
+        }
+      } else {
+        throw new Error(result.error || 'Analysis failed');
+      }
+    } catch (error) {
+      console.error('Content analysis error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to analyze content');
+    } finally {
+      setTextAnalysisLoading(false);
+      setProcessingProgress(0);
+    }
+  }, []);
 
   // ETF Modal Component
   const ETFModal = () => {
@@ -982,11 +1101,221 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
-        
-        {/* AI Agent Debate View - Coming Soon */}
-        {transparentDecision && (
-          <ContentCard title="🤖 AI Agent Analysis">
-            <p className="text-theme-text-muted">Multi-agent decision system coming soon...</p>
+
+        {/* Unified Content Input for AutoGen Analysis */}
+        <UnifiedContentInput
+          onSubmit={handleContentSubmission}
+          isLoading={textAnalysisLoading}
+          className="mb-8"
+        />
+
+        {/* Processing Status Display */}
+        {textAnalysisLoading && (
+          <ProcessingStatusDisplay
+            isLoading={textAnalysisLoading}
+            contentType={currentContentType}
+            analysisType={currentAnalysisType}
+            stage={processingStage}
+            progress={processingProgress}
+            error={error}
+            className="mb-8"
+          />
+        )}
+
+        {/* Enhanced AI Agent Debate Results with Signal Integration */}
+        {textAnalysisResult && (
+          <ContentCard
+            title="🤖 AI Agent Analysis Results"
+            subtitle="AutoGen agent debate and financial analysis"
+          >
+            <div className="space-y-8">
+              {/* Analysis Overview Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-theme-primary/10 to-theme-primary/5 border border-theme-primary/20 p-6 rounded-xl">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-10 h-10 bg-theme-primary/20 rounded-lg flex items-center justify-center">
+                      <MessageSquare className="w-5 h-5 text-theme-primary" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-theme-text-muted">Relevance Score</div>
+                      <div className="text-2xl font-bold text-theme-text">
+                        {Math.round(textAnalysisResult.data.relevanceScore * 100)}%
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full bg-theme-border rounded-full h-2">
+                    <div
+                      className="bg-theme-primary h-2 rounded-full transition-all duration-1000"
+                      style={{ width: `${textAnalysisResult.data.relevanceScore * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-theme-success/10 to-theme-success/5 border border-theme-success/20 p-6 rounded-xl">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-10 h-10 bg-theme-success/20 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-theme-success" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-theme-text-muted">Consensus Confidence</div>
+                      <div className="text-2xl font-bold text-theme-text">
+                        {Math.round(textAnalysisResult.data.autoGenConversation.confidenceScore * 100)}%
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full bg-theme-border rounded-full h-2">
+                    <div
+                      className="bg-theme-success h-2 rounded-full transition-all duration-1000"
+                      style={{ width: `${textAnalysisResult.data.autoGenConversation.confidenceScore * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-theme-warning/10 to-theme-warning/5 border border-theme-warning/20 p-6 rounded-xl">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-10 h-10 bg-theme-warning/20 rounded-lg flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-theme-warning" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-theme-text-muted">Processing Time</div>
+                      <div className="text-2xl font-bold text-theme-text">
+                        {Math.round(textAnalysisResult.data.processingMetrics.totalProcessingTime / 1000)}s
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-theme-text-muted">
+                    {currentAnalysisType.replace('_', ' ')} Mode
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-theme-text/5 to-theme-text/2 border border-theme-border p-6 rounded-xl">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-10 h-10 bg-theme-text/10 rounded-lg flex items-center justify-center">
+                      <Activity className="w-5 h-5 text-theme-text" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-theme-text-muted">Content Type</div>
+                      <div className="text-xl font-bold text-theme-text capitalize">
+                        {currentContentType}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-theme-text-muted">
+                    {getContentTypeLabel(currentContentType)} Analysis
+                  </div>
+                </div>
+              </div>
+
+              {/* Agent Conversation Timeline */}
+              {agentConversation.length > 0 && (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3">
+                    <MessageSquare className="w-6 h-6 text-theme-primary" />
+                    <h4 className="text-xl font-semibold text-theme-text">Agent Debate Timeline</h4>
+                    <div className="px-3 py-1 bg-theme-primary/10 text-theme-primary text-sm rounded-full">
+                      {agentConversation.length} Messages
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {agentConversation.map((message, index) => (
+                      <div key={index} className="relative">
+                        {/* Timeline connector */}
+                        {index < agentConversation.length - 1 && (
+                          <div className="absolute left-6 top-20 w-0.5 h-8 bg-theme-border"></div>
+                        )}
+
+                        <div className="flex items-start space-x-4 p-6 bg-theme-card-secondary border border-theme-border rounded-xl hover:shadow-md transition-all">
+                          {/* Agent Avatar */}
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white flex-shrink-0 ${
+                            message.agentType === 'FINANCIAL_ANALYST' ? 'bg-blue-500' :
+                            message.agentType === 'MARKET_CONTEXT' ? 'bg-green-500' :
+                            message.agentType === 'RISK_CHALLENGER' ? 'bg-red-500' :
+                            'bg-gray-500'
+                          }`}>
+                            {message.agentName.charAt(0)}
+                          </div>
+
+                          {/* Message Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <div className="font-semibold text-theme-text">{message.agentName}</div>
+                                <div className="text-sm text-theme-text-muted">{message.role || message.agentType}</div>
+                              </div>
+                              <div className="text-right">
+                                {message.confidence && (
+                                  <div className="text-sm font-medium text-theme-text">
+                                    {Math.round(message.confidence * 100)}% Confidence
+                                  </div>
+                                )}
+                                <div className="text-xs text-theme-text-muted">
+                                  {new Date(message.timestamp).toLocaleTimeString()}
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-theme-text leading-relaxed">{message.message}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Consensus with Signal Context */}
+              <div className="bg-gradient-to-r from-theme-primary/10 via-theme-success/10 to-theme-primary/10 border border-theme-primary/20 rounded-xl p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 bg-theme-primary rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-semibold text-theme-text">Agent Consensus</h4>
+                    <div className="text-sm text-theme-text-muted">
+                      Combined analysis from {agentConversation.length} agents
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-theme-card rounded-xl p-4 mb-4">
+                  <p className="text-theme-text leading-relaxed text-lg">
+                    {textAnalysisResult.data.autoGenConversation.consensus}
+                  </p>
+                </div>
+
+                {/* Signal Integration Note */}
+                {consensus && (
+                  <div className="flex items-center space-x-3 p-4 bg-theme-card-secondary rounded-xl">
+                    <div className="w-8 h-8 bg-theme-warning/20 rounded-lg flex items-center justify-center">
+                      <BarChart3 className="w-4 h-4 text-theme-warning" />
+                    </div>
+                    <div className="text-sm">
+                      <div className="font-medium text-theme-text">Signal Context Integration</div>
+                      <div className="text-theme-text-muted">
+                        Analysis considered current market consensus: <strong>{consensus.consensus}</strong>
+                        with {Math.round(consensus.confidence * 100)}% confidence
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </ContentCard>
+        )}
+
+        {/* Conversation Export */}
+        {textAnalysisResult && agentConversation.length > 0 && (
+          <ConversationExport
+            analysisResult={textAnalysisResult}
+            agentConversation={agentConversation}
+            contentType={currentContentType}
+            className="mb-8"
+          />
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <ContentCard title="⚠️ Analysis Error">
+            <p className="text-theme-danger">{error}</p>
           </ContentCard>
         )}
       </div>
