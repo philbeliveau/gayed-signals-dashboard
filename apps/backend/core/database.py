@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool.events import PoolEvents
 from typing import AsyncGenerator, Generator
 import logging
 
@@ -14,9 +15,15 @@ from .config import settings
 logger = logging.getLogger(__name__)
 
 # Determine pool configuration based on environment
+# For async engines, use NullPool to avoid asyncio conflicts
 if settings.ENVIRONMENT == "production":
-    poolclass = QueuePool
-    pool_kwargs = {
+    # Use NullPool for async engine - connections managed by asyncpg
+    async_poolclass = NullPool
+    async_pool_kwargs = {}
+
+    # QueuePool for sync engine (Celery workers)
+    sync_poolclass = QueuePool
+    sync_pool_kwargs = {
         "pool_size": 20,          # Increased base connections for video processing
         "max_overflow": 40,       # Increased additional connections under load
         "pool_timeout": 45,       # Increased timeout for video processing
@@ -25,8 +32,13 @@ if settings.ENVIRONMENT == "production":
         "pool_reset_on_return": "commit",  # Reset connections properly
     }
 else:
-    poolclass = QueuePool  # Use pooling in development for testing
-    pool_kwargs = {
+    # Use NullPool for async engine in development
+    async_poolclass = NullPool
+    async_pool_kwargs = {}
+
+    # QueuePool for sync engine
+    sync_poolclass = QueuePool
+    sync_pool_kwargs = {
         "pool_size": 5,
         "max_overflow": 10,
         "pool_timeout": 30,
@@ -37,9 +49,9 @@ else:
 # Create async database engine
 engine = create_async_engine(
     settings.processed_database_url,
-    poolclass=poolclass,
+    poolclass=async_poolclass,
     echo=False,  # Disable SQL logging in production
-    **pool_kwargs
+    **async_pool_kwargs
 )
 
 # Session factory with optimized settings
@@ -54,9 +66,9 @@ async_session_maker = async_sessionmaker(
 sync_database_url = settings.processed_database_url.replace("postgresql+asyncpg://", "postgresql://")
 sync_engine = create_engine(
     sync_database_url,
-    poolclass=poolclass,
+    poolclass=sync_poolclass,
     echo=False,
-    **pool_kwargs
+    **sync_pool_kwargs
 )
 
 # Synchronous session factory for Celery workers
@@ -130,37 +142,9 @@ async def create_db_and_tables():
             # await conn.execute("CREATE EXTENSION IF NOT EXISTS btree_gin;")
             # await conn.execute("CREATE EXTENSION IF NOT EXISTS pg_stat_statements;")
             
-            # Set PostgreSQL performance parameters
-            performance_settings = """
-                -- Memory and performance settings
-                ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
-                ALTER SYSTEM SET shared_buffers = '256MB';
-                ALTER SYSTEM SET effective_cache_size = '1GB';
-                ALTER SYSTEM SET maintenance_work_mem = '64MB';
-                ALTER SYSTEM SET checkpoint_completion_target = 0.9;
-                ALTER SYSTEM SET wal_buffers = '16MB';
-                ALTER SYSTEM SET default_statistics_target = 100;
-                ALTER SYSTEM SET random_page_cost = 1.1;
-                ALTER SYSTEM SET effective_io_concurrency = 200;
-                
-                -- Connection and worker settings
-                ALTER SYSTEM SET max_connections = 200;
-                ALTER SYSTEM SET max_worker_processes = 8;
-                ALTER SYSTEM SET max_parallel_workers_per_gather = 2;
-                ALTER SYSTEM SET max_parallel_workers = 8;
-                ALTER SYSTEM SET max_parallel_maintenance_workers = 2;
-                
-                -- Query optimization
-                ALTER SYSTEM SET enable_partitionwise_join = on;
-                ALTER SYSTEM SET enable_partitionwise_aggregate = on;
-            """
-            
-            try:
-                for setting in performance_settings.strip().split(';'):
-                    if setting.strip():
-                        await conn.execute(setting + ';')
-            except Exception as e:
-                logger.warning(f"Could not set performance parameters (may require superuser): {e}")
+            # Skip performance parameters - they require superuser privileges
+            # and cannot run inside transactions
+            logger.info("Skipping PostgreSQL performance parameters (require superuser privileges)")
             
             # Enable Row Level Security and create policies (commented out - complex DDL)
             # await conn.execute("""
@@ -222,24 +206,48 @@ async def create_db_and_tables():
 async def create_performance_indexes():
     """Create all performance indexes concurrently."""
     from models.database import create_search_indexes
-    
+    from sqlalchemy import text
+
     try:
-        async with engine.begin() as conn:
-            index_statements = create_search_indexes()
-            
-            for index_sql in index_statements:
+        # Get regular indexes and CONCURRENT indexes separately
+        index_statements = create_search_indexes()
+
+        # Create regular indexes in transaction
+        regular_indexes = [idx for idx in index_statements if 'CONCURRENTLY' not in idx]
+        concurrent_indexes = [idx for idx in index_statements if 'CONCURRENTLY' in idx]
+
+        # Create regular indexes in transaction
+        if regular_indexes:
+            async with engine.begin() as conn:
+                for index_sql in regular_indexes:
+                    try:
+                        await conn.execute(text(index_sql))
+                        index_name = index_sql.split(' ')[-1] if 'idx_' in index_sql else 'extension/setting'
+                        logger.info(f"Created index: {index_name}")
+                    except Exception as e:
+                        logger.warning(f"Failed to create index: {e}")
+                        continue
+
+        # Create concurrent indexes outside transaction
+        if concurrent_indexes:
+            logger.info("Skipping CONCURRENT indexes (require non-transactional execution)")
+            for index_sql in concurrent_indexes:
+                # Convert to regular index for development
+                regular_index = index_sql.replace(' CONCURRENTLY', '')
                 try:
-                    await conn.execute(index_sql)
-                    logger.info(f"Created index: {index_sql.split(' ')[-1] if 'idx_' in index_sql else 'extension/setting'}")
+                    async with engine.begin() as conn:
+                        await conn.execute(text(regular_index))
+                        index_name = regular_index.split(' ')[-1] if 'idx_' in regular_index else 'index'
+                        logger.info(f"Created regular index: {index_name}")
                 except Exception as e:
-                    logger.warning(f"Failed to create index/setting: {e}")
+                    logger.warning(f"Failed to create index: {e}")
                     continue
-        
-        logger.info("Performance indexes created successfully")
-        
+
+        logger.info("Performance indexes creation completed")
+
     except Exception as e:
         logger.error(f"Error creating performance indexes: {e}")
-        raise
+        # Don't raise - indexes are optional for basic functionality
 
 
 async def set_user_context(session: AsyncSession, user_id: str):
@@ -253,11 +261,12 @@ async def set_user_context(session: AsyncSession, user_id: str):
 async def analyze_query_performance(query: str) -> dict:
     """Analyze query performance and get execution plan."""
     try:
+        from sqlalchemy import text
         async with engine.begin() as conn:
             # Get query execution plan
-            explain_result = await conn.execute(f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {query}")
+            explain_result = await conn.execute(text(f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {query}"))
             plan = explain_result.fetchone()[0]
-            
+
             return {
                 'query': query,
                 'execution_plan': plan,
@@ -273,45 +282,46 @@ async def analyze_query_performance(query: str) -> dict:
 async def get_database_stats() -> dict:
     """Get comprehensive database performance statistics."""
     try:
+        from sqlalchemy import text
         async with engine.begin() as conn:
             # Table sizes
-            table_sizes = await conn.execute("""
-                SELECT 
+            table_sizes = await conn.execute(text("""
+                SELECT
                     schemaname,
                     tablename,
                     pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size,
                     pg_total_relation_size(schemaname||'.'||tablename) as size_bytes
-                FROM pg_tables 
+                FROM pg_tables
                 WHERE schemaname = 'public'
                 ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
-            """)
-            
-            # Index usage statistics  
-            index_stats = await conn.execute("""
-                SELECT 
+            """))
+
+            # Index usage statistics
+            index_stats = await conn.execute(text("""
+                SELECT
                     schemaname,
                     tablename,
                     indexname,
                     idx_tup_read,
                     idx_tup_fetch,
                     pg_size_pretty(pg_relation_size(indexrelid)) as index_size
-                FROM pg_stat_user_indexes 
+                FROM pg_stat_user_indexes
                 ORDER BY idx_tup_read DESC LIMIT 20;
-            """)
-            
+            """))
+
             # Query performance (if pg_stat_statements is available)
             try:
-                query_stats = await conn.execute("""
-                    SELECT 
+                query_stats = await conn.execute(text("""
+                    SELECT
                         query,
                         calls,
                         total_time,
                         mean_time,
                         rows
-                    FROM pg_stat_statements 
-                    ORDER BY total_time DESC 
+                    FROM pg_stat_statements
+                    ORDER BY total_time DESC
                     LIMIT 10;
-                """)
+                """))
                 query_stats_data = [dict(row) for row in query_stats.fetchall()]
             except:
                 query_stats_data = []

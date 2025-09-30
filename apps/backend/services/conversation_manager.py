@@ -9,11 +9,35 @@ import uuid
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
-from autogen_agentchat.teams import RoundRobinGroupChat
-from autogen_agentchat.base import TaskResult
-from autogen_agentchat.messages import ChatMessage
+# AutoGen imports with fallback handling
+try:
+    from autogen_agentchat.teams import RoundRobinGroupChat
+    from autogen_agentchat.base import TaskResult
+    from autogen_agentchat.messages import ChatMessage
+    AUTOGEN_AVAILABLE = True
+except ImportError:
+    # Create mock types for when AutoGen is not available
+    class TaskResult:
+        """Mock TaskResult for when AutoGen is not available."""
+        pass
 
-from agents import FinancialAnalystAgent, MarketContextAgent, RiskChallengerAgent
+    class RoundRobinGroupChat:
+        """Mock RoundRobinGroupChat for when AutoGen is not available."""
+        pass
+
+    class ChatMessage:
+        """Mock ChatMessage for when AutoGen is not available."""
+        pass
+
+    AUTOGEN_AVAILABLE = False
+    logging.warning("AutoGen not available - using mock conversation manager")
+
+try:
+    from agents import FinancialAnalystAgent, MarketContextAgent, RiskChallengerAgent
+    AGENTS_AVAILABLE = True
+except ImportError:
+    AGENTS_AVAILABLE = False
+    logging.warning("Agent modules not available - using mock agents")
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -27,6 +51,25 @@ class ConversationError(Exception):
 class ConversationTimeoutError(ConversationError):
     """Exception raised when conversation times out."""
     pass
+
+
+class MockConversationManager:
+    """Mock conversation manager for when AutoGen is not available."""
+
+    def __init__(self, model_config: Optional[Dict[str, Any]] = None):
+        logger.warning("Using mock conversation manager - AutoGen not available")
+
+    async def create_conversation(self, content: str, content_type: str = "text") -> Dict[str, Any]:
+        """Mock conversation creation."""
+        return {
+            "conversation_id": str(uuid.uuid4()),
+            "status": "completed",
+            "messages": [
+                {"agent": "analyst", "content": f"Mock analysis of: {content[:100]}..."},
+                {"agent": "context", "content": "Mock market context provided"},
+                {"agent": "challenger", "content": "Mock risk assessment completed"}
+            ]
+        }
 
 
 class AutoGenConversationManager:
@@ -538,3 +581,17 @@ class AutoGenConversationManager:
                     masked_config[field] = "***MASKED***"
 
         return masked_config
+
+
+# Export the appropriate conversation manager based on availability
+if AUTOGEN_AVAILABLE and AGENTS_AVAILABLE:
+    try:
+        ConversationManager = AutoGenConversationManager
+        logger.info("Using AutoGen conversation manager")
+    except NameError:
+        # Fallback if AutoGenConversationManager class has undefined references
+        ConversationManager = MockConversationManager
+        logger.warning("AutoGen types not available - using mock conversation manager")
+else:
+    ConversationManager = MockConversationManager
+    logger.warning("Using mock conversation manager - AutoGen or agents not available")

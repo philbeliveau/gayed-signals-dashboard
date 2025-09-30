@@ -1,138 +1,62 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { AgentMessage, ConversationStatus, ConversationResult, LiveConversationMessage, WebSocketMessage } from '@/types/agents';
+import { AgentMessage, ConversationStatus, ConversationResult } from '@/types/agents';
 import { StatusBadge } from '@/components/SharedUIComponents';
 import UnifiedLoader from '@/components/ui/UnifiedLoader';
-import useWebSocket from '@/hooks/useWebSocket';
-import { AGENT_CONFIG, DEFAULT_AGENT_CONFIG, CONVERSATION_TIMING } from '@/constants/agentConfig';
+import { useAutoGenConversation } from '@/hooks/useAutoGenConversation';
+import { AGENT_CONFIG, DEFAULT_AGENT_CONFIG } from '@/constants/agentConfig';
 
 interface LiveConversationDisplayProps {
   sessionId: string;
+  content?: string;
+  contentType?: string;
   onConversationComplete?: (result: ConversationResult) => void;
   className?: string;
-  enableWebSocket?: boolean;
-  mockMode?: boolean;
+  enableAutoGen?: boolean;
+  autoStart?: boolean;
 }
 
 export function LiveConversationDisplay({
   sessionId,
+  content = '',
+  contentType = 'text',
   onConversationComplete,
   className = '',
-  enableWebSocket = false,
-  mockMode = true
+  enableAutoGen = true,
+  autoStart = false
 }: LiveConversationDisplayProps) {
-  const [messages, setMessages] = useState<AgentMessage[]>([]);
-  const [status, setStatus] = useState<ConversationStatus>('initializing');
   const scrollRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const hasStarted = useRef(false);
 
-  // WebSocket connection for real-time communication
-  const wsUrl = enableWebSocket && !mockMode ? `/api/conversations/${sessionId}/stream` : null;
-  const { isConnected, connectionState, lastMessage, sendMessage } = useWebSocket(wsUrl, {
-    onMessage: (data: WebSocketMessage) => {
-      switch (data.type) {
-        case 'agent-message':
-          if (data.data && data.data.agentType && data.data.message) {
-            setMessages(prev => [...prev, data.data]);
-          }
-          break;
-        case 'conversation-status':
-          if (data.data?.status) {
-            setStatus(data.data.status);
-          }
-          break;
-        case 'conversation-complete':
-          setStatus('completed');
-          if (data.data && onConversationComplete) {
-            onConversationComplete(data.data);
-          }
-          break;
-        case 'error':
-          setStatus('error');
-          setErrorMessage(data.data?.message || 'An error occurred');
-          break;
-      }
-    },
-    onError: (error) => {
-      setStatus('error');
-      setErrorMessage('Connection failed');
+  // Use the new AutoGen conversation hook
+  const {
+    messages,
+    status,
+    isConnected,
+    isUsingDemo,
+    error,
+    startConversation,
+    retryConnection,
+    clearMessages
+  } = useAutoGenConversation(sessionId, {
+    content,
+    contentType,
+    enableAutoGen,
+    onComplete: onConversationComplete,
+    onFallbackMode: (reason) => {
+      console.warn(`Conversation fell back to demo mode: ${reason}`);
     }
   });
 
-  // Mock conversation for demonstration when not using WebSocket
+  // Auto-start conversation if content is provided and autoStart is enabled
   useEffect(() => {
-    if (!mockMode || !sessionId) return;
-
-    setStatus('active');
-
-    // Simulate real-time agent conversation
-    const mockConversation = [
-      {
-        id: '1',
-        agentName: 'Financial Analyst',
-        agentType: 'FINANCIAL_ANALYST' as const,
-        role: 'analyst',
-        message: 'Analyzing provided content using current market signals. Our Utilities/SPY ratio is currently at 0.91, suggesting defensive positioning. VIX defensive signal at 3.2 confirms risk-off sentiment.',
-        timestamp: new Date().toISOString(),
-        confidence: 0.85
-      },
-      {
-        id: '2',
-        agentName: 'Market Context',
-        agentType: 'MARKET_CONTEXT' as const,
-        role: 'context',
-        message: 'Real-time market intelligence shows Fed maintaining hawkish stance. Employment at 3.7% remains historically low. Latest CPI at 3.2% still above Fed target. Market pricing 75bps cuts but Fed signaling caution on inflation persistence.',
-        timestamp: new Date(Date.now() + 3000).toISOString(),
-        confidence: 0.78
-      },
-      {
-        id: '3',
-        agentName: 'Risk Challenger',
-        agentType: 'RISK_CHALLENGER' as const,
-        role: 'challenger',
-        message: 'Critical concern: What if inflation resurges? Employment could deteriorate rapidly given current labor market tightness. Remember 2019 "insurance cuts" became crisis response. Markets rarely follow linear progressions.',
-        timestamp: new Date(Date.now() + 6000).toISOString(),
-        confidence: 0.92
-      },
-      {
-        id: '4',
-        agentName: 'Financial Analyst',
-        agentType: 'FINANCIAL_ANALYST' as const,
-        role: 'analyst',
-        message: 'Valid risk concerns noted. Adjusting signal confidence to 65% given Fed uncertainty and strong employment. Recommend 60% defensive positioning vs normal 80% allocation.',
-        timestamp: new Date(Date.now() + 9000).toISOString(),
-        confidence: 0.65
-      }
-    ];
-
-    let messageIndex = 0;
-    const interval = setInterval(() => {
-      if (messageIndex < mockConversation.length) {
-        setMessages(prev => [...prev, mockConversation[messageIndex]]);
-        messageIndex++;
-      } else {
-        setStatus('completed');
-        onConversationComplete?.({
-          consensusReached: true,
-          finalRecommendation: 'Mixed Signals (65% confidence) - Fed policy uncertainty requires flexible defensive positioning',
-          confidenceLevel: 0.65,
-          keyInsights: [
-            'Utilities/SPY signal indicates risk-off positioning',
-            'Fed policy uncertainty affects market outlook',
-            'Employment strength may delay rate cuts',
-            'Defensive allocation recommended with flexibility'
-          ]
-        });
-        clearInterval(interval);
-      }
-    }, CONVERSATION_TIMING.MESSAGE_INTERVAL);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [sessionId, onConversationComplete, mockMode]);
+    if (autoStart && content.trim() && !hasStarted.current) {
+      hasStarted.current = true;
+      startConversation();
+    }
+  }, [autoStart, content, startConversation]);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -154,16 +78,49 @@ export function LiveConversationDisplay({
     setAutoScroll(isAtBottom);
   };
 
-  // Show loading state
+  // Show loading state or start button
   if (status === 'initializing' && messages.length === 0) {
+    if (!autoStart && !hasStarted.current && content.trim()) {
+      // Show start button when not auto-starting
+      return (
+        <div className={`bg-theme-card border border-theme-border rounded-xl h-[600px] max-h-[600px] md:h-[500px] md:max-h-[500px] flex flex-col shadow-theme-card ${className}`}>
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="text-center space-y-4 max-w-sm">
+              <div className="w-16 h-16 mx-auto bg-theme-primary-bg rounded-full flex items-center justify-center">
+                <span className="text-2xl text-theme-primary">🤖</span>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-theme-text">Ready to Start Agent Conversation</h3>
+                <p className="text-theme-text-muted text-sm">
+                  Click below to start a {enableAutoGen ? 'live AutoGen' : 'demo'} conversation analyzing your content.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  hasStarted.current = true;
+                  startConversation();
+                }}
+                className="px-6 py-3 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors touch-manipulation font-medium"
+              >
+                Start {enableAutoGen ? 'AutoGen' : 'Demo'} Conversation
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show loading state when initializing
     return (
       <div className={`bg-theme-card border border-theme-border rounded-xl h-[600px] max-h-[600px] md:h-[500px] md:max-h-[500px] flex flex-col shadow-theme-card ${className}`}>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-4">
             <UnifiedLoader size="lg" />
             <div className="space-y-1">
-              <p className="text-theme-text font-medium">Initializing Agent Conversation</p>
-              <p className="text-theme-text-muted text-sm">Setting up secure connection...</p>
+              <p className="text-theme-text font-medium">
+                {enableAutoGen ? 'Connecting to AutoGen...' : 'Initializing Demo...'}
+              </p>
+              <p className="text-theme-text-muted text-sm">Setting up agent conversation...</p>
             </div>
           </div>
         </div>
@@ -172,7 +129,7 @@ export function LiveConversationDisplay({
   }
 
   // Show error state
-  if (status === 'error') {
+  if (status === 'error' && !isUsingDemo) {
     return (
       <div className={`bg-theme-card border border-theme-danger-border rounded-xl h-[600px] max-h-[600px] md:h-[500px] md:max-h-[500px] flex flex-col shadow-theme-card ${className}`}>
         <div className="flex-1 flex items-center justify-center p-6">
@@ -181,21 +138,31 @@ export function LiveConversationDisplay({
               <span className="text-2xl text-theme-danger">⚠️</span>
             </div>
             <div className="space-y-2">
-              <h3 className="font-semibold text-theme-text">Connection Failed</h3>
+              <h3 className="font-semibold text-theme-text">AutoGen Connection Failed</h3>
               <p className="text-theme-text-muted text-sm">
-                {errorMessage || 'Unable to establish conversation connection. Please try again.'}
+                {error || 'Unable to connect to AutoGen backend. You can try again or continue in demo mode.'}
               </p>
             </div>
-            <button
-              onClick={() => {
-                setStatus('initializing');
-                setErrorMessage('');
-                setMessages([]);
-              }}
-              className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors touch-manipulation"
-            >
-              Retry Connection
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={retryConnection}
+                className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors touch-manipulation"
+              >
+                Retry AutoGen
+              </button>
+              <button
+                onClick={() => {
+                  clearMessages();
+                  hasStarted.current = true;
+                  // Force demo mode by disabling AutoGen
+                  enableAutoGen = false;
+                  startConversation();
+                }}
+                className="px-4 py-2 bg-theme-secondary text-theme-text rounded-lg hover:bg-theme-secondary-hover transition-colors touch-manipulation"
+              >
+                Use Demo Mode
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -207,8 +174,23 @@ export function LiveConversationDisplay({
       {/* Header */}
       <div className="flex-shrink-0 p-3 sm:p-4 border-b border-theme-border">
         <div className="flex items-center justify-between">
-          <h3 className="text-base sm:text-lg font-semibold text-theme-text truncate">Live Agent Conversation</h3>
-          <ConversationStatusBadge status={status} isConnected={mockMode || isConnected} />
+          <div className="flex items-center gap-2">
+            <h3 className="text-base sm:text-lg font-semibold text-theme-text truncate">
+              {isUsingDemo ? 'Demo: ' : ''}Agent Conversation
+            </h3>
+            {enableAutoGen && !isUsingDemo && (
+              <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-theme-success-bg border border-theme-success-border rounded text-xs text-theme-success">
+                <span className="w-1.5 h-1.5 bg-theme-success rounded-full"></span>
+                AutoGen
+              </div>
+            )}
+          </div>
+          <ConversationStatusBadge
+            status={status}
+            isConnected={isConnected}
+            isUsingDemo={isUsingDemo}
+            enableAutoGen={enableAutoGen}
+          />
         </div>
       </div>
 
@@ -315,23 +297,45 @@ function AgentMessageBubble({
 // Connection and status indicators
 function ConversationStatusBadge({
   status,
-  isConnected
+  isConnected,
+  isUsingDemo,
+  enableAutoGen
 }: {
   status: 'initializing' | 'active' | 'completed' | 'error';
   isConnected: boolean;
+  isUsingDemo?: boolean;
+  enableAutoGen?: boolean;
 }) {
-  if (!isConnected) {
+  if (!isConnected && !isUsingDemo) {
     return <StatusBadge status="error" label="Disconnected" size="sm" />;
   }
 
-  const statusMap = {
-    'initializing': { status: 'loading' as const, label: 'Initializing' },
-    'active': { status: 'online' as const, label: 'Live Conversation' },
-    'completed': { status: 'online' as const, label: 'Complete' },
-    'error': { status: 'error' as const, label: 'Error' }
-  };
+  let statusConfig;
 
-  const config = statusMap[status];
+  if (isUsingDemo) {
+    statusConfig = {
+      'initializing': { status: 'loading' as const, label: 'Demo Starting' },
+      'active': { status: 'neutral' as const, label: 'Demo Mode' },
+      'completed': { status: 'online' as const, label: 'Demo Complete' },
+      'error': { status: 'error' as const, label: 'Demo Error' }
+    };
+  } else if (enableAutoGen) {
+    statusConfig = {
+      'initializing': { status: 'loading' as const, label: 'AutoGen Starting' },
+      'active': { status: 'online' as const, label: 'AutoGen Live' },
+      'completed': { status: 'online' as const, label: 'AutoGen Complete' },
+      'error': { status: 'error' as const, label: 'AutoGen Error' }
+    };
+  } else {
+    statusConfig = {
+      'initializing': { status: 'loading' as const, label: 'Initializing' },
+      'active': { status: 'online' as const, label: 'Live Conversation' },
+      'completed': { status: 'online' as const, label: 'Complete' },
+      'error': { status: 'error' as const, label: 'Error' }
+    };
+  }
+
+  const config = statusConfig[status];
   return <StatusBadge status={config.status} label={config.label} size="sm" />;
 }
 

@@ -13,7 +13,8 @@ import {
   Users,
   Settings,
   Shield,
-  BarChart3
+  BarChart3,
+  MessageSquareMore
 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { getNavigationRoutes } from '@/lib/navigation';
@@ -44,10 +45,12 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
     'activity': BarChart,
     'line-chart': LineChart,
     'video': Video,
+    'youtube': Video,
     'users': Users,
     'bar-chart': BarChart,
     'shield': Shield,
     'settings': Settings,
+    'message-square-more': MessageSquareMore,
   };
 
   const getIcon = (iconName?: string) => {

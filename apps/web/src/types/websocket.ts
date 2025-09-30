@@ -31,8 +31,8 @@ export interface ConversationEvent extends BaseWebSocketEvent {
   conversationId: string;
   data: {
     type: 'message' | 'status' | 'completed' | 'error';
-    content?: any;
-    metadata?: Record<string, any>;
+    content?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
   };
 }
 
@@ -42,7 +42,7 @@ export interface SignalEvent extends BaseWebSocketEvent {
   data: {
     type: 'update' | 'alert' | 'calculation';
     value?: number;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   };
 }
 
@@ -51,7 +51,7 @@ export interface MonitoringEvent extends BaseWebSocketEvent {
   data: {
     type: 'health' | 'performance' | 'error';
     status?: string;
-    metrics?: Record<string, any>;
+    metrics?: Record<string, unknown>;
   };
 }
 
@@ -74,7 +74,7 @@ export type WebSocketEvent =
 // Subscription management
 export interface SubscriptionRequest {
   channels: EventChannel[];
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
 }
 
 export interface SubscriptionResponse {
@@ -111,7 +111,7 @@ export interface RateLimitConfig {
 export interface WebSocketError {
   code: string;
   message: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   retryable: boolean;
 }
 

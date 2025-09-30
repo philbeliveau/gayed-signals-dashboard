@@ -16,7 +16,7 @@ import sys
 import time
 from pathlib import Path
 import shutil
-from typing import Optional
+from typing import Optional, Dict
 from uuid import UUID
 import uuid
 from datetime import datetime

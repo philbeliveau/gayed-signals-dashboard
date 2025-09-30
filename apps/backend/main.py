@@ -21,8 +21,11 @@ from sqlalchemy import text
 
 from core.config import settings
 from core.database import engine, create_db_and_tables
-from api.routes import videos, folders, prompts, economic_data, simple_youtube, autogen_agents, conversations, content_triggers
-from api.v1 import conversations as conversations_v1
+from api.routes import videos, folders, prompts, economic_data, simple_youtube, conversations, content_triggers
+# autogen_agents temporarily disabled due to missing autogen dependencies
+# Temporarily disabled v1 conversations due to AutoGen dependencies
+# from api.v1 import conversations as conversations_v1
+from api.websocket import streaming as websocket_streaming, health as websocket_health
 from models.database import Base
 
 # Configure logging
@@ -52,6 +55,44 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Additional WebSocket CORS configuration
+@app.middleware("http")
+async def websocket_cors_middleware(request, call_next):
+    """
+    Explicit CORS policy for WebSocket connections.
+
+    Validates WebSocket upgrade requests against allowed origins
+    and ensures proper security headers are set.
+    """
+    # Check if this is a WebSocket upgrade request
+    if request.headers.get("upgrade") == "websocket":
+        origin = request.headers.get("origin")
+
+        # Validate origin against allowed origins
+        if origin and origin not in settings.ALLOWED_ORIGINS:
+            # If origin not in allowed list, check for localhost development
+            from urllib.parse import urlparse
+            parsed_origin = urlparse(origin)
+
+            # Allow localhost for development
+            if parsed_origin.hostname not in ["localhost", "127.0.0.1"] and not parsed_origin.hostname.endswith(".vercel.app"):
+                logger.warning(f"WebSocket connection denied for origin: {origin}")
+                from fastapi.responses import JSONResponse
+                return JSONResponse(
+                    status_code=403,
+                    content={"detail": "WebSocket origin not allowed"}
+                )
+
+    response = await call_next(request)
+
+    # Add security headers for WebSocket responses
+    if request.headers.get("upgrade") == "websocket":
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+    return response
 
 # Include API routers
 app.include_router(
@@ -84,11 +125,12 @@ app.include_router(
     tags=["simple-youtube"]
 )
 
-app.include_router(
-    autogen_agents.router,
-    prefix="/api/v1/autogen",
-    tags=["autogen-agents"]
-)
+# Temporarily disabled autogen routes due to missing dependencies
+# app.include_router(
+#     autogen_agents.router,
+#     prefix="/api/v1/autogen",
+#     tags=["autogen-agents"]
+# )
 
 app.include_router(
     conversations.router,
@@ -96,17 +138,31 @@ app.include_router(
     tags=["autogen-conversations"]
 )
 
-# New v1 conversations API for Story 1.8
-app.include_router(
-    conversations_v1.router,
-    prefix="/api/v1",
-    tags=["conversation-orchestrator"]
-)
+# Temporarily disabled v1 conversations API due to AutoGen dependencies
+# app.include_router(
+#     conversations_v1.router,
+#     prefix="/api/v1",
+#     tags=["conversation-orchestrator"]
+# )
 
 # Content triggers API for Story 2.1
 app.include_router(
     content_triggers.router,
     tags=["content-triggers"]
+)
+
+# WebSocket streaming API for Story 2.8
+app.include_router(
+    websocket_streaming.router,
+    prefix="/api/v1",
+    tags=["websocket-streaming"]
+)
+
+# WebSocket health monitoring API for Story 2.8 QA fixes
+app.include_router(
+    websocket_health.router,
+    prefix="/api/v1/websocket",
+    tags=["websocket-health"]
 )
 
 

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     // Generate consensus
     const consensus = SignalOrchestrator.calculateConsensusSignal(signals);
-    console.log(`🎯 Consensus: ${consensus.consensus} with ${consensus.confidence:.1%} confidence`);
+    console.log(`🎯 Consensus: ${consensus.consensus} with ${Math.round(consensus.confidence * 100)}% confidence`);
 
     // Prepare response for Enhanced Financial Analyst
     const response = {

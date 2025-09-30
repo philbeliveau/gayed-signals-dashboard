@@ -5,10 +5,10 @@ FastAPI routes for AutoGen conversation management.
 import logging
 from typing import Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from services.conversation_manager import (
-    AutoGenConversationManager,
+    ConversationManager,
     ConversationError,
     ConversationTimeoutError
 )
@@ -17,19 +17,19 @@ from core.config import settings
 logger = logging.getLogger(__name__)
 
 # Global conversation manager instance
-_conversation_manager: Optional[AutoGenConversationManager] = None
+_conversation_manager: Optional[ConversationManager] = None
 
 
-def get_conversation_manager() -> AutoGenConversationManager:
+def get_conversation_manager() -> ConversationManager:
     """
     Get or create the global conversation manager instance.
 
     Returns:
-        AutoGenConversationManager instance
+        ConversationManager instance
     """
     global _conversation_manager
     if _conversation_manager is None:
-        _conversation_manager = AutoGenConversationManager()
+        _conversation_manager = ConversationManager()
     return _conversation_manager
 
 
@@ -60,7 +60,8 @@ class ConversationRequest(BaseModel):
         description="Optional conversation ID"
     )
 
-    @validator('message')
+    @field_validator('message')
+    @classmethod
     def validate_message(cls, v):
         """Validate the conversation message."""
         if not v.strip():
@@ -111,7 +112,7 @@ class PerformanceMetricsResponse(BaseModel):
     average_duration: float
     within_target_rate: float
     agent_count: int
-    model_config: Dict[str, Any]
+    agent_model_config: Dict[str, Any]
 
 
 # Router setup
@@ -122,7 +123,7 @@ router = APIRouter(prefix="/conversations", tags=["conversations"])
 async def start_conversation(
     request: ConversationRequest,
     background_tasks: BackgroundTasks,
-    conversation_manager: AutoGenConversationManager = Depends(get_conversation_manager)
+    conversation_manager: ConversationManager = Depends(get_conversation_manager)
 ):
     """
     Start a new AutoGen conversation with financial analysis agents.
@@ -189,7 +190,7 @@ async def start_conversation(
 @router.get("/status/{conversation_id}", response_model=ConversationStatusResponse)
 async def get_conversation_status(
     conversation_id: str,
-    conversation_manager: AutoGenConversationManager = Depends(get_conversation_manager)
+    conversation_manager: ConversationManager = Depends(get_conversation_manager)
 ):
     """
     Get the status of a specific conversation.
@@ -236,7 +237,7 @@ async def get_conversation_status(
 
 @router.get("/agents", response_model=AgentInfoResponse)
 async def get_agent_info(
-    conversation_manager: AutoGenConversationManager = Depends(get_conversation_manager)
+    conversation_manager: ConversationManager = Depends(get_conversation_manager)
 ):
     """
     Get information about available agents.
@@ -272,7 +273,7 @@ async def get_agent_info(
 
 @router.get("/metrics", response_model=PerformanceMetricsResponse)
 async def get_performance_metrics(
-    conversation_manager: AutoGenConversationManager = Depends(get_conversation_manager)
+    conversation_manager: ConversationManager = Depends(get_conversation_manager)
 ):
     """
     Get performance metrics for the conversation system.
@@ -315,7 +316,7 @@ async def get_performance_metrics(
 
 @router.get("/health")
 async def health_check(
-    conversation_manager: AutoGenConversationManager = Depends(get_conversation_manager)
+    conversation_manager: ConversationManager = Depends(get_conversation_manager)
 ):
     """
     Health check endpoint for the conversation system.

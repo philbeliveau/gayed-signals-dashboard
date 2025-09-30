@@ -1,6 +1,7 @@
 """
 Redis caching service for video metadata and transcript caching.
 """
+import asyncio
 import json
 import gzip
 import hashlib

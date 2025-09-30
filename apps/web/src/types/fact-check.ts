@@ -22,7 +22,7 @@ export interface ExtractedClaim {
   confidence: number;
   extractedAt: string;
   source?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   // Additional properties used by agents
   claimText?: string;
 }
@@ -36,7 +36,7 @@ export interface SourceEvidence {
   credibilityScore: number;
   relevanceScore: number;
   source: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface Investigation {
@@ -49,10 +49,10 @@ export interface Investigation {
   evidence?: SourceEvidence[];
   reasoning?: string;
   timestamp?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   // Additional properties used by academic agent
   sourcesSearched?: string[];
-  evidenceFound?: any[];
+  evidenceFound?: unknown[];
   conclusion?: string;
   confidenceScore?: number;
   mcpUsed?: string[];
@@ -63,9 +63,9 @@ export interface Investigation {
 
 export interface McpResponse {
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface FactCheckResult {

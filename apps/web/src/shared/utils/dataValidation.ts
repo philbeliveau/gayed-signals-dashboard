@@ -16,14 +16,14 @@ export interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
-  data?: any;
+  data?: unknown;
 }
 
 /**
  * Validate and normalize chart data
  */
 export function validateChartData(
-  data: any[], 
+  data: unknown[],
   requiredFields: string[] = ['date'],
   options: {
     sortByDate?: boolean;
@@ -131,7 +131,7 @@ export function validateChartData(
 /**
  * Normalize date to consistent format
  */
-function normalizeDate(date: any): string | null {
+function normalizeDate(date: string | number | Date | unknown): string | null {
   if (typeof date === 'string') {
     const parsed = parseDate(date);
     return parsed ? formatDate(parsed, 'iso') : null;
@@ -152,7 +152,7 @@ function normalizeDate(date: any): string | null {
  * Validate API response structure
  */
 export function validateAPIResponse(
-  response: any, 
+  response: unknown,
   expectedStructure: Record<string, string>
 ): ValidationResult {
   const errors: string[] = [];
@@ -209,7 +209,7 @@ export function validateAPIResponse(
  * Transform data from different sources to consistent format
  */
 export function transformDataSource(
-  data: any, 
+  data: unknown, 
   sourceType: 'python' | 'api' | 'mock'
 ): ChartDataPoint[] {
   try {
@@ -233,7 +233,7 @@ export function transformDataSource(
 /**
  * Transform Python service data
  */
-function transformPythonData(data: any): ChartDataPoint[] {
+function transformPythonData(data: unknown): ChartDataPoint[] {
   if (!data || !data.chartData) return [];
   
   const result = validateChartData(data.chartData, ['date'], {
@@ -247,7 +247,7 @@ function transformPythonData(data: any): ChartDataPoint[] {
 /**
  * Transform API data
  */
-function transformAPIData(data: any): ChartDataPoint[] {
+function transformAPIData(data: unknown): ChartDataPoint[] {
   if (!data || !Array.isArray(data)) return [];
   
   const result = validateChartData(data, ['date'], {
@@ -261,7 +261,7 @@ function transformAPIData(data: any): ChartDataPoint[] {
 /**
  * Transform mock data
  */
-function transformMockData(data: any): ChartDataPoint[] {
+function transformMockData(data: unknown): ChartDataPoint[] {
   if (!Array.isArray(data)) return [];
   
   const result = validateChartData(data, ['date'], {
@@ -275,7 +275,7 @@ function transformMockData(data: any): ChartDataPoint[] {
 /**
  * Validate signal data structure
  */
-export function validateSignalData(signals: any[]): ValidationResult {
+export function validateSignalData(signals: unknown[]): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   
@@ -330,7 +330,7 @@ export function validateSignalData(signals: any[]): ValidationResult {
  * Safe data access with defaults
  */
 export function safeGet<T>(
-  obj: any, 
+  obj: Record<string, unknown>, 
   path: string, 
   defaultValue: T
 ): T {

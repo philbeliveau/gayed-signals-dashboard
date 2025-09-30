@@ -15,7 +15,8 @@ import {
   Shield,
   Sun,
   Moon,
-  Monitor
+  Monitor,
+  MessageSquareMore
 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -44,10 +45,12 @@ export default function MobileBottomNav() {
     'activity': BarChart,
     'line-chart': LineChart,
     'video': Video,
+    'youtube': Video,
     'users': Users,
     'bar-chart': BarChart,
     'shield': Shield,
     'settings': Settings,
+    'message-square-more': MessageSquareMore,
   };
 
   const getIcon = (iconName?: string) => {

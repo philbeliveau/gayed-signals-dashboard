@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     // Generate consensus from available fast signals
     const consensus = SignalOrchestrator.calculateConsensusSignal(fastSignals);
-    console.log(`🎯 Fast consensus: ${consensus.consensus} with ${consensus.confidence:.1%} confidence`);
+    console.log(`🎯 Fast consensus: ${consensus.consensus} with ${Math.round(consensus.confidence * 100)}% confidence`);
 
     // Prepare fast response
     const response = {
