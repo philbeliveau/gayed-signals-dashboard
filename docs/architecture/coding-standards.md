@@ -37,6 +37,68 @@ try {
 }
 ```
 
+### Auth-First Validation Pattern
+
+**CRITICAL SECURITY PATTERN**: All API routes MUST check authentication BEFORE parsing request bodies or validating parameters.
+
+```typescript
+// ✅ CORRECT: Auth-First Pattern
+export async function POST(request: NextRequest) {
+  try {
+    // 1. AUTHENTICATE FIRST (before any other processing)
+    let userId: string | null = null;
+    try {
+      const authResult = await auth();
+      userId = authResult.userId;
+    } catch (authError) {
+      console.log('⚠️ Clerk auth not available - using development mode');
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // 2. THEN parse request body
+    const body = await request.json();
+
+    // 3. THEN validate parameters
+    if (!body.required_field) {
+      return NextResponse.json(
+        { error: 'Field required' },
+        { status: 400 }
+      );
+    }
+
+    // 4. FINALLY process request
+    // ... implementation
+  }
+}
+```
+
+**Anti-Patterns (PROHIBITED)**:
+
+```typescript
+// ❌ WRONG: Dev user fallback (authentication bypass)
+const effectiveUserId = userId || 'dev-user';  // NEVER DO THIS
+
+// ❌ WRONG: Parsing body before auth check
+const body = await request.json();  // MUST happen AFTER auth check
+if (!userId) return 401;
+
+// ❌ WRONG: Validation before auth check
+if (!body.field) return 400;  // MUST happen AFTER auth check
+if (!userId) return 401;
+```
+
+**Why Auth-First Matters**:
+- Prevents information leakage via validation error messages
+- Ensures unauthorized users cannot trigger request processing
+- Maintains consistent 401 responses for all unauthenticated requests
+- Required for financial-grade security compliance
+
 ## Python Standards (FastAPI Backend)
 
 ### File Naming

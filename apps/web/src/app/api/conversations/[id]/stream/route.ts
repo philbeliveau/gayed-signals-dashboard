@@ -42,6 +42,13 @@ export async function GET(
       console.log('⚠️ Clerk auth not available - using development mode');
     }
 
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Authentication required' },
+        { status: 401 }
+      );
+    }
+
     // Determine backend WebSocket URL with proper protocol handling
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
     const wsUrl = backendUrl.replace(/^https?/, backendUrl.startsWith('https') ? 'wss' : 'ws');
@@ -77,24 +84,8 @@ export async function POST(
 ): Promise<NextResponse> {
   try {
     const conversationId = params.id;
-    const body = await request.json();
 
-    // Validate request
-    if (!conversationId) {
-      return NextResponse.json(
-        { error: 'Conversation ID is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!body.content || !body.content.trim()) {
-      return NextResponse.json(
-        { error: 'Content is required' },
-        { status: 400 }
-      );
-    }
-
-    // Get authentication context (optional when auth is disabled)
+    // Get authentication context FIRST (before parsing body)
     let userId: string | null = null;
     let authToken: string | null = null;
 
@@ -110,6 +101,31 @@ export async function POST(
       }
     } catch (authError) {
       console.log('⚠️ Clerk auth not available - using development mode');
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // NOW parse body after auth check
+    const body = await request.json();
+
+    // Validate request
+    if (!conversationId) {
+      return NextResponse.json(
+        { error: 'Conversation ID is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!body.content || !body.content.trim()) {
+      return NextResponse.json(
+        { error: 'Content is required' },
+        { status: 400 }
+      );
     }
 
     // Prepare request for backend

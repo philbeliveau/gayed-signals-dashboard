@@ -65,8 +65,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<UnifiedCo
       console.log('⚠️ Clerk auth not available - using development mode');
     }
 
-    // Allow requests when auth middleware is disabled (development mode)
-    const effectiveUserId = userId || 'dev-user';
+    if (!userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized - Authentication required'
+      }, { status: 401 });
+    }
 
     // Parse and validate request body
     let body;
@@ -90,7 +94,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UnifiedCo
 
     const { content, contentType, analysisType, includeSignalContext } = validationResult.data;
 
-    console.log(`🔄 Processing ${contentType} content for user ${effectiveUserId}:`);
+    console.log(`🔄 Processing ${contentType} content for user ${userId}:`);
 
     // Route to appropriate processing based on content type
     let processedContent;
@@ -172,6 +176,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<UnifiedCo
 
   } catch (error) {
     console.error('❌ Unified content processing error:', error);
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('❌ Error details:', JSON.stringify(error, null, 2));
 
     return NextResponse.json({
       success: false,

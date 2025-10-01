@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, Activity, LineChart, DollarSign, PieChart, BarChart3, MessageSquare } from 'lucide-react';
+import { RefreshCw, X, TrendingUp, TrendingDown, AlertTriangle, ExternalLink, Activity, LineChart, DollarSign, PieChart, BarChart3, MessageSquare, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../contexts/ThemeContext';
 import { PageHeader, ContentCard, CardGrid, StatsCard } from '../components/layout/ProfessionalLayout';

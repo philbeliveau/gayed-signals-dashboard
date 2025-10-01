@@ -35,7 +35,7 @@ interface YouTubeProcessResponse {
 
 export async function POST(request: NextRequest): Promise<NextResponse<YouTubeProcessResponse>> {
   try {
-    // Authenticate user with Clerk (optional when auth is disabled)
+    // Authenticate user with Clerk FIRST (before parsing body)
     let userId: string | null = null;
     try {
       const authResult = await auth();
@@ -45,10 +45,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<YouTubePr
       console.log('⚠️ Clerk auth not available - using development mode');
     }
 
-    // Allow requests when auth middleware is disabled (development mode)
-    const effectiveUserId = userId || 'dev-user';
+    if (!userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized - Authentication required'
+      }, { status: 401 });
+    }
 
-    // Parse request body
+    // NOW parse request body after auth check
     let body: YouTubeProcessRequest;
     try {
       body = await request.json();

@@ -336,11 +336,12 @@ async def test_specific_route(
     method: str = Query(description="HTTP method (GET, POST, PATCH, DELETE)"),
     path: str = Query(description="API route path (e.g., /api/conversations)"),
     conversation_id: Optional[str] = Query(default=None, description="Conversation ID if needed"),
-    clerk_token: Optional[str] = Query(default=None, description="Clerk session token (optional)")
+    clerk_token: Optional[str] = Query(default=None, description="Clerk session token (optional)"),
+    custom_body: Optional[str] = Query(default=None, description="Custom JSON body for testing (JSON string)")
 ):
     """
-    Test a specific route with optional Clerk authentication.
-    Useful for debugging individual endpoint auth behavior.
+    Test a specific route with optional Clerk authentication and custom request body.
+    Useful for debugging individual endpoint auth behavior with real content.
     """
     # Replace conversation_id in path if provided
     if conversation_id and "{conversation_id}" in path:
@@ -362,7 +363,18 @@ async def test_specific_route(
         async with httpx.AsyncClient(timeout=10.0) as client:
             request_kwargs = {"method": method, "url": url, "headers": headers}
 
-            if route_config and route_config.get("requires_body"):
+            # Use custom body if provided, otherwise use default route body
+            if custom_body:
+                import json
+                try:
+                    request_kwargs["json"] = json.loads(custom_body)
+                except json.JSONDecodeError as e:
+                    return {
+                        "route": f"{method} {path}",
+                        "error": f"Invalid JSON in custom_body: {str(e)}",
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+            elif route_config and route_config.get("requires_body"):
                 request_kwargs["json"] = route_config["body"]
 
             response = await client.request(**request_kwargs)
@@ -462,6 +474,108 @@ async def test_all_routes_summary(
         "success_rate": f"{(passed / len(PROTECTED_ROUTES) * 100):.1f}%",
         "all_passing": failed == 0,
         "timestamp": datetime.utcnow().isoformat()
+    }
+
+    return results
+
+
+@app.get("/test/positive-auth", operation_id="test_positive_auth")
+async def test_positive_auth(
+    clerk_token: str = Query(description="Valid Clerk session token for testing authenticated access"),
+    test_conversation_id: str = Query(
+        default="test_conv_123",
+        description="Conversation ID to use for parameterized routes"
+    )
+):
+    """
+    Positive authentication test: Verify that authenticated requests succeed.
+
+    This test ensures that valid Clerk tokens result in successful API responses (200 OK),
+    complementing the negative tests that verify 401 responses without auth.
+
+    CRITICAL: This is the missing test that would have caught the middleware being disabled.
+
+    Usage:
+        1. Sign in to the application in your browser
+        2. Open browser DevTools → Application → Cookies
+        3. Copy the value of the __session cookie (Clerk session token)
+        4. Pass it as the clerk_token parameter to this endpoint
+
+    Expected Result:
+        - All routes should return 200 OK (or appropriate success status)
+        - None should return 401 Unauthorized
+        - This proves that authentication is actually working end-to-end
+    """
+    results = {
+        "test_name": "Positive Authentication Test",
+        "description": "Verify authenticated requests succeed with valid Clerk tokens",
+        "routes_tested": [],
+        "summary": {}
+    }
+
+    passed = 0
+    failed = 0
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        for route_config in PROTECTED_ROUTES:
+            path = route_config["path"]
+            if route_config.get("uses_param"):
+                path = path.replace("{conversation_id}", test_conversation_id)
+
+            url = f"{NEXTJS_BASE_URL}{path}"
+
+            # Add Clerk session token to cookies (how Clerk auth works in browser)
+            cookies = {"__session": clerk_token}
+
+            try:
+                request_kwargs = {
+                    "method": route_config["method"],
+                    "url": url,
+                    "cookies": cookies
+                }
+                if route_config.get("requires_body"):
+                    request_kwargs["json"] = route_config["body"]
+
+                response = await client.request(**request_kwargs)
+
+                # Positive test: Should NOT be 401
+                # May be 200, 201, 404 (if conversation doesn't exist), etc.
+                # The key is: NOT 401 Unauthorized
+                is_passing = response.status_code != 401
+
+                if is_passing:
+                    passed += 1
+                else:
+                    failed += 1
+
+                results["routes_tested"].append({
+                    "endpoint": f"{route_config['method']} {route_config['path']}",
+                    "status_code": response.status_code,
+                    "authenticated": is_passing,
+                    "icon": "✅" if is_passing else "❌",
+                    "description": route_config["description"],
+                    "response_preview": response.text[:200] if response.text else None
+                })
+
+            except Exception as e:
+                failed += 1
+                results["routes_tested"].append({
+                    "endpoint": f"{route_config['method']} {route_config['path']}",
+                    "status_code": "ERROR",
+                    "authenticated": False,
+                    "icon": "❌",
+                    "error": str(e)
+                })
+
+    results["summary"] = {
+        "total_routes": len(PROTECTED_ROUTES),
+        "passed": passed,
+        "failed": failed,
+        "success_rate": f"{(passed / len(PROTECTED_ROUTES) * 100):.1f}%",
+        "all_passed": failed == 0,
+        "auth_working": failed == 0,
+        "timestamp": datetime.utcnow().isoformat(),
+        "note": "CRITICAL: If any routes return 401, authentication middleware may be disabled!"
     }
 
     return results

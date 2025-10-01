@@ -49,6 +49,12 @@ interface CacheEntry {
   source: DataSource;
 }
 
+// Rate limit tracker
+interface RateLimitTracker {
+  requests: number[];
+  lastReset: number;
+}
+
 // Usage statistics
 export interface DataSourceStats {
   totalRequests: number;
@@ -76,7 +82,8 @@ export class EnhancedMarketClient {
   private config: Required<EnhancedMarketClientConfig>;
   private cache: Map<string, CacheEntry> = new Map();
   private stats: EnhancedClientStats;
-  
+  private rateLimitTrackers: Map<DataSource, RateLimitTracker> = new Map();
+
   // Symbol mapping for different data sources
   private symbolMappings: Map<string, { tiingo: string; alphaVantage: string; yahoo: string }> = new Map([
     ['SPY', { tiingo: 'SPY', alphaVantage: 'SPY', yahoo: 'SPY' }],
@@ -205,12 +212,57 @@ export class EnhancedMarketClient {
   }
 
   /**
+   * Enforce rate limiting for data source
+   */
+  private async enforceRateLimit(source: DataSource): Promise<void> {
+    const now = Date.now();
+    let tracker = this.rateLimitTrackers.get(source);
+
+    if (!tracker) {
+      tracker = { requests: [], lastReset: now };
+      this.rateLimitTrackers.set(source, tracker);
+    }
+
+    // Clean up old requests (older than 1 minute)
+    tracker.requests = tracker.requests.filter(timestamp => now - timestamp < 60000);
+
+    // Get rate limit for this source
+    const rateLimit = this.config.rateLimits[source] || 500;
+    const maxRequestsPerMinute = source === 'tiingo' ? 50 : 5; // Tiingo: 50/min, others: 5/min
+
+    // Check if we've exceeded the rate limit
+    if (tracker.requests.length >= maxRequestsPerMinute) {
+      const oldestRequest = tracker.requests[0];
+      const timeSinceOldest = now - oldestRequest;
+      const waitTime = 60000 - timeSinceOldest + 100; // Wait until oldest request is > 1 min old
+
+      if (waitTime > 0) {
+        logger.warn(`⏳ Rate limit throttling for ${source}, waiting ${waitTime}ms`, {
+          source,
+          operation: 'rate_limit_throttle',
+          waitTime
+        });
+        await this.delay(waitTime);
+      }
+    }
+
+    // Add this request to tracker
+    tracker.requests.push(now);
+
+    // Also apply minimum delay between requests
+    await this.delay(rateLimit);
+  }
+
+  /**
    * Fetch data from Tiingo API (Primary source)
    */
   private async fetchFromTiingo(symbol: string): Promise<MarketData[]> {
     if (!this.config.tiingoApiKey) {
       throw new Error('Tiingo API key not configured');
     }
+
+    // Enforce rate limiting BEFORE making request
+    await this.enforceRateLimit('tiingo');
 
     this.stats.tiingo.totalRequests++;
     const startTime = Date.now();
@@ -228,7 +280,7 @@ export class EnhancedMarketClient {
       };
 
       logger.info(`Fetching ${symbol} from Tiingo`, { symbol, dataSource: 'tiingo', operation: 'fetch_start' });
-      
+
       const response: AxiosResponse<TiingoResponse[]> = await axios.get(url, {
         params,
         timeout: this.config.timeout,
@@ -276,6 +328,9 @@ export class EnhancedMarketClient {
     if (!this.config.alphaVantageApiKey) {
       throw new Error('Alpha Vantage API key not configured');
     }
+
+    // Enforce rate limiting BEFORE making request
+    await this.enforceRateLimit('alpha_vantage');
 
     this.stats.alphaVantage.totalRequests++;
     const startTime = Date.now();
@@ -357,12 +412,15 @@ export class EnhancedMarketClient {
    * Fetch data from Yahoo Finance API (Tertiary/fallback source)
    */
   private async fetchFromYahooFinance(symbol: string): Promise<MarketData[]> {
+    // Enforce rate limiting BEFORE making request
+    await this.enforceRateLimit('yahoo_finance');
+
     this.stats.yahooFinance.totalRequests++;
     const startTime = Date.now();
 
     try {
       const mappedSymbol = this.getSymbolForSource(symbol, 'yahoo_finance');
-      
+
       logger.info(`Fetching ${symbol} from Yahoo Finance`, { symbol, dataSource: 'yahoo_finance', operation: 'fetch_start' });
       const historical = await yahooFinance.historical(mappedSymbol, {
         period1: new Date(Date.now() - (2 * 365 * 24 * 60 * 60 * 1000)),
