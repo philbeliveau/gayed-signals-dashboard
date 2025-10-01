@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "gayed-signals-api": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-http",
+        "http://localhost:8000/mcp"
+      ],
+      "env": {
+        "GAYED_API_URL": "http://localhost:8000"
+      }
+    }
+  }
+}

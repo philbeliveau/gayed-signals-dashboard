@@ -10,7 +10,23 @@ import UnifiedContentInput from '../components/agents/UnifiedContentInput';
 import ProcessingStatusDisplay from '../components/agents/ProcessingStatusDisplay';
 import ConversationExport from '../components/agents/ConversationExport';
 import { AnalysisType, TextAnalysisResponse } from '../types/agents';
+import DataProvenanceBadge from '../components/signals/DataProvenanceBadge';
+import DataQualityWarning, { DataQualityIssue } from '../components/signals/DataQualityWarning';
+import SignalConfidenceTooltip from '../components/signals/SignalConfidenceTooltip';
 // import AgentDebateView from '../components/AgentDebateView';
+
+interface DataProvenance {
+  sources: {
+    name: string;
+    symbols: string[];
+    fetchedAt: string;
+    dataPoints: number;
+    apiSuccess: boolean;
+  }[];
+  validationPassed: boolean;
+  confidenceReduction: number;
+  missingDataSources: string[];
+}
 
 interface Signal {
   type: string;
@@ -19,6 +35,7 @@ interface Signal {
   confidence: number;
   rawValue: number;
   date: string;
+  provenance?: DataProvenance;
 }
 
 interface ConsensusSignal {
@@ -527,6 +544,44 @@ export default function Dashboard() {
     }
   };
 
+  // Collect data quality issues from all signals
+  const getDataQualityIssues = (): { issues: DataQualityIssue[], totalReduction: number } => {
+    const issues: DataQualityIssue[] = [];
+    let totalReduction = 0;
+
+    signals.forEach(signal => {
+      if (signal.provenance) {
+        const { missingDataSources, confidenceReduction, sources } = signal.provenance;
+
+        // Add issues for missing data sources
+        missingDataSources.forEach(source => {
+          issues.push({
+            severity: 'error',
+            source,
+            message: `Data source unavailable for ${signal.type}`,
+            impact: `${confidenceReduction}% confidence reduction`
+          });
+        });
+
+        // Add warnings for failed API calls
+        sources.forEach(source => {
+          if (!source.apiSuccess) {
+            issues.push({
+              severity: 'warning',
+              source: source.name,
+              message: `API fetch failed for ${source.symbols.join(', ')}`,
+              impact: 'Using cached or partial data'
+            });
+          }
+        });
+
+        totalReduction += confidenceReduction;
+      }
+    });
+
+    return { issues, totalReduction };
+  };
+
   const getStrengthColor = (strength: string) => {
     switch (strength) {
       case 'Strong': return 'bg-theme-success';
@@ -946,6 +1001,18 @@ export default function Dashboard() {
           />
         </CardGrid>
 
+        {/* Data Quality Warning - displayed when issues detected */}
+        {(() => {
+          const { issues, totalReduction } = getDataQualityIssues();
+          return issues.length > 0 ? (
+            <DataQualityWarning
+              issues={issues}
+              confidenceReduction={totalReduction}
+              className="mb-8"
+            />
+          ) : null;
+        })()}
+
         {/* Enhanced Consensus Panel */}
         {consensus && (
           <ContentCard className="consensus-gradient">
@@ -1045,13 +1112,11 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0 ml-2">
-                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-theme-text">
-                    {Math.round(signal.confidence * 100)}%
-                  </div>
-                  <div className="text-xs text-theme-text-muted uppercase tracking-wide">
-                    Confidence
-                  </div>
+                <div className="flex-shrink-0 ml-2">
+                  <SignalConfidenceTooltip
+                    confidence={signal.confidence}
+                    provenance={signal.provenance}
+                  />
                 </div>
               </div>
 
@@ -1064,6 +1129,19 @@ export default function Dashboard() {
                   Updated {new Date(signal.date).toLocaleTimeString()}
                 </div>
               </div>
+
+              {/* Data Provenance Badge - shows data sources */}
+              {signal.provenance && (
+                <div className="mb-4 sm:mb-6">
+                  <DataProvenanceBadge
+                    sources={signal.provenance.sources}
+                    validationPassed={signal.provenance.validationPassed}
+                    confidenceReduction={signal.provenance.confidenceReduction}
+                    missingDataSources={signal.provenance.missingDataSources}
+                    compact={true}
+                  />
+                </div>
+              )}
 
               {/* Compact metrics display - mobile optimized */}
               <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">

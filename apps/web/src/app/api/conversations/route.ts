@@ -34,8 +34,18 @@ const queryParamsSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user with Clerk
-    const { userId } = auth()
+    // AUTH STRATEGY: Development Mode with Disabled Middleware
+    // When middleware.ts is disabled (no_auth branch), auth() throws an error
+    // We catch this error and allow the route to continue in dev mode
+    // Production should re-enable Clerk middleware for proper authentication
+    let userId: string | null = null
+    try {
+      const authResult = await auth()
+      userId = authResult.userId
+    } catch (authError) {
+      console.log('⚠️ Clerk auth not available - using development mode')
+    }
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized - Authentication required' },
@@ -102,8 +112,18 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user with Clerk
-    const { userId } = auth()
+    // AUTH STRATEGY: Development Mode with Disabled Middleware
+    // When middleware.ts is disabled (no_auth branch), auth() throws an error
+    // We catch this error and allow the route to continue in dev mode
+    // Production should re-enable Clerk middleware for proper authentication
+    let userId: string | null = null
+    try {
+      const authResult = await auth()
+      userId = authResult.userId
+    } catch (authError) {
+      console.log('⚠️ Clerk auth not available - using development mode')
+    }
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized - Authentication required' },

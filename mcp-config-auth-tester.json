@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "clerk-auth-tester": {
+      "command": "python",
+      "args": [
+        "-m",
+        "uvicorn",
+        "apps.backend.mcp_auth_tester:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8001"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    }
+  }
+}

@@ -54,14 +54,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<UnifiedCo
   const startTime = Date.now();
 
   try {
-    // Authenticate user with Clerk
-    const { userId } = auth();
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Unauthorized - Authentication required'
-      }, { status: 401 });
+    // Authenticate user with Clerk (optional when auth is disabled)
+    let userId: string | null = null;
+    try {
+      const authResult = await auth();
+      userId = authResult.userId;
+    } catch (authError) {
+      // Clerk middleware not configured - this is expected in development mode
+      // when middleware.ts is disabled for no_auth branch
+      console.log('⚠️ Clerk auth not available - using development mode');
     }
+
+    // Allow requests when auth middleware is disabled (development mode)
+    const effectiveUserId = userId || 'dev-user';
 
     // Parse and validate request body
     let body;
@@ -85,7 +90,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UnifiedCo
 
     const { content, contentType, analysisType, includeSignalContext } = validationResult.data;
 
-    console.log(`🔄 Processing ${contentType} content for user ${userId}:`);
+    console.log(`🔄 Processing ${contentType} content for user ${effectiveUserId}:`);
 
     // Route to appropriate processing based on content type
     let processedContent;
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UnifiedCo
         processedContent = await processDirectText(content, analysisType);
         break;
       case 'substack':
-        const substackResult = await processSubstackUrl(content);
+        const substackResult = await processSubstackUrl(content, request);
         if (!substackResult.success) {
           return NextResponse.json({
             success: false,
@@ -107,7 +112,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UnifiedCo
         extractionTime = substackResult.extractionTime || 0;
         break;
       case 'youtube':
-        const youtubeResult = await processYouTubeUrl(content);
+        const youtubeResult = await processYouTubeUrl(content, request);
         if (!youtubeResult.success) {
           return NextResponse.json({
             success: false,
@@ -193,14 +198,19 @@ async function processDirectText(content: string, analysisType: string) {
 
 /**
  * Process Substack URL by calling existing API
+ * FIXED: Forward authentication headers to prevent 401 errors
  */
-async function processSubstackUrl(url: string) {
+async function processSubstackUrl(url: string, request: NextRequest) {
   try {
-    // Call the existing Substack API
+    // Forward authentication cookies from parent request
+    const cookieHeader = request.headers.get('cookie');
+
+    // Call the existing Substack API with authentication
     const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/content/substack`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(cookieHeader && { 'Cookie': cookieHeader }),
       },
       body: JSON.stringify({
         url,
@@ -238,14 +248,19 @@ async function processSubstackUrl(url: string) {
 
 /**
  * Process YouTube URL - currently returns mock data due to Vercel limitations
+ * FIXED: Forward authentication headers to prevent 401 errors
  */
-async function processYouTubeUrl(url: string) {
+async function processYouTubeUrl(url: string, request: NextRequest) {
   try {
-    // Call the existing YouTube API (which returns mock data on Vercel)
+    // Forward authentication cookies from parent request
+    const cookieHeader = request.headers.get('cookie');
+
+    // Call the existing YouTube API (which returns mock data on Vercel) with authentication
     const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/simple-youtube`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(cookieHeader && { 'Cookie': cookieHeader }),
       },
       body: JSON.stringify({
         youtube_url: url

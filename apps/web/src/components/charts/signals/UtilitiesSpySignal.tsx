@@ -67,16 +67,14 @@ export default function UtilitiesSpySignal({
       }
       
     } catch (err) {
-      console.error('Error fetching Utilities/SPY data:', err);
+      console.error('❌ Error fetching Utilities/SPY data:', err);
+      console.log('⚠️ Real data unavailable - NO SYNTHETIC FALLBACK');
       setError(err instanceof Error ? err.message : 'Failed to fetch data');
-      
-      // Generate fallback data for demo
-      const fallbackData = generateFallbackData();
-      setData(fallbackData);
-      if (fallbackData.length > 0) {
-        setCurrentSignal(fallbackData[fallbackData.length - 1]);
-      }
-      
+
+      // ✅ POLICY COMPLIANT: No fallback data - return empty
+      setData([]);
+      setCurrentSignal(null);
+
     } finally {
       setLoading(false);
     }
@@ -95,58 +93,9 @@ export default function UtilitiesSpySignal({
     }));
   };
 
-  // Generate fallback data for demo purposes
-  const generateFallbackData = (): UtilitiesSpyData[] => {
-    const data: UtilitiesSpyData[] = [];
-    const endDate = new Date();
-    const startDate = new Date();
-    
-    // Calculate date range
-    const months = selectedPeriod.includes('y') ? 
-      parseInt(selectedPeriod) * 12 : 
-      parseInt(selectedPeriod) || 12;
-    startDate.setMonth(endDate.getMonth() - months);
-    
-    const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    
-    for (let i = 0; i < daysDiff; i += 7) { // Weekly data
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      
-      // Generate realistic market data with trends
-      const trend = Math.sin(i / 50) * 0.2 + Math.cos(i / 30) * 0.1;
-      const xluPrice = 65 + trend * 5 + (Math.random() - 0.5) * 2;
-      const spyPrice = 420 + trend * 20 + (Math.random() - 0.5) * 8;
-      const ratio = xluPrice / spyPrice;
-      
-      // Determine signal based on ratio trends
-      let signal: 'Risk-On' | 'Risk-Off' | 'Neutral' = 'Neutral';
-      let strength: 'Strong' | 'Moderate' | 'Weak' = 'Moderate';
-      let confidence = 0.7;
-      
-      if (ratio > 0.156) {
-        signal = 'Risk-Off'; // Utilities outperforming = defensive behavior
-        strength = ratio > 0.160 ? 'Strong' : 'Moderate';
-        confidence = Math.min(0.9, 0.6 + (ratio - 0.156) * 10);
-      } else if (ratio < 0.150) {
-        signal = 'Risk-On'; // SPY outperforming = risk-on behavior
-        strength = ratio < 0.145 ? 'Strong' : 'Moderate';
-        confidence = Math.min(0.9, 0.6 + (0.150 - ratio) * 10);
-      }
-      
-      data.push({
-        date: date.toISOString().split('T')[0],
-        xluPrice: Math.round(xluPrice * 100) / 100,
-        spyPrice: Math.round(spyPrice * 100) / 100,
-        ratio: Math.round(ratio * 10000) / 10000,
-        signal,
-        strength,
-        confidence: Math.round(confidence * 100) / 100
-      });
-    }
-    
-    return data;
-  };
+  // ❌ REMOVED: generateFallbackData() violated REAL DATA ONLY policy
+  // Per data-integrity-policy.md: NO SYNTHETIC FALLBACKS ALLOWED
+  // When API fails, component displays error state instead
 
   // Load data on mount and period change
   useEffect(() => {

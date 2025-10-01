@@ -195,3 +195,7 @@ public
 # *.gate.yml
 
 apps/web/.next
+
+# Turbo cache and runtime
+.turbo/
+**/.turbo/

@@ -69,8 +69,15 @@ export async function GET(
   const startTime = Date.now()
 
   try {
-    // Authenticate user with Clerk
-    const { userId } = auth()
+    // AUTH STRATEGY: Development Mode with Disabled Middleware
+    let userId: string | null = null
+    try {
+      const authResult = await auth()
+      userId = authResult.userId
+    } catch (authError) {
+      console.log('⚠️ Clerk auth not available - using development mode')
+    }
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized - Authentication required' },

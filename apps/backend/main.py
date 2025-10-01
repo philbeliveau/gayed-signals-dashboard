@@ -19,6 +19,9 @@ from typing import Dict, Any
 import logging
 from sqlalchemy import text
 
+# FastAPI MCP Integration
+from fastapi_mcp import FastApiMCP
+
 from core.config import settings
 from core.database import engine, create_db_and_tables
 from api.routes import videos, folders, prompts, economic_data, simple_youtube, conversations, content_triggers
@@ -37,8 +40,8 @@ logger = logging.getLogger(__name__)
 
 # Create FastAPI application
 app = FastAPI(
-    title="YouTube Video Insights API",
-    description="FastAPI service for processing YouTube videos with AI-powered transcription and summarization",
+    title="Gayed Signals Dashboard API",
+    description="FastAPI service for processing YouTube videos, financial data analysis, and AutoGen agent conversations",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -46,6 +49,26 @@ app = FastAPI(
 
 # Security scheme
 security = HTTPBearer()
+
+# ============================================================
+# FastAPI MCP Integration - Expose API endpoints as MCP tools
+# ============================================================
+logger.info("Initializing FastAPI MCP integration...")
+mcp = FastApiMCP(
+    app,
+    name="gayed-signals-api",
+    description="Gayed Signals Dashboard API - Financial analysis, YouTube processing, and AutoGen agent conversations",
+    # Optional: Add authentication for MCP endpoints
+    # dependencies=[Depends(verify_api_key)]
+)
+
+# Mount MCP endpoints (HTTP transport)
+mcp.mount_http(mount_path="/mcp")
+logger.info("✅ FastAPI MCP mounted at /mcp")
+
+# Optional: Mount SSE transport for streaming (useful for real-time updates)
+mcp.mount_sse(mount_path="/mcp/sse")
+logger.info("✅ FastAPI MCP SSE transport mounted at /mcp/sse")
 
 # CORS middleware for Next.js integration
 app.add_middleware(

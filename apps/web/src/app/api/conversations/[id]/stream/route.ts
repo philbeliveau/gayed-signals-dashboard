@@ -33,8 +33,14 @@ export async function GET(
       );
     }
 
-    // Get authentication context
-    const { userId } = await auth();
+    // Get authentication context (optional when auth is disabled)
+    let userId: string | null = null;
+    try {
+      const authResult = await auth();
+      userId = authResult.userId;
+    } catch (authError) {
+      console.log('⚠️ Clerk auth not available - using development mode');
+    }
 
     // Determine backend WebSocket URL with proper protocol handling
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
@@ -88,15 +94,22 @@ export async function POST(
       );
     }
 
-    // Get authentication context
-    const { userId, getToken } = await auth();
-
-    // Get auth token for backend
+    // Get authentication context (optional when auth is disabled)
+    let userId: string | null = null;
     let authToken: string | null = null;
+
     try {
-      authToken = await getToken();
-    } catch (error) {
-      console.warn('Failed to get auth token:', error);
+      const authResult = await auth();
+      userId = authResult.userId;
+
+      // Get auth token for backend
+      try {
+        authToken = await authResult.getToken();
+      } catch (tokenError) {
+        console.warn('Failed to get auth token:', tokenError);
+      }
+    } catch (authError) {
+      console.log('⚠️ Clerk auth not available - using development mode');
     }
 
     // Prepare request for backend

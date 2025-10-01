@@ -13,6 +13,22 @@ export type SignalDirection = 'Risk-On' | 'Risk-Off' | 'Neutral';
 
 export type SignalStrength = 'Strong' | 'Moderate' | 'Weak';
 
+/**
+ * Data Provenance for REAL DATA ONLY enforcement
+ */
+export interface DataProvenance {
+  sources: {
+    name: string; // e.g., 'yahoo-finance', 'fred-api'
+    symbols: string[]; // e.g., ['SPY', 'XLU']
+    fetchedAt: string; // ISO timestamp
+    dataPoints: number;
+    apiSuccess: boolean;
+  }[];
+  validationPassed: boolean;
+  confidenceReduction: number; // 0-100, percentage reduction due to missing data
+  missingDataSources: string[]; // Explicit list of unavailable data
+}
+
 export interface Signal {
   type: SignalType;
   signal: SignalDirection;
@@ -21,6 +37,7 @@ export interface Signal {
   rawValue: number;
   date: string;
   metadata?: Record<string, any>;
+  provenance?: DataProvenance; // REAL DATA ONLY tracking
 }
 
 export interface ConsensusSignal {
@@ -34,12 +51,15 @@ export interface ConsensusSignal {
 }
 
 export interface MarketData {
+  date: string;
   symbol: string;
-  price: number;
-  change: number;
-  changePercent: number;
+  close: number;
   volume?: number;
-  timestamp: string;
+  // Legacy fields for backwards compatibility
+  price?: number;
+  change?: number;
+  changePercent?: number;
+  timestamp?: string;
 }
 
 export interface SignalCalculationInput {

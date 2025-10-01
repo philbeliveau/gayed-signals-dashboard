@@ -4,6 +4,9 @@ uvicorn[standard]==0.32.0
 gunicorn==21.2.0
 websockets==13.1
 
+# FastAPI MCP - Expose FastAPI endpoints as MCP tools
+fastapi-mcp>=0.1.0
+
 # Database
 sqlalchemy==2.0.23
 asyncpg==0.29.0
