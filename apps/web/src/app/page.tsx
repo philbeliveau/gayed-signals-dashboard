@@ -428,7 +428,8 @@ export default function Dashboard() {
   const { theme } = useTheme();
   const [signals, setSignals] = useState<Signal[]>([]);
   const [consensus, setConsensus] = useState<ConsensusSignal | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -475,11 +476,12 @@ export default function Dashboard() {
       setSignals(data.signals || []);
       setConsensus(data.consensus);
       setLastUpdated(new Date());
+      setDataLoaded(true);
       // NEW: Set agent debate data
       setAgentConversation(data.agentConversation || []);
       setReasoning(data.reasoning || []);
       setTransparentDecision(data.transparentDecision || false);
-      
+
       const loadTime = Date.now() - startTime;
       
       // Show performance info
@@ -499,14 +501,8 @@ export default function Dashboard() {
     }
   }, [loading]);
 
-  useEffect(() => {
-    // Add small delay to prevent rapid re-renders on mobile
-    const timeoutId = setTimeout(() => {
-      fetchSignals(!isFullMode);
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [fetchSignals, isFullMode]);
+  // REMOVED: Auto-load on mount - now requires user click
+  // Data loads only when user explicitly requests it via "Load Dashboard" button
 
   const getSignalColor = (signal: string) => {
     switch (signal) {
@@ -907,6 +903,59 @@ export default function Dashboard() {
       </div>
     );
   };
+
+  // Show welcome screen with "Load Dashboard" button if data hasn't been loaded yet
+  if (!dataLoaded && !loading && !error) {
+    return (
+      <div className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center p-4">
+        <div className="text-center max-w-2xl mx-auto p-8 sm:p-12 bg-theme-card border border-theme-border rounded-2xl shadow-xl">
+          <div className="mb-8">
+            <Activity className="w-16 h-16 sm:w-20 sm:h-20 text-theme-primary mx-auto mb-6" />
+            <h1 className="text-3xl sm:text-4xl font-bold text-theme-text mb-4">
+              Gayed Market Signals
+            </h1>
+            <p className="text-base sm:text-lg text-theme-text-muted leading-relaxed mb-2">
+              Real-time analysis of 5 key market indicators using the Gayed methodology
+            </p>
+            <p className="text-sm sm:text-base text-theme-text-light">
+              Click below to load the latest market data
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => {
+                setLoading(true);
+                fetchSignals(!isFullMode);
+              }}
+              className="w-full px-8 py-4 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-hover transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
+            >
+              <Activity className="w-6 h-6" />
+              Load Market Dashboard
+            </button>
+
+            <button
+              onClick={() => {
+                setLoading(true);
+                setIsFullMode(false);
+                fetchSignals(true);
+              }}
+              className="w-full px-8 py-4 bg-theme-card-secondary border border-theme-border rounded-xl text-theme-text hover:bg-theme-card-hover transition-all duration-200 font-medium flex items-center justify-center gap-3"
+            >
+              <RefreshCw className="w-5 h-5" />
+              Load Fast Mode (Cached Data)
+            </button>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-theme-border">
+            <p className="text-xs sm:text-sm text-theme-text-light">
+              Data sources: FRED API, Yahoo Finance, Enhanced Market Data
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
