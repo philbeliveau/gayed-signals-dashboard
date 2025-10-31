@@ -12,16 +12,26 @@
     "prisma:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
     "prisma:deploy": "prisma migrate deploy --schema=./prisma/schema.prisma",
     "prisma:studio": "prisma studio --schema=./prisma/schema.prisma",
+    "cleanup:preview": "ts-node src/jobs/scheduled-cleanup.ts preview",
+    "cleanup:execute": "ts-node src/jobs/scheduled-cleanup.ts execute",
+    "benchmark:queries": "ts-node src/benchmarks/query-performance.ts",
+    "benchmark:pool": "ts-node src/config/database.ts",
     "test": "jest",
+    "test:unit": "jest --testPathIgnorePatterns=integration",
+    "test:integration": "jest --testPathPattern=integration",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint ."
   },
   "dependencies": {
     "@prisma/client": "^5.7.0",
+    "@types/supertest": "^6.0.3",
+    "axios": "^1.13.1",
     "express": "^4.18.2",
     "ioredis": "^5.3.2",
-    "uuid": "^9.0.1"
+    "supertest": "^7.1.4",
+    "uuid": "^9.0.1",
+    "yahoo-finance2": "^3.10.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

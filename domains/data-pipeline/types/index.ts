@@ -70,9 +70,11 @@ export interface DataSourceHealth {
   name: string;
   endpoint: string;
   priority: number;
-  health_score: number;
-  last_success: Date | null;
-  error_rate: number;
+  healthScore: number;
+  lastSuccess: Date | null;
+  lastFailure: Date | null;
+  errorRate: number;
+  enabled: boolean;
 }
 
 export interface ValidationResult {

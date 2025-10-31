@@ -1,6 +1,7 @@
 // Prisma schema for Unified Data Pipeline
-// Story: 4.0a - Unified Data Service
-// Railway PostgreSQL connection
+// Story: 4.0b - Data Persistence Layer (Railway PostgreSQL)
+// Implements market_data, data_provenance, and signal_history tables
+// with full provenance tracking and data quality metrics
 
 generator client {
   provider = "prisma-client-js"
@@ -13,45 +14,152 @@ datasource db {
   directUrl = env("DATABASE_PUBLIC_URL")
 }
 
+// Story 4.0b: Market Data Table
+// OHLCV data with provenance tracking
 model MarketData {
-  id               String            @id @default(uuid())
-  symbol           String
-  date             DateTime
-  open             Decimal?          @db.Decimal(10, 4)
-  high             Decimal?          @db.Decimal(10, 4)
-  low              Decimal?          @db.Decimal(10, 4)
-  close            Decimal           @db.Decimal(10, 4)
-  volume           BigInt?
-  source           String
-  fetchTimestamp   DateTime          @default(now())
-  validationStatus String?
-  qualityScore     Decimal?          @db.Decimal(3, 2)
-  provenance       DataProvenance[]
+  id              Int              @id @default(autoincrement())
 
-  @@unique([symbol, date, source])
-  @@index([symbol, date])
+  // Identifiers
+  symbol          String           @db.VarChar(20)
+  dataType        String           @db.VarChar(50) @map("data_type") // 'price', 'volume', 'spy', 'vix', etc.
+
+  // Temporal data
+  timestamp       DateTime         @db.Timestamptz()
+  date            DateTime         @db.Date
+
+  // Market data fields (DECIMAL for precision)
+  open            Decimal?         @db.Decimal(12, 4)
+  high            Decimal?         @db.Decimal(12, 4)
+  low             Decimal?         @db.Decimal(12, 4)
+  close           Decimal          @db.Decimal(12, 4)
+  volume          BigInt?
+
+  // Additional metrics
+  adjustedClose   Decimal?         @db.Decimal(12, 4) @map("adjusted_close")
+  splitCoefficient Decimal?        @db.Decimal(8, 6) @map("split_coefficient")
+
+  // Metadata
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz() // Soft delete support
+
+  // Provenance tracking
+  provenanceId    Int?             @map("provenance_id")
+  provenance      DataProvenance?  @relation(fields: [provenanceId], references: [id])
+
+  @@unique([symbol, dataType, timestamp], name: "unique_market_data")
+  @@index([symbol, date(sort: Desc)])
+  @@index([dataType, date(sort: Desc)])
+  @@index([timestamp(sort: Desc)])
+  @@index([provenanceId])
   @@map("market_data")
 }
 
+// Story 4.0b: Data Provenance Table
+// Tracks source, quality, and lineage of all data
 model DataProvenance {
-  id               String     @id @default(uuid())
-  fetchId          String     @unique
-  marketDataId     String
-  marketData       MarketData @relation(fields: [marketDataId], references: [id])
-  source           String
-  symbols          String[]
-  fetchedAt        DateTime   @default(now())
-  apiSuccess       Boolean
-  errorMessage     String?
-  confidence       Decimal    @db.Decimal(5, 2)
-  requestMetadata  Json?
-  responseMetadata Json?
+  id                  Int         @id @default(autoincrement())
 
-  @@index([fetchId])
-  @@index([source, fetchedAt])
+  // Source information
+  sourceSystem        String      @db.VarChar(100) @map("source_system") // 'alpha_vantage', 'fred', 'manual', etc.
+  sourceEndpoint      String?     @db.VarChar(255) @map("source_endpoint")
+  sourceQueryParams   Json?       @map("source_query_params")
+
+  // Request metadata
+  requestTimestamp    DateTime    @default(now()) @map("request_timestamp") @db.Timestamptz()
+  responseTimestamp   DateTime?   @map("response_timestamp") @db.Timestamptz()
+  responseStatus      Int?        @map("response_status")
+  responseHeaders     Json?       @map("response_headers")
+
+  // Data quality
+  recordsReceived     Int?        @map("records_received")
+  recordsValid        Int?        @map("records_valid")
+  recordsInvalid      Int?        @map("records_invalid")
+  validationErrors    Json?       @map("validation_errors")
+
+  // Transformation tracking
+  transformationApplied String?   @db.VarChar(100) @map("transformation_applied") // 'raw', 'normalized', 'aggregated', etc.
+  transformationParams  Json?     @map("transformation_params")
+
+  // API usage tracking
+  apiCreditsUsed      Int?        @map("api_credits_used")
+  rateLimitRemaining  Int?        @map("rate_limit_remaining")
+
+  // Audit fields
+  createdBy           String?     @db.VarChar(100) @map("created_by")
+  createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  deletedAt           DateTime?   @map("deleted_at") @db.Timestamptz() // Soft delete support
+
+  // Data lineage (self-referencing)
+  parentProvenanceId  Int?        @map("parent_provenance_id")
+  parent              DataProvenance?  @relation("ProvenanceLineage", fields: [parentProvenanceId], references: [id])
+  children            DataProvenance[] @relation("ProvenanceLineage")
+
+  // Status tracking
+  status              String      @default("completed") // 'pending', 'completed', 'failed', 'partial'
+  errorMessage        String?     @db.Text @map("error_message")
+
+  // Relationships
+  marketData          MarketData[]
+
+  @@index([sourceSystem, requestTimestamp(sort: Desc)])
+  @@index([status, requestTimestamp(sort: Desc)])
+  @@index([parentProvenanceId])
   @@map("data_provenance")
 }
 
+// Story 4.0b: Signal History Table
+// Stores calculated signals with metadata and provenance
+model SignalHistory {
+  id                  Int         @id @default(autoincrement())
+
+  // Signal identification
+  signalName          String      @db.VarChar(100) @map("signal_name") // 'gayed_8_month', 'gayed_20d', etc.
+  signalType          String      @db.VarChar(50) @map("signal_type") // 'timing', 'momentum', 'volatility', etc.
+
+  // Temporal data
+  calculationDate     DateTime    @db.Date @map("calculation_date")
+  calculationTimestamp DateTime   @default(now()) @map("calculation_timestamp") @db.Timestamptz()
+
+  // Signal value
+  signalValue         Decimal     @db.Decimal(12, 6) @map("signal_value")
+  signalStrength      Decimal?    @db.Decimal(5, 4) @map("signal_strength") // Normalized -1 to 1 or 0 to 1
+
+  // Signal metadata
+  confidenceScore     Decimal?    @db.Decimal(5, 4) @map("confidence_score") // 0 to 1
+  dataQualityScore    Decimal?    @db.Decimal(5, 4) @map("data_quality_score") // 0 to 1
+
+  // Signal status
+  signalStatus        String      @db.VarChar(20) @map("signal_status") // 'bullish', 'bearish', 'neutral', 'defensive'
+  previousStatus      String?     @db.VarChar(20) @map("previous_status")
+  statusChanged       Boolean     @default(false) @map("status_changed")
+
+  // Supporting data (JSON for flexibility)
+  inputData           Json?       @map("input_data") // Raw inputs used for calculation
+  intermediateValues  Json?       @map("intermediate_values") // Debug/audit information
+  calculationParams   Json?       @map("calculation_params") // Parameters used (lookback, thresholds, etc.)
+
+  // Data dependencies (PostgreSQL arrays)
+  marketDataIds       Int[]       @map("market_data_ids") // Array of market_data.id records used
+  provenanceIds       Int[]       @map("provenance_ids") // Array of data_provenance.id records
+
+  // Version tracking
+  calculationVersion  String?     @db.VarChar(20) @map("calculation_version") // Algorithm version
+
+  // Audit fields
+  createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  createdBy           String      @default("system") @db.VarChar(100) @map("created_by")
+  deletedAt           DateTime?   @map("deleted_at") @db.Timestamptz() // Soft delete support
+
+  @@unique([signalName, calculationDate], name: "unique_signal_calc")
+  @@index([signalName, calculationDate(sort: Desc)])
+  @@index([signalType, calculationDate(sort: Desc)])
+  @@index([signalStatus, calculationDate(sort: Desc)])
+  @@index([calculationTimestamp(sort: Desc)])
+  @@map("signal_history")
+}
+
+// Supporting tables from Story 4.0a (kept for compatibility)
 model DataSourceHealth {
   id           String    @id @default(uuid())
   name         String    @unique
@@ -60,40 +168,102 @@ model DataSourceHealth {
   healthScore  Decimal   @default(1.0) @db.Decimal(3, 2)
   lastSuccess  DateTime?
   lastFailure  DateTime?
+  lastCheckAt  DateTime  @default(now()) @map("last_check_at") @db.Timestamptz()
   errorRate    Decimal   @default(0) @db.Decimal(5, 2)
   enabled      Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz() // Soft delete support
 
   @@index([enabled, healthScore])
+  @@index([lastCheckAt(sort: Desc)])
   @@map("data_source_health")
 }
 
 model CacheMetadata {
-  key       String   @id
-  dataHash  String
-  createdAt DateTime @default(now())
-  expiresAt DateTime
-  hitCount  Int      @default(0)
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  dataHash  String   @map("data_hash")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  expiresAt DateTime @map("expires_at") @db.Timestamptz()
+  hitCount  Int      @default(0) @map("hit_count")
   source    String
-  isStale   Boolean  @default(false)
+  isStale   Boolean  @default(false) @map("is_stale")
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz() // Soft delete support
 
   @@index([expiresAt])
+  @@index([createdAt(sort: Desc)])
   @@map("cache_metadata")
 }
 
-model SignalHistory {
-  id                   String   @id @default(uuid())
-  signalType           String
-  signalValue          String
-  confidence           Decimal  @db.Decimal(5, 2)
-  rawValue             Decimal? @db.Decimal(10, 4)
-  calculatedAt         DateTime @default(now())
-  dataProvenanceId     String?
-  inputDataIds         String[]
-  calculationMetadata  Json?
-  qualityMetrics       Json?
+// Story 4.0c: Validation Framework Tables
+// Stores validation results, rules, quarantined data, and metrics
 
-  @@index([signalType, calculatedAt])
-  @@map("signal_history")
+model ValidationResult {
+  id          String   @id @default(uuid())
+  timestamp   DateTime @default(now()) @db.Timestamptz()
+  dataCount   Int      @map("data_count")
+  errors      Json[]
+  warnings    Json[]
+  score       Decimal  @db.Decimal(5, 4) // 0 to 1
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([timestamp(sort: Desc)])
+  @@index([score])
+  @@map("validation_results")
+}
+
+model ValidationRule {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  category    String   // completeness, freshness, consistency, anomaly, sequential
+  severity    String   // error, warning, info
+  enabled     Boolean  @default(true)
+  config      Json     // Rule-specific configuration
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([category])
+  @@index([enabled])
+  @@map("validation_rules")
+}
+
+model QuarantinedData {
+  id               String    @id @default(uuid())
+  originalData     Json      @map("original_data")
+  validationErrors Json[]    @map("validation_errors")
+  source           String
+  symbol           String?
+  timestamp        DateTime  @default(now()) @db.Timestamptz()
+  reviewed         Boolean   @default(false)
+  reviewedBy       String?   @map("reviewed_by")
+  reviewedAt       DateTime? @map("reviewed_at") @db.Timestamptz()
+  action           String?   // approved, rejected, modified
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([symbol])
+  @@index([reviewed])
+  @@index([timestamp(sort: Desc)])
+  @@map("quarantined_data")
+}
+
+model ValidationMetrics {
+  id               String   @id @default(uuid())
+  date             DateTime @db.Date
+  totalValidations Int      @map("total_validations")
+  passedCount      Int      @map("passed_count")
+  failedCount      Int      @map("failed_count")
+  warningCount     Int      @map("warning_count")
+  averageScore     Decimal  @db.Decimal(5, 4) @map("average_score")
+  p95Score         Decimal  @db.Decimal(5, 4) @map("p95_score")
+  p99Score         Decimal  @db.Decimal(5, 4) @map("p99_score")
+  metadata         Json?
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@unique([date])
+  @@index([date(sort: Desc)])
+  @@map("validation_metrics")
 }

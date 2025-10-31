@@ -20,6 +20,8 @@ import {
   DataQuality,
   ProvenanceRecord,
 } from '../types';
+import yahooFinance from 'yahoo-finance2';
+import axios from 'axios';
 
 export class UnifiedDataService {
   private prisma: PrismaClient;
@@ -353,7 +355,12 @@ export class UnifiedDataService {
       },
     });
 
-    return sources;
+    // Convert Prisma Decimal to number for type compatibility
+    return sources.map(s => ({
+      ...s,
+      healthScore: Number(s.healthScore),
+      errorRate: Number(s.errorRate),
+    }));
   }
 
   /**
@@ -367,17 +374,171 @@ export class UnifiedDataService {
     const breaker = this.getCircuitBreaker(source.name);
 
     return breaker.execute(async () => {
-      // This would integrate with actual API clients
-      // For now, returning mock structure
       this.logger.info(`Fetching from ${source.name}`, { symbols });
 
-      // TODO: Implement actual API calls based on source.name
-      // - YAHOO_FINANCE: Use yahoo-finance2
-      // - TIINGO: Use Tiingo API client
-      // - ALPHA_VANTAGE: Use Alpha Vantage client
-
-      throw new Error('API client integration not yet implemented');
+      switch (source.name) {
+        case 'YAHOO_FINANCE':
+          return await this.fetchFromYahoo(symbols, options);
+        case 'TIINGO':
+          return await this.fetchFromTiingo(symbols, options);
+        case 'ALPHA_VANTAGE':
+          return await this.fetchFromAlphaVantage(symbols, options);
+        default:
+          throw new Error(`Unknown data source: ${source.name}`);
+      }
     });
+  }
+
+  /**
+   * Fetch data from Yahoo Finance using yahoo-finance2
+   */
+  private async fetchFromYahoo(
+    symbols: string[],
+    options: FetchOptions
+  ): Promise<MarketData[]> {
+    const marketData: MarketData[] = [];
+
+    for (const symbol of symbols) {
+      try {
+        const quote = await (yahooFinance as any).quoteCombine(symbol);
+
+        if (!quote) {
+          this.logger.warn(`No data from Yahoo Finance for ${symbol}`);
+          continue;
+        }
+
+        marketData.push({
+          symbol,
+          date: quote.regularMarketTime
+            ? new Date(quote.regularMarketTime * 1000)
+            : new Date(),
+          close: quote.regularMarketPrice ?? 0,
+          open: quote.regularMarketOpen ?? 0,
+          high: quote.regularMarketDayHigh ?? 0,
+          low: quote.regularMarketDayLow ?? 0,
+          volume: quote.regularMarketVolume ?? 0,
+          source: 'YAHOO_FINANCE',
+        });
+      } catch (error: any) {
+        this.logger.error(`Yahoo Finance error for ${symbol}`, {
+          error: error.message,
+        });
+        throw error; // Let circuit breaker handle it
+      }
+    }
+
+    return marketData;
+  }
+
+  /**
+   * Fetch data from Tiingo
+   */
+  private async fetchFromTiingo(
+    symbols: string[],
+    options: FetchOptions
+  ): Promise<MarketData[]> {
+    const apiKey = process.env.TIINGO_API_KEY;
+    if (!apiKey) {
+      throw new Error('TIINGO_API_KEY not configured');
+    }
+
+    const marketData: MarketData[] = [];
+
+    for (const symbol of symbols) {
+      try {
+        const response = await axios.get(
+          `https://api.tiingo.com/tiingo/daily/${symbol}/prices`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Token ${apiKey}`,
+            },
+            params: {
+              resampleFreq: 'daily',
+              columns: 'open,high,low,close,volume',
+            },
+          }
+        );
+
+        const latest = response.data[0];
+        if (!latest) {
+          this.logger.warn(`No data from Tiingo for ${symbol}`);
+          continue;
+        }
+
+        marketData.push({
+          symbol,
+          date: new Date(latest.date),
+          close: latest.close,
+          open: latest.open,
+          high: latest.high,
+          low: latest.low,
+          volume: latest.volume,
+          source: 'TIINGO',
+        });
+      } catch (error: any) {
+        this.logger.error(`Tiingo error for ${symbol}`, {
+          error: error.message,
+        });
+        throw error;
+      }
+    }
+
+    return marketData;
+  }
+
+  /**
+   * Fetch data from Alpha Vantage
+   */
+  private async fetchFromAlphaVantage(
+    symbols: string[],
+    options: FetchOptions
+  ): Promise<MarketData[]> {
+    const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+    if (!apiKey) {
+      throw new Error('ALPHA_VANTAGE_API_KEY not configured');
+    }
+
+    const marketData: MarketData[] = [];
+
+    for (const symbol of symbols) {
+      try {
+        const response = await axios.get(
+          'https://www.alphavantage.co/query',
+          {
+            params: {
+              function: 'GLOBAL_QUOTE',
+              symbol: symbol,
+              apikey: apiKey,
+            },
+          }
+        );
+
+        const quote = response.data['Global Quote'];
+        if (!quote || !quote['05. price']) {
+          this.logger.warn(`No data from Alpha Vantage for ${symbol}`);
+          continue;
+        }
+
+        marketData.push({
+          symbol,
+          date: new Date(quote['07. latest trading day']),
+          close: parseFloat(quote['05. price']),
+          open: parseFloat(quote['02. open']),
+          high: parseFloat(quote['03. high']),
+          low: parseFloat(quote['04. low']),
+          volume: parseInt(quote['06. volume']),
+          source: 'ALPHA_VANTAGE',
+        });
+      } catch (error: any) {
+        this.logger.error(`Alpha Vantage error for ${symbol}`, {
+          error: error.message,
+        });
+        throw error;
+      }
+    }
+
+    return marketData;
   }
 
   /**
@@ -414,10 +575,10 @@ export class UnifiedDataService {
         for (const item of data) {
           await tx.marketData.upsert({
             where: {
-              symbol_date_source: {
+              unique_market_data: {
                 symbol: item.symbol,
-                date: item.date,
-                source: source.name,
+                dataType: 'price',
+                timestamp: item.date,
               },
             },
             update: {
@@ -426,52 +587,37 @@ export class UnifiedDataService {
               low: item.low,
               close: item.close,
               volume: item.volume ? BigInt(item.volume) : null,
-              validationStatus: quality.status,
-              qualityScore: quality.score,
+              date: item.date,
             },
             create: {
               symbol: item.symbol,
+              dataType: 'price',
+              timestamp: item.date,
               date: item.date,
               open: item.open,
               high: item.high,
               low: item.low,
               close: item.close,
               volume: item.volume ? BigInt(item.volume) : null,
-              source: source.name,
-              validationStatus: quality.status,
-              qualityScore: quality.score,
             },
           });
         }
 
         // Store provenance
-        const firstItem = await tx.marketData.findFirst({
-          where: {
-            symbol: data[0].symbol,
-            date: data[0].date,
-            source: source.name,
+        await tx.dataProvenance.create({
+          data: {
+            sourceSystem: source.name,
+            sourceEndpoint: source.endpoint,
+            requestTimestamp: new Date(),
+            responseTimestamp: new Date(),
+            responseStatus: 200,
+            recordsReceived: data.length,
+            recordsValid: data.length,
+            recordsInvalid: 0,
+            transformationApplied: 'raw',
+            status: 'completed',
           },
         });
-
-        if (firstItem) {
-          await tx.dataProvenance.create({
-            data: {
-              fetchId,
-              marketDataId: firstItem.id,
-              source: source.name,
-              symbols: data.map((d) => d.symbol),
-              apiSuccess: true,
-              confidence: quality.confidence,
-              requestMetadata: {
-                endpoint: source.endpoint,
-              },
-              responseMetadata: {
-                recordCount: data.length,
-                processingTime: Date.now(),
-              },
-            },
-          });
-        }
       });
 
       this.logger.info('Data stored with provenance', { fetchId });

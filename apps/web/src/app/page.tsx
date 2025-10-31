@@ -1065,9 +1065,9 @@ export default function Dashboard() {
         {/* Enhanced Consensus Panel */}
         {consensus && (
           <ContentCard className="consensus-gradient">
-            <div className="text-center mb-8 sm:mb-12">
+            <div className="text-center mb-6 sm:mb-8">
               {/* Header - mobile responsive */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-5">
                 <div className="text-xs sm:text-sm text-theme-text-muted uppercase tracking-wider font-bold">Market Consensus</div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-theme-success rounded-full animate-pulse"></div>
@@ -1076,57 +1076,57 @@ export default function Dashboard() {
               </div>
 
               {/* Main Consensus Display - mobile optimized */}
-              <div className="mb-8 sm:mb-12">
-                <div className={`text-5xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-black mb-4 sm:mb-6 ${getSignalColor(consensus.consensus)} flex flex-col items-center justify-center space-y-4 sm:space-y-6`}>
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 xl:w-32 xl:h-32 rounded-2xl sm:rounded-3xl bg-current/10 flex items-center justify-center shadow-xl">
-                    <div className="scale-125 sm:scale-150 lg:scale-200">
+              <div className="mb-6 sm:mb-8">
+                <div className={`text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 sm:mb-4 ${getSignalColor(consensus.consensus)} flex flex-col items-center justify-center space-y-3 sm:space-y-4`}>
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-2xl bg-current/10 flex items-center justify-center shadow-lg">
+                    <div className="scale-110 sm:scale-125 lg:scale-150">
                       {getSignalIcon(consensus.consensus)}
                     </div>
                   </div>
                   <span className="text-center tracking-tight px-4">{consensus.consensus}</span>
                 </div>
-                <div className="text-base sm:text-lg lg:text-xl text-theme-text-muted font-medium px-4">
+                <div className="text-sm sm:text-base lg:text-lg text-theme-text-muted font-medium px-4">
                   Market is showing <strong className="text-theme-text">{consensus.consensus.toLowerCase()}</strong> signals with{' '}
                   <strong className="text-theme-text">{Math.round(consensus.confidence * 100)}%</strong> confidence
                 </div>
               </div>
 
               {/* Enhanced Metrics Grid - mobile responsive */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 xl:gap-12 max-w-6xl mx-auto">
-                <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation">
-                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-theme-text mb-3 sm:mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 max-w-5xl mx-auto">
+                <div className="bg-theme-card border border-theme-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md hover:shadow-lg transition-all duration-300 touch-manipulation">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-theme-text mb-2 sm:mb-3">
                     {Math.round(consensus.confidence * 100)}%
                   </div>
-                  <div className="text-theme-text-muted font-semibold text-base sm:text-lg mb-3 sm:mb-4">Confidence Level</div>
-                  <div className="w-full bg-theme-border rounded-full h-3 sm:h-4">
+                  <div className="text-theme-text-muted font-semibold text-sm sm:text-base mb-2 sm:mb-3">Confidence Level</div>
+                  <div className="w-full bg-theme-border rounded-full h-2 sm:h-3">
                     <div
-                      className="bg-theme-primary h-3 sm:h-4 rounded-full transition-all duration-1000"
+                      className="bg-theme-primary h-2 sm:h-3 rounded-full transition-all duration-1000"
                       style={{ width: `${consensus.confidence * 100}%` }}
                     ></div>
                   </div>
                 </div>
 
-                <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation">
-                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-theme-success mb-3 sm:mb-4">
+                <div className="bg-theme-card border border-theme-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md hover:shadow-lg transition-all duration-300 touch-manipulation">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-theme-success mb-2 sm:mb-3">
                     {consensus.riskOnCount}
                   </div>
-                  <div className="text-theme-text-muted font-semibold text-base sm:text-lg mb-3 sm:mb-4">Risk-On Signals</div>
-                  <div className="w-full bg-theme-border rounded-full h-3 sm:h-4">
+                  <div className="text-theme-text-muted font-semibold text-sm sm:text-base mb-2 sm:mb-3">Risk-On Signals</div>
+                  <div className="w-full bg-theme-border rounded-full h-2 sm:h-3">
                     <div
-                      className="bg-theme-success h-3 sm:h-4 rounded-full transition-all duration-1000"
+                      className="bg-theme-success h-2 sm:h-3 rounded-full transition-all duration-1000"
                       style={{ width: `${totalSignals > 0 ? (consensus.riskOnCount / totalSignals) * 100 : 0}%` }}
                     ></div>
                   </div>
                 </div>
 
-                <div className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation">
-                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-theme-danger mb-3 sm:mb-4">
+                <div className="bg-theme-card border border-theme-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md hover:shadow-lg transition-all duration-300 touch-manipulation">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-theme-danger mb-2 sm:mb-3">
                     {consensus.riskOffCount}
                   </div>
-                  <div className="text-theme-text-muted font-semibold text-base sm:text-lg mb-3 sm:mb-4">Risk-Off Signals</div>
-                  <div className="w-full bg-theme-border rounded-full h-3 sm:h-4">
+                  <div className="text-theme-text-muted font-semibold text-sm sm:text-base mb-2 sm:mb-3">Risk-Off Signals</div>
+                  <div className="w-full bg-theme-border rounded-full h-2 sm:h-3">
                     <div
-                      className="bg-theme-danger h-3 sm:h-4 rounded-full transition-all duration-1000"
+                      className="bg-theme-danger h-2 sm:h-3 rounded-full transition-all duration-1000"
                       style={{ width: `${totalSignals > 0 ? (consensus.riskOffCount / totalSignals) * 100 : 0}%` }}
                     ></div>
                   </div>
