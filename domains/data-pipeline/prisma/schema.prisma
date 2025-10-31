@@ -1,0 +1,99 @@
+// Prisma schema for Unified Data Pipeline
+// Story: 4.0a - Unified Data Service
+// Railway PostgreSQL connection
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_PUBLIC_URL")
+}
+
+model MarketData {
+  id               String            @id @default(uuid())
+  symbol           String
+  date             DateTime
+  open             Decimal?          @db.Decimal(10, 4)
+  high             Decimal?          @db.Decimal(10, 4)
+  low              Decimal?          @db.Decimal(10, 4)
+  close            Decimal           @db.Decimal(10, 4)
+  volume           BigInt?
+  source           String
+  fetchTimestamp   DateTime          @default(now())
+  validationStatus String?
+  qualityScore     Decimal?          @db.Decimal(3, 2)
+  provenance       DataProvenance[]
+
+  @@unique([symbol, date, source])
+  @@index([symbol, date])
+  @@map("market_data")
+}
+
+model DataProvenance {
+  id               String     @id @default(uuid())
+  fetchId          String     @unique
+  marketDataId     String
+  marketData       MarketData @relation(fields: [marketDataId], references: [id])
+  source           String
+  symbols          String[]
+  fetchedAt        DateTime   @default(now())
+  apiSuccess       Boolean
+  errorMessage     String?
+  confidence       Decimal    @db.Decimal(5, 2)
+  requestMetadata  Json?
+  responseMetadata Json?
+
+  @@index([fetchId])
+  @@index([source, fetchedAt])
+  @@map("data_provenance")
+}
+
+model DataSourceHealth {
+  id           String    @id @default(uuid())
+  name         String    @unique
+  endpoint     String
+  priority     Int
+  healthScore  Decimal   @default(1.0) @db.Decimal(3, 2)
+  lastSuccess  DateTime?
+  lastFailure  DateTime?
+  errorRate    Decimal   @default(0) @db.Decimal(5, 2)
+  enabled      Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([enabled, healthScore])
+  @@map("data_source_health")
+}
+
+model CacheMetadata {
+  key       String   @id
+  dataHash  String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  hitCount  Int      @default(0)
+  source    String
+  isStale   Boolean  @default(false)
+
+  @@index([expiresAt])
+  @@map("cache_metadata")
+}
+
+model SignalHistory {
+  id                   String   @id @default(uuid())
+  signalType           String
+  signalValue          String
+  confidence           Decimal  @db.Decimal(5, 2)
+  rawValue             Decimal? @db.Decimal(10, 4)
+  calculatedAt         DateTime @default(now())
+  dataProvenanceId     String?
+  inputDataIds         String[]
+  calculationMetadata  Json?
+  qualityMetrics       Json?
+
+  @@index([signalType, calculatedAt])
+  @@map("signal_history")
+}
