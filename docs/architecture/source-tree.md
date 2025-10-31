@@ -10,14 +10,24 @@ gayed-signals-dashboard/
 │   ├── web/                           # Frontend application
 │   │   ├── src/
 │   │   │   ├── domains/               # Domain-driven architecture (PRESERVED)
+│   │   │   │   ├── data-pipeline/     # NEW: Unified data pipeline
+│   │   │   │   │   ├── services/      # UnifiedDataService & orchestration
+│   │   │   │   │   ├── validators/    # Data quality validation
+│   │   │   │   │   ├── repositories/  # Data persistence layer
+│   │   │   │   │   ├── cache/         # Redis cache management
+│   │   │   │   │   ├── types/         # Data pipeline types
+│   │   │   │   │   └── utils/         # Pipeline utilities
 │   │   │   │   ├── ai-agents/         # Enhanced for AutoGen integration
 │   │   │   │   │   ├── components/    # Agent-specific UI components
 │   │   │   │   │   ├── hooks/         # Agent state management hooks
 │   │   │   │   │   ├── services/      # Agent orchestration services
 │   │   │   │   │   ├── types/         # AutoGen type definitions
 │   │   │   │   │   └── utils/         # Agent-specific utilities
-│   │   │   │   ├── trading-signals/   # Existing signal infrastructure (PRESERVED)
-│   │   │   │   ├── market-data/       # Existing market data (PRESERVED)
+│   │   │   │   ├── trading-signals/   # Existing signal infrastructure (UPDATED)
+│   │   │   │   │   ├── factories/     # NEW: Signal factory pattern
+│   │   │   │   │   ├── calculators/   # Individual signal calculators
+│   │   │   │   │   └── engines/       # Signal orchestration
+│   │   │   │   ├── market-data/       # Existing market data (DEPRECATED - use data-pipeline)
 │   │   │   │   └── risk-management/   # Existing risk management (PRESERVED)
 │   │   │   ├── components/            # Shared UI components
 │   │   │   │   ├── agents/            # NEW: AutoGen-specific components

@@ -1,5 +1,75 @@
 # Coding Standards
 
+## Data Pipeline Standards (NEW)
+
+### Data Fetching Pattern
+```typescript
+// ✅ ALWAYS use UnifiedDataService for data fetching
+import { UnifiedDataService } from '@/domains/data-pipeline/services';
+
+const dataService = new UnifiedDataService();
+const marketData = await dataService.fetchMarketData(symbols, {
+  requireProvenance: true,
+  validateQuality: true,
+  useCache: true
+});
+
+// ❌ NEVER fetch directly from external APIs
+const response = await fetch('https://api.tiingo.com/...'); // WRONG
+```
+
+### Data Validation Pattern
+```typescript
+// ✅ Validate ALL data before use
+import { DataQualityValidator } from '@/domains/data-pipeline/validators';
+
+const validation = await DataQualityValidator.validate(data);
+if (validation.score < 0.7) {
+  logger.warn('Low quality data', validation);
+  // Degrade confidence or reject
+}
+
+// ❌ NEVER use unvalidated data
+const signal = calculateSignal(rawData); // WRONG - no validation
+```
+
+### Provenance Tracking Pattern
+```typescript
+// ✅ Include provenance in all data operations
+interface DataWithProvenance<T> {
+  data: T;
+  provenance: {
+    source: string;
+    fetchedAt: Date;
+    quality: number;
+    validationPassed: boolean;
+  };
+}
+
+// ❌ NEVER return data without provenance
+return { signals }; // WRONG - missing provenance
+```
+
+### Error Handling for Data Operations
+```typescript
+// ✅ Graceful degradation with explicit warnings
+try {
+  const data = await dataService.fetch();
+} catch (error) {
+  logger.error('Data fetch failed', error);
+  return {
+    data: [],
+    error: 'Data unavailable',
+    degraded: true
+  };
+}
+
+// ❌ NEVER generate synthetic fallback data
+catch (error) {
+  return generateFakeData(); // WRONG - violates data integrity
+}
+```
+
 ## TypeScript/JavaScript Standards
 
 ### File Naming Conventions

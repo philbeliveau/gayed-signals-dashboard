@@ -11,6 +11,12 @@ This directory contains the complete architectural specifications for the AutoGe
 - **[git-workflow.md](./git-workflow.md)** - Git branching, commit standards, and PR requirements
 - **[tech-stack.md](./tech-stack.md)** - Definitive technology stack with versions and configurations
 
+### Data Pipeline Documentation (NEW)
+- **[CRITICAL-DATA-ISSUES-AND-RESTRUCTURING-PLAN.md](./CRITICAL-DATA-ISSUES-AND-RESTRUCTURING-PLAN.md)** - Critical data integrity issues and 4-phase restructuring plan
+- **[data-pipeline-architecture.md](./data-pipeline-architecture.md)** - Unified data pipeline design and implementation patterns
+- **[data-integrity-policy.md](./data-integrity-policy.md)** - Financial-grade data integrity requirements and validation
+- **[data-flow-diagram.md](./data-flow-diagram.md)** - Visual representation of data flow through the system
+
 ## 🔄 Developer Workflow
 
 ### For New Features
