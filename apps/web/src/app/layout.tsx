@@ -1,26 +1,30 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { UserPreferencesProvider } from "../contexts/UserPreferencesContext";
 import ProfessionalLayout from "../components/layout/ProfessionalLayout";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const interMono = Inter({
+  variable: "--font-inter-mono",
   subsets: ["latin"],
+  weight: ["100", "200", "300", "400"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Gayed Signal Dashboard - Professional Market Regime Analysis",
+  title: "The Gayed Report - Professional Market Regime Analysis",
   description: "Advanced market regime analysis dashboard based on Michael Gayed's research signals. Professional trading tools for risk-on/risk-off market assessment.",
-  keywords: "trading, market signals, risk management, market regime, financial analysis, investment research",
-  authors: [{ name: "Gayed Signal Dashboard" }],
+  keywords: "trading, market signals, risk management, market regime, financial analysis, investment research, gayed report",
+  authors: [{ name: "The Gayed Report" }],
 };
 
 export const viewport = {
@@ -49,6 +53,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="icon" type="image/webp" href="/logo.webp" />
+        <link rel="apple-touch-icon" href="/logo.webp" />
         <meta name="theme-color" content="#f4f6f8" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -56,7 +62,7 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased touch-manipulation`}
+        className={`${inter.variable} ${interMono.variable} antialiased touch-manipulation`}
         suppressHydrationWarning
       >
         <ClerkProvider>

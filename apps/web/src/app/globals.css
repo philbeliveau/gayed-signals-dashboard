@@ -292,40 +292,40 @@
   --theme-bg-secondary: #FFFFFF;
   --theme-bg-tertiary: #F8FAFC;
 
-  /* Sidebar Colors - Dark theme for left navigation */
+  /* Sidebar Colors - Dark theme for left navigation with purple accent */
   --theme-sidebar-bg: #2D3748;
   --theme-sidebar-text: #E2E8F0;
   --theme-sidebar-text-muted: #A0AEC0;
-  --theme-sidebar-active: #3182CE;
-  
+  --theme-sidebar-active: #7C3AED;
+
   /* Card Colors - Pure white with professional shadows */
   --theme-card: #FFFFFF;
   --theme-card-hover: #FFFFFF;
   --theme-card-secondary: #FFFFFF;
   --theme-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --theme-card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  
+
   /* Border Colors */
   --theme-border: #e2e8f0;
   --theme-border-hover: #cbd5e1;
-  --theme-border-focus: #3b82f6;
-  
+  --theme-border-focus: #7C3AED;
+
   /* Text Colors - Updated for better contrast */
   --theme-text: #1A202C;
   --theme-text-secondary: #4A5568;
   --theme-text-muted: #718096;
   --theme-text-light: #A0AEC0;
+
+  /* Primary Professional Colors - The Gayed Report Purple */
+  --theme-primary: #7C3AED;
+  --theme-primary-hover: #6D28D9;
+  --theme-primary-light: #8B5CF6;
+  --theme-primary-bg: #F5F3FF;
+  --theme-primary-border: #C4B5FD;
   
-  /* Primary Professional Colors - Updated to match reference blue */
-  --theme-primary: #3182CE;
-  --theme-primary-hover: #2B6CB0;
-  --theme-primary-light: #4299E1;
-  --theme-primary-bg: #EBF8FF;
-  --theme-primary-border: #90CDF4;
-  
-  /* Accent Colors */
-  --theme-accent: #3b82f6;
-  --theme-accent-hover: #2563eb;
+  /* Accent Colors - The Gayed Report Purple */
+  --theme-accent: #7C3AED;
+  --theme-accent-hover: #6D28D9;
   
   /* Status Colors */
   --theme-success: #059669;
@@ -356,10 +356,10 @@
   --theme-shadow: rgba(15, 23, 42, 0.08);
   --theme-shadow-hover: rgba(15, 23, 42, 0.12);
   
-  /* Trading Pattern Colors */
-  --theme-pattern-primary: rgba(59, 130, 246, 0.03);
-  --theme-pattern-secondary: rgba(59, 130, 246, 0.06);
-  --theme-grid: rgba(59, 130, 246, 0.08);
+  /* Trading Pattern Colors - Purple tinted */
+  --theme-pattern-primary: rgba(124, 58, 237, 0.03);
+  --theme-pattern-secondary: rgba(124, 58, 237, 0.06);
+  --theme-grid: rgba(124, 58, 237, 0.08);
 }
 
 /* Dark Theme Variables */
@@ -369,11 +369,11 @@
   --theme-bg-secondary: #1A1A1A;
   --theme-bg-tertiary: #1F1F1F;
 
-  /* Sidebar Colors - Keep dark for consistency */
+  /* Sidebar Colors - Keep dark for consistency with purple accent */
   --theme-sidebar-bg: #1A1A1A;
   --theme-sidebar-text: #E2E8F0;
   --theme-sidebar-text-muted: #A0AEC0;
-  --theme-sidebar-active: #4299E1;
+  --theme-sidebar-active: #8B5CF6;
 
   /* Card Colors */
   --theme-card: #1A1A1A;
@@ -385,7 +385,7 @@
   /* Border Colors */
   --theme-border: #2A2A2A;
   --theme-border-hover: #3A3A3A;
-  --theme-border-focus: #4299E1;
+  --theme-border-focus: #8B5CF6;
 
   /* Text Colors */
   --theme-text: #F8F9FA;
@@ -393,16 +393,16 @@
   --theme-text-muted: #94A3B8;
   --theme-text-light: #64748B;
 
-  /* Primary Professional Colors */
-  --theme-primary: #4299E1;
-  --theme-primary-hover: #3182CE;
-  --theme-primary-light: #63B3ED;
-  --theme-primary-bg: #1E3A8A20;
-  --theme-primary-border: #3B82F650;
+  /* Primary Professional Colors - The Gayed Report Purple */
+  --theme-primary: #8B5CF6;
+  --theme-primary-hover: #7C3AED;
+  --theme-primary-light: #A78BFA;
+  --theme-primary-bg: #3B2E6620;
+  --theme-primary-border: #7C3AED50;
 
-  /* Accent Colors */
-  --theme-accent: #4299E1;
-  --theme-accent-hover: #3182CE;
+  /* Accent Colors - Purple */
+  --theme-accent: #8B5CF6;
+  --theme-accent-hover: #7C3AED;
 
   /* Status Colors - Adjusted for dark theme */
   --theme-success: #10B981;
@@ -433,13 +433,13 @@
   --theme-shadow: rgba(0, 0, 0, 0.25);
   --theme-shadow-hover: rgba(0, 0, 0, 0.35);
 
-  /* Trading Pattern Colors */
-  --theme-pattern-primary: rgba(66, 153, 225, 0.08);
-  --theme-pattern-secondary: rgba(66, 153, 225, 0.12);
-  --theme-grid: rgba(66, 153, 225, 0.15);
+  /* Trading Pattern Colors - Purple tinted */
+  --theme-pattern-primary: rgba(139, 92, 246, 0.08);
+  --theme-pattern-secondary: rgba(139, 92, 246, 0.12);
+  --theme-grid: rgba(139, 92, 246, 0.15);
 }
 
-/* Default to light theme matching reference design */
+/* Default to light theme matching reference design with purple branding */
 :root {
   --theme-bg: #FFFFFF;
   --theme-bg-secondary: #FFFFFF;
@@ -452,21 +452,21 @@
   --theme-sidebar-bg: #2D3748;
   --theme-sidebar-text: #E2E8F0;
   --theme-sidebar-text-muted: #A0AEC0;
-  --theme-sidebar-active: #3182CE;
+  --theme-sidebar-active: #7C3AED;
   --theme-border: #e2e8f0;
   --theme-border-hover: #cbd5e1;
-  --theme-border-focus: #3b82f6;
+  --theme-border-focus: #7C3AED;
   --theme-text: #1A202C;
   --theme-text-secondary: #4A5568;
   --theme-text-muted: #718096;
   --theme-text-light: #A0AEC0;
-  --theme-primary: #3182CE;
-  --theme-primary-hover: #2B6CB0;
-  --theme-primary-light: #4299E1;
-  --theme-primary-bg: #eff6ff;
-  --theme-primary-border: #93c5fd;
-  --theme-accent: #3b82f6;
-  --theme-accent-hover: #2563eb;
+  --theme-primary: #7C3AED;
+  --theme-primary-hover: #6D28D9;
+  --theme-primary-light: #8B5CF6;
+  --theme-primary-bg: #F5F3FF;
+  --theme-primary-border: #C4B5FD;
+  --theme-accent: #7C3AED;
+  --theme-accent-hover: #6D28D9;
   --theme-success: #059669;
   --theme-success-bg: #ecfdf5;
   --theme-success-border: #a7f3d0;
@@ -487,9 +487,9 @@
   --theme-neutral-bg: #fffbeb;
   --theme-shadow: rgba(15, 23, 42, 0.08);
   --theme-shadow-hover: rgba(15, 23, 42, 0.12);
-  --theme-pattern-primary: rgba(59, 130, 246, 0.03);
-  --theme-pattern-secondary: rgba(59, 130, 246, 0.06);
-  --theme-grid: rgba(59, 130, 246, 0.08);
+  --theme-pattern-primary: rgba(124, 58, 237, 0.03);
+  --theme-pattern-secondary: rgba(124, 58, 237, 0.06);
+  --theme-grid: rgba(124, 58, 237, 0.08);
 }
 
 @theme inline {
@@ -536,8 +536,8 @@
   --color-theme-pattern-primary: var(--theme-pattern-primary);
   --color-theme-pattern-secondary: var(--theme-pattern-secondary);
   --color-theme-grid: var(--theme-grid);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-inter-mono);
 }
 
 /* Trading Background Patterns */
@@ -610,8 +610,41 @@
 body {
   background: var(--theme-bg);
   color: var(--theme-text);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-weight: 300;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light font styling for modern aesthetic */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 300;
+  letter-spacing: 0.01em;
+}
+
+p, span, div {
+  font-weight: 300;
+}
+
+strong, b {
+  font-weight: 500;
+}
+
+/* Button and interactive elements */
+button, a {
+  font-weight: 400;
+}
+
+/* Professional typography utilities */
+.font-thin {
+  font-weight: 100;
+}
+
+.font-extralight {
+  font-weight: 200;
+}
+
+.font-light {
+  font-weight: 300;
 }
 
 /* Scrollbar styling */
@@ -1404,21 +1437,16 @@ main {
  * MODERN FLOATING NAVIGATION STYLES
  * =================================================================*/
 
-/* Modern button container with gradient background */
+/* Modern button container - Flat design with purple accent */
 .modern-nav-container {
   display: flex;
-  background: linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%);
-  border-radius: 12px;
-  box-shadow:
-    rgba(0, 0, 0, 0.35) 0px 5px 15px,
-    rgba(49, 130, 206, 0.5) 5px 10px 15px;
-  transition: all 0.3s ease;
+  background: transparent;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
 }
 
 .modern-nav-container:hover {
-  box-shadow:
-    rgba(0, 0, 0, 0.4) 0px 6px 20px,
-    rgba(49, 130, 206, 0.6) 4px 8px 20px;
+  background-color: rgba(124, 58, 237, 0.05);
 }
 
 /* Modern floating buttons */
@@ -1453,56 +1481,34 @@ main {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Ripple effect for modern buttons */
-.modern-nav-button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transition: width 0.6s, height 0.6s, top 0.6s, left 0.6s;
-  transform: translate(-50%, -50%);
-}
+/* Removed ripple effect for flat design */
 
-.modern-nav-button:active::before {
-  width: 100px;
-  height: 100px;
-  top: 50%;
-  left: 50%;
-}
-
-/* Modern sidebar styling - Ultra Slim */
+/* Modern sidebar styling - Ultra Slim with flat design */
 .modern-sidebar {
-  background: linear-gradient(135deg, #2D3748 0%, #1A202C 100%);
-  backdrop-filter: blur(20px);
+  background: #2D3748;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   width: 70px;
   transition: all 0.3s ease;
 }
 
-/* Tooltip styles for slim sidebar */
+/* Tooltip styles for slim sidebar - Flat design with purple */
 .nav-tooltip {
   position: absolute;
   left: 75px;
   top: 50%;
   transform: translateY(-50%);
-  background: linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%);
+  background: #7C3AED;
   color: white;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   z-index: 1000;
-  box-shadow:
-    rgba(0, 0, 0, 0.3) 0px 4px 12px,
-    rgba(49, 130, 206, 0.4) 2px 6px 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
 .nav-tooltip::before {
@@ -1512,7 +1518,7 @@ main {
   top: 50%;
   transform: translateY(-50%);
   border: 5px solid transparent;
-  border-right-color: #3182CE;
+  border-right-color: #7C3AED;
 }
 
 .nav-item-container:hover .nav-tooltip {
@@ -1521,27 +1527,20 @@ main {
 }
 
 .modern-sidebar-item {
-  background: linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%);
-  border-radius: 12px;
+  background: rgba(124, 58, 237, 0.1);
+  border-radius: 6px;
   padding: 12px;
   margin: 8px;
-  box-shadow:
-    rgba(0, 0, 0, 0.2) 0px 3px 8px,
-    rgba(49, 130, 206, 0.3) 2px 5px 12px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .modern-sidebar-item:hover {
-  box-shadow:
-    rgba(0, 0, 0, 0.3) 0px 6px 16px,
-    rgba(49, 130, 206, 0.5) 4px 8px 20px;
+  background: rgba(124, 58, 237, 0.15);
 }
 
 .modern-sidebar-item.active {
-  background: linear-gradient(135deg, #4299E1 0%, #3182CE 100%);
-  box-shadow:
-    rgba(0, 0, 0, 0.3) 0px 6px 16px,
-    rgba(66, 153, 225, 0.6) 4px 8px 20px;
+  background: #7C3AED;
+  color: white;
 }
 
 /* Modern top navigation */
@@ -1570,21 +1569,21 @@ main {
   border-bottom: 1px solid #2A2A2A !important;
 }
 
-/* Consensus gradient backgrounds */
+/* Consensus flat backgrounds */
 .consensus-gradient {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+  background: #FFFFFF;
 }
 
 :root.dark .consensus-gradient {
-  background: linear-gradient(135deg, #1A1A1A 0%, #1F1F1F 100%);
+  background: #1A1A1A;
 }
 
 [data-theme="dark"] .consensus-gradient {
-  background: linear-gradient(135deg, #1A1A1A 0%, #1F1F1F 100%);
+  background: #1A1A1A;
 }
 
 .dark .consensus-gradient {
-  background: linear-gradient(135deg, #1A1A1A 0%, #1F1F1F 100%);
+  background: #1A1A1A;
 }
 
 /* Modern search bar */
@@ -1605,59 +1604,38 @@ main {
     0 0 0 4px var(--theme-primary-bg);
 }
 
-/* Modern navigation pills */
+/* Modern navigation pills - Flat design with purple */
 .modern-pill {
-  background: linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%);
-  border-radius: 25px;
+  background: #7C3AED;
+  border-radius: 6px;
   padding: 10px 20px;
   color: white;
   font-weight: 500;
-  box-shadow:
-    rgba(0, 0, 0, 0.2) 0px 3px 8px,
-    rgba(49, 130, 206, 0.3) 2px 5px 12px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   border: none;
   cursor: pointer;
 }
 
 .modern-pill:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, #4299E1 0%, #3182CE 100%);
-  box-shadow:
-    rgba(0, 0, 0, 0.3) 0px 6px 16px,
-    rgba(66, 153, 225, 0.5) 4px 8px 20px;
+  background: #6D28D9;
 }
 
 .modern-pill:active {
-  transform: translateY(0px);
+  transform: scale(0.98);
 }
 
 .modern-pill.inactive {
-  background: rgba(49, 130, 206, 0.1);
-  color: #3182CE;
-  box-shadow: inset 0 2px 4px rgba(49, 130, 206, 0.1);
+  background: rgba(124, 58, 237, 0.1);
+  color: #7C3AED;
 }
 
 .modern-pill.inactive:hover {
-  background: rgba(49, 130, 206, 0.2);
-  transform: translateY(-1px);
-  box-shadow:
-    inset 0 2px 4px rgba(49, 130, 206, 0.1),
-    0 2px 8px rgba(49, 130, 206, 0.2);
+  background: rgba(124, 58, 237, 0.15);
 }
 
 /* Removed floating effects for static design */
 
-/* Pulse animation for active elements */
-.pulse-glow {
-  animation: pulse-glow 2s infinite;
-}
-
-@keyframes pulse-glow {
-  0% { box-shadow: 0 0 5px rgba(49, 130, 206, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(49, 130, 206, 0.6), 0 0 30px rgba(49, 130, 206, 0.4); }
-  100% { box-shadow: 0 0 5px rgba(49, 130, 206, 0.3); }
-}
+/* Removed pulse-glow animation for flat design */
 
 /* =================================================================
  * CUSTOM THEME UTILITY CLASSES - CRITICAL FIX

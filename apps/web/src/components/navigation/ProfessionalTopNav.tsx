@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Bell, ChevronDown } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { useAuthMode } from '@/lib/device-detection';
 import ThemeToggle from '../ThemeToggle';
@@ -26,7 +26,21 @@ export default function ProfessionalTopNav({
   return (
     <header className={`modern-topnav relative md:sticky top-0 z-40 ${className}`}>
       <div className="px-3 md:px-6 py-3 md:py-5">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between">
+          {/* Logo - Left side */}
+          <div className="flex items-center space-x-3">
+            <img
+              src="/logo.webp"
+              alt="The Gayed Report"
+              className="h-10 w-10 md:h-12 md:w-12 object-contain"
+            />
+            <div className="hidden md:block">
+              <h1 className="text-lg font-light text-theme-text tracking-wide">
+                THE GAYED REPORT
+              </h1>
+            </div>
+          </div>
+
           {/* Controls - Mobile optimized */}
           <div className="flex items-center space-x-2 md:space-x-4">
 
@@ -34,7 +48,7 @@ export default function ProfessionalTopNav({
             <SignedIn>
               <button className="modern-nav-button relative hidden md:block">
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-400 ring-2 ring-theme-card animate-pulse"></span>
+                <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500"></span>
               </button>
             </SignedIn>
 
@@ -68,13 +82,6 @@ export default function ProfessionalTopNav({
                         }
                       }}
                     />
-                  </div>
-
-                  {/* Additional Options - Desktop */}
-                  <div className="hidden xl:flex items-center space-x-2">
-                    <button className="p-1.5 text-theme-text-muted hover:text-theme-text transition-colors">
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
               </SignedIn>

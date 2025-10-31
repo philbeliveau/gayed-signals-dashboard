@@ -31,7 +31,7 @@ export default function ProfessionalLayout({
         <ProfessionalTopNav showThemeToggle={showThemeToggle} />
 
         {/* Page Content - Mobile optimized with bottom nav spacing */}
-        <main className="p-3 md:p-6 bg-theme-bg-tertiary min-h-screen pb-20 md:pb-6">
+        <main className="p-3 md:p-6 bg-theme-bg min-h-screen pb-20 md:pb-6">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

@@ -13,7 +13,6 @@ import {
   Users,
   Settings,
   Shield,
-  BarChart3,
   MessageSquareMore
 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
@@ -72,10 +71,14 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
         {/* Trading Logo */}
         <div className="flex items-center justify-center h-16 border-b border-theme-border/30">
           <div className="nav-item-container relative">
-            <Link href="/" className="modern-nav-container w-12 h-12 flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-theme-sidebar-text" />
+            <Link href="/" className="modern-nav-container w-12 h-12 flex items-center justify-center p-1">
+              <img
+                src="/logo.webp"
+                alt="The Gayed Report"
+                className="w-full h-full object-contain"
+              />
             </Link>
-            <div className="nav-tooltip">Trading Hub</div>
+            <div className="nav-tooltip">The Gayed Report</div>
           </div>
         </div>
 
@@ -89,7 +92,7 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
               <div key={route.path} className="nav-item-container relative flex justify-center">
                 <Link
                   href={route.path}
-                  className={`modern-nav-button ${isActive ? 'active pulse-glow' : ''}`}
+                  className={`modern-nav-button ${isActive ? 'active' : ''}`}
                 >
                   <IconComponent className="w-5 h-5" />
                   {route.adminOnly && (
@@ -106,7 +109,7 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
         <div className="px-2 py-4 border-t border-theme-border/30">
           <div className="nav-item-container relative flex justify-center">
             <div className="modern-nav-button">
-              <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>
             </div>
             <div className="nav-tooltip">Live Market Data</div>
           </div>
