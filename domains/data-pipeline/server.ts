@@ -41,8 +41,8 @@ app.use((req, res, next) => {
  * leakage and ensure financial-grade security compliance.
  */
 function authenticate(req: Request, res: Response, next: NextFunction) {
-  // Skip authentication for health check endpoint
-  if (req.path === '/health' || req.path === '/') {
+  // Skip authentication for health check endpoint and OPTIONS preflight requests
+  if (req.path === '/health' || req.path === '/' || req.method === 'OPTIONS') {
     return next();
   }
 
