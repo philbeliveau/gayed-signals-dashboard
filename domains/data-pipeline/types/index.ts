@@ -10,6 +10,10 @@ export interface FetchOptions {
   requireProvenance?: boolean;
   timeout?: number;
   retryAttempts?: number;
+  // Historical data options
+  startDate?: Date;     // Historical data start date
+  endDate?: Date;       // Historical data end date
+  limit?: number;       // Number of historical data points (e.g., 252 for 1 year)
 }
 
 export interface MarketData {

@@ -325,11 +325,17 @@ app.get('/api/v2/signals', async (req: Request, res: Response) => {
     if (!result.success || result.data.length === 0) {
       logger.info('PostgreSQL empty - calculating signals on-demand');
 
-      // Fetch market data
+      // Fetch market data with historical data (252 trading days = ~1 year)
       const symbols = SignalOrchestrator.getRequiredSymbols();
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
       const marketDataResult = await dataService.fetchMarketData(symbols, {
         useCache: true,
         fallbackEnabled: true,
+        limit: 252,  // 252 trading days = ~1 year of data for signal calculations
+        endDate: new Date(),
+        startDate: oneYearAgo
       });
 
       if (marketDataResult.data && marketDataResult.data.length > 0) {

@@ -167,7 +167,19 @@ export class SignalOrchestrator {
       const xluData = marketData['XLU'];
       const spyData = marketData['SPY'];
 
-      if (!xluData || !spyData) {
+      if (!xluData || xluData.length === 0) {
+        console.warn('Utilities/SPY signal failed: Missing XLU data', {
+          availableSymbols: Object.keys(marketData),
+          xluDataPoints: xluData?.length || 0
+        });
+        return null;
+      }
+
+      if (!spyData || spyData.length === 0) {
+        console.warn('Utilities/SPY signal failed: Missing SPY data', {
+          availableSymbols: Object.keys(marketData),
+          spyDataPoints: spyData?.length || 0
+        });
         return null;
       }
 
@@ -188,7 +200,19 @@ export class SignalOrchestrator {
       const lumberData = marketData['WOOD'];
       const goldData = marketData['GLD'];
 
-      if (!lumberData || !goldData) {
+      if (!lumberData || lumberData.length === 0) {
+        console.warn('Lumber/Gold signal failed: Missing WOOD data', {
+          availableSymbols: Object.keys(marketData),
+          woodDataPoints: lumberData?.length || 0
+        });
+        return null;
+      }
+
+      if (!goldData || goldData.length === 0) {
+        console.warn('Lumber/Gold signal failed: Missing GLD data', {
+          availableSymbols: Object.keys(marketData),
+          gldDataPoints: goldData?.length || 0
+        });
         return null;
       }
 
@@ -209,7 +233,19 @@ export class SignalOrchestrator {
       const ty10Data = marketData['IEF'];
       const ty30Data = marketData['TLT'];
 
-      if (!ty10Data || !ty30Data) {
+      if (!ty10Data || ty10Data.length === 0) {
+        console.warn('Treasury Curve signal failed: Missing IEF data', {
+          availableSymbols: Object.keys(marketData),
+          iefDataPoints: ty10Data?.length || 0
+        });
+        return null;
+      }
+
+      if (!ty30Data || ty30Data.length === 0) {
+        console.warn('Treasury Curve signal failed: Missing TLT data', {
+          availableSymbols: Object.keys(marketData),
+          tltDataPoints: ty30Data?.length || 0
+        });
         return null;
       }
 
@@ -229,7 +265,11 @@ export class SignalOrchestrator {
     try {
       const vixData = marketData['VIXY'];
 
-      if (!vixData) {
+      if (!vixData || vixData.length === 0) {
+        console.warn('VIX Defensive signal failed: Missing VIXY data', {
+          availableSymbols: Object.keys(marketData),
+          vixyDataPoints: vixData?.length || 0
+        });
         return null;
       }
 
@@ -247,7 +287,11 @@ export class SignalOrchestrator {
     try {
       const spyData = marketData['SPY'];
 
-      if (!spyData) {
+      if (!spyData || spyData.length === 0) {
+        console.warn('S&P 500 MA signal failed: Missing SPY data', {
+          availableSymbols: Object.keys(marketData),
+          spyDataPoints: spyData?.length || 0
+        });
         return null;
       }
 

@@ -446,6 +446,20 @@ export class UnifiedDataService {
 
     for (const symbol of symbols) {
       try {
+        // Build params with optional date range support
+        const params: any = {
+          resampleFreq: 'daily',
+          columns: 'open,high,low,close,volume',
+        };
+
+        // Add date range if specified for historical data
+        if (options.startDate) {
+          params.startDate = options.startDate.toISOString().split('T')[0];
+        }
+        if (options.endDate) {
+          params.endDate = options.endDate.toISOString().split('T')[0];
+        }
+
         const response = await axios.get(
           `https://api.tiingo.com/tiingo/daily/${symbol}/prices`,
           {
@@ -453,29 +467,39 @@ export class UnifiedDataService {
               'Content-Type': 'application/json',
               Authorization: `Token ${apiKey}`,
             },
-            params: {
-              resampleFreq: 'daily',
-              columns: 'open,high,low,close,volume',
-            },
+            params,
           }
         );
 
-        const latest = response.data[0];
-        if (!latest) {
+        const dataPoints = response.data;
+        if (!dataPoints || dataPoints.length === 0) {
           this.logger.warn(`No data from Tiingo for ${symbol}`);
           continue;
         }
 
-        marketData.push({
-          symbol,
-          date: new Date(latest.date),
-          close: latest.close,
-          open: latest.open,
-          high: latest.high,
-          low: latest.low,
-          volume: latest.volume,
-          source: 'TIINGO',
-        });
+        // If historical data requested, return all points; otherwise return latest
+        const pointsToProcess = options.startDate || options.limit
+          ? dataPoints
+          : [dataPoints[0]];
+
+        // Apply limit if specified
+        const limitedPoints = options.limit
+          ? pointsToProcess.slice(0, options.limit)
+          : pointsToProcess;
+
+        // Convert all data points to MarketData format
+        for (const point of limitedPoints) {
+          marketData.push({
+            symbol,
+            date: new Date(point.date),
+            close: point.close,
+            open: point.open,
+            high: point.high,
+            low: point.low,
+            volume: point.volume,
+            source: 'TIINGO',
+          });
+        }
       } catch (error: any) {
         this.logger.error(`Tiingo error for ${symbol}`, {
           error: error.message,
