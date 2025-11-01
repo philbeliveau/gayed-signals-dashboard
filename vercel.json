@@ -8,6 +8,7 @@
   "outputDirectory": "apps/web/.next",
   "installCommand": "npm ci",
   "framework": "nextjs",
+  "public": "apps/web/public",
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30
