@@ -13,44 +13,100 @@ We are actively restructuring the entire data pipeline to resolve severe data re
 ## 🚀 **VERCEL DEPLOYMENT CONFIGURATION**
 
 ### **Monorepo Setup - CRITICAL**
-This is a **monorepo** with the Next.js app located in `apps/web/`. Vercel deployment requires specific configuration to work correctly.
+This is a **Turborepo monorepo** with the Next.js app located in `apps/web/`. Vercel deployment requires specific configuration.
 
-**✅ CORRECT CONFIGURATION:**
+**✅ CORRECT CONFIGURATION (VERIFIED WORKING):**
 
 1. **Vercel Project Settings (Dashboard):**
    - Navigate to: **Settings → General → Root Directory**
-   - Set Root Directory to: `apps/web`
-   - This tells Vercel to build from the app directory, not the monorepo root
+   - **LEAVE EMPTY** or set to blank
+   - Vercel builds from monorepo root, not from `apps/web`
 
 2. **vercel.json Location:**
-   - File must be at: `apps/web/vercel.json` (NOT at monorepo root)
-   - Contains headers, redirects, and other deployment config
-   - **DO NOT** include `functions` pattern - Next.js auto-detects API routes
+   - **File location:** Root of monorepo (`/vercel.json`)
+   - **NOT** in `apps/web/` directory
 
-3. **Why This Matters:**
-   - Next.js App Router uses `route.ts` files in `apps/web/src/app/api/**/`
-   - Vercel needs to build from `apps/web/` to find these routes
-   - Incorrect root directory causes: "doesn't match any Serverless Functions" error
+3. **Complete Working vercel.json:**
+   ```json
+   {
+     "version": 2,
+     "env": {
+       "NODE_ENV": "production",
+       "ENVIRONMENT": "production"
+     },
+     "buildCommand": "turbo run build --filter=web",
+     "outputDirectory": "apps/web/.next",
+     "installCommand": "npm ci",
+     "framework": "nextjs",
+     "functions": {
+       "src/app/api/**/*.ts": {
+         "maxDuration": 30
+       }
+     },
+     "headers": [...],
+     "redirects": []
+   }
+   ```
+
+4. **Critical Path Rules:**
+   - `buildCommand`: Just `turbo run build --filter=web` (no `cd ../..`)
+   - `outputDirectory`: Full path `apps/web/.next` from monorepo root
+   - `functions` pattern: `src/app/api/**/*.ts` (NOT `apps/web/src/app/api/**/*.ts`)
+
+   **Why:** When `outputDirectory` is `apps/web/.next`, Vercel's working context becomes `apps/web/`, so function paths are relative to that.
+
+5. **Headers Configuration:**
+   - Can be in both `vercel.json` AND `next.config.ts`
+   - Use `vercel.json` for security headers (X-Frame-Options, etc.)
+   - Use `next.config.ts` for dynamic/environment-based headers
 
 **❌ COMMON MISTAKES:**
-- ❌ Placing `vercel.json` at monorepo root
-- ❌ Using `functions` pattern like `"apps/web/src/app/api/**/route.ts"`
-- ❌ Not setting Root Directory in Vercel dashboard
-- ❌ Using incorrect path patterns that don't match actual file locations
+- ❌ Setting Root Directory to `apps/web` in Vercel dashboard
+- ❌ Placing `vercel.json` in `apps/web/` directory
+- ❌ Using wrong function pattern: `apps/web/src/app/api/**/*.ts` (WRONG!)
+- ❌ Using `cd ../..` in buildCommand when Root Directory is empty
+- ❌ Forgetting `outputDirectory` must be full path from monorepo root
+- ❌ Not committing files in `apps/web/public/` to git (check `.gitignore` for `public`)
 
 **🔧 TROUBLESHOOTING:**
-If you see: `The pattern "..." doesn't match any Serverless Functions inside the api directory`
 
-**Fix:**
-1. Move `vercel.json` from root to `apps/web/vercel.json`
-2. Remove any `functions` configuration from `vercel.json`
-3. Set Root Directory to `apps/web` in Vercel dashboard (Settings → General)
-4. Redeploy
+**Error 1:** `The pattern "..." doesn't match any Serverless Functions`
+- **Cause:** Wrong function pattern relative to outputDirectory
+- **Fix:** Use `src/app/api/**/*.ts` (not `apps/web/src/app/api/**/*.ts`)
+- **Alternative:** Remove `functions` config entirely (Next.js auto-detects)
+
+**Error 2:** `No Output Directory named "public" found`
+- **Cause:** Missing or incorrect `outputDirectory` in `vercel.json`
+- **Fix:** Set `"outputDirectory": "apps/web/.next"` (full path from root)
+
+**Error 3:** Build succeeds but 404 on all pages
+- **Cause:** Wrong `outputDirectory` path or missing `framework: "nextjs"`
+- **Fix:** Ensure `"framework": "nextjs"` and correct output path
+
+**Error 4:** Static assets (logo, images) return 404
+- **Cause:** Files in `apps/web/public/` not committed to git (ignored by `.gitignore`)
+- **Fix:**
+  1. Check `.gitignore` for `public` entry
+  2. Force add files: `git add -f apps/web/public/logo.webp`
+  3. Commit and push to trigger redeployment
 
 **Files:**
-- `/apps/web/vercel.json` - Deployment configuration (headers, redirects)
+- `/vercel.json` - Complete deployment config (root of monorepo)
 - `/apps/web/next.config.ts` - Next.js build configuration
-- `/apps/web/src/app/api/**/route.ts` - API routes (auto-detected by Vercel)
+- `/apps/web/src/app/api/**/route.ts` - API routes
+
+**Quick Setup Checklist:**
+1. ✅ Root Directory in Vercel dashboard: **Empty/blank**
+2. ✅ Place `vercel.json` at **monorepo root** (not `apps/web/`)
+3. ✅ Include all required fields:
+   - `buildCommand`: `"turbo run build --filter=web"`
+   - `outputDirectory`: `"apps/web/.next"`
+   - `framework`: `"nextjs"`
+   - `functions`: Use `"src/app/api/**/*.ts"` pattern
+4. ✅ Ensure static assets in `apps/web/public/` are committed to git
+5. ✅ Copy complete configuration from template above
+
+**This configuration is tested and verified working.**
 
 ---
 
