@@ -1,7 +1,98 @@
 @import "tailwindcss";
 
-/* Loader Animation Styles - Embedded for reliability */
+/* Minimalist Spinner Loader */
 .loader {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: 10px;
+}
+
+.loader div {
+  width: 8%;
+  height: 24%;
+  background: rgb(128, 128, 128);
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  opacity: 0;
+  border-radius: 50px;
+  box-shadow: 0 0 3px rgba(0,0,0,0.2);
+  animation: fade458 1s linear infinite;
+}
+
+@keyframes fade458 {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.25;
+  }
+}
+
+.loader .bar1 {
+  transform: rotate(0deg) translate(0, -130%);
+  animation-delay: 0s;
+}
+
+.loader .bar2 {
+  transform: rotate(30deg) translate(0, -130%);
+  animation-delay: -1.1s;
+}
+
+.loader .bar3 {
+  transform: rotate(60deg) translate(0, -130%);
+  animation-delay: -1s;
+}
+
+.loader .bar4 {
+  transform: rotate(90deg) translate(0, -130%);
+  animation-delay: -0.9s;
+}
+
+.loader .bar5 {
+  transform: rotate(120deg) translate(0, -130%);
+  animation-delay: -0.8s;
+}
+
+.loader .bar6 {
+  transform: rotate(150deg) translate(0, -130%);
+  animation-delay: -0.7s;
+}
+
+.loader .bar7 {
+  transform: rotate(180deg) translate(0, -130%);
+  animation-delay: -0.6s;
+}
+
+.loader .bar8 {
+  transform: rotate(210deg) translate(0, -130%);
+  animation-delay: -0.5s;
+}
+
+.loader .bar9 {
+  transform: rotate(240deg) translate(0, -130%);
+  animation-delay: -0.4s;
+}
+
+.loader .bar10 {
+  transform: rotate(270deg) translate(0, -130%);
+  animation-delay: -0.3s;
+}
+
+.loader .bar11 {
+  transform: rotate(300deg) translate(0, -130%);
+  animation-delay: -0.2s;
+}
+
+.loader .bar12 {
+  transform: rotate(330deg) translate(0, -130%);
+  animation-delay: -0.1s;
+}
+
+/* Legacy loader styles - kept for compatibility */
+.legacy-loader {
   --dur: 2s;
   --hue: 35;
   display: block;
@@ -1471,10 +1562,10 @@ main {
 
 .modern-nav-button:hover {
   transform: translateY(-2px);
-  background-color: rgba(124, 58, 237, 0.15);
-  border-color: rgba(124, 58, 237, 0.3);
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
   color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .modern-nav-button:active {
@@ -1483,30 +1574,30 @@ main {
 }
 
 .modern-nav-button.active {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(124, 58, 237, 0.15) 100%);
-  border-color: rgba(124, 58, 237, 0.5);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
   color: #fff;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1),
-              inset 0 1px 2px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05),
+              inset 0 1px 2px rgba(255, 255, 255, 0.08);
 }
 
 /* Removed ripple effect for flat design */
 
 /* Modern sidebar styling - Premium refined design */
 .modern-sidebar {
-  background: linear-gradient(180deg, #1a202c 0%, #2D3748 100%);
-  border-right: 1px solid rgba(124, 58, 237, 0.2);
+  background: #1a202c;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   width: 70px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Modern top nav - Blends with sidebar */
 .modern-topnav {
-  background: linear-gradient(180deg, #1a202c 0%, #2D3748 100%);
-  border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+  background: #1a202c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Navigation item container */

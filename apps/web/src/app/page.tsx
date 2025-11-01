@@ -909,16 +909,23 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center p-4">
         <div className="text-center max-w-2xl mx-auto p-8 sm:p-12 bg-theme-card border border-theme-border rounded-2xl shadow-xl">
-          <div className="mb-8">
-            <Activity className="w-16 h-16 sm:w-20 sm:h-20 text-theme-primary mx-auto mb-6" />
-            <h1 className="text-3xl sm:text-4xl font-bold text-theme-text mb-4">
+          <div className="mb-12">
+            {/* Large Centered Logo */}
+            <div className="flex justify-center mb-8">
+              <div className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 rounded-3xl bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 p-6 sm:p-8 shadow-2xl">
+                <img
+                  src="/logo.webp"
+                  alt="The Gayed Report"
+                  className="w-full h-full object-contain drop-shadow-2xl"
+                />
+              </div>
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl font-bold text-theme-text mb-4">
               Gayed Market Signals
             </h1>
-            <p className="text-base sm:text-lg text-theme-text-muted leading-relaxed mb-2">
+            <p className="text-base text-theme-text-muted">
               Real-time analysis of 5 key market indicators using the Gayed methodology
-            </p>
-            <p className="text-sm sm:text-base text-theme-text-light">
-              Click below to load the latest market data
             </p>
           </div>
 
@@ -945,12 +952,6 @@ export default function Dashboard() {
               <RefreshCw className="w-5 h-5" />
               Load Fast Mode (Cached Data)
             </button>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-theme-border">
-            <p className="text-xs sm:text-sm text-theme-text-light">
-              Data sources: FRED API, Yahoo Finance, Enhanced Market Data
-            </p>
           </div>
         </div>
       </div>
