@@ -1,6 +1,9 @@
 # Node.js Data Pipeline Dockerfile for Railway
 FROM node:20-slim
 
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl
+
 # Set working directory
 WORKDIR /app
 
