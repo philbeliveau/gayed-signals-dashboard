@@ -1,9 +1,7 @@
 {
-  "version": 2,
   "buildCommand": "turbo run build --filter=web",
   "installCommand": "npm ci",
   "framework": "nextjs",
-  "rootDirectory": "apps/web",
   "env": {
     "NODE_ENV": "production",
     "ENVIRONMENT": "production",
