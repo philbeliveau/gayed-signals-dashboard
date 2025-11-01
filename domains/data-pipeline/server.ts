@@ -231,10 +231,20 @@ app.get('/api/v2/signals', async (req: Request, res: Response) => {
       sortBy,
       sortOrder,
       includeMetadata,
+      fast, // Fast mode: skip expensive calculations, return cached data only
     } = req.query;
 
     // Parse and validate query parameters
     const queryParams: any = {};
+
+    // Fast mode: prioritize speed over freshness
+    // - Uses only in-memory/Redis cache
+    // - Skips PostgreSQL queries
+    // - Returns immediately if no cached data
+    const fastMode = fast === 'true';
+    if (fastMode) {
+      logger.info('Fast mode enabled - cache-only operation');
+    }
 
     // Date range
     if (dateFrom && typeof dateFrom === 'string') {
@@ -321,7 +331,40 @@ app.get('/api/v2/signals', async (req: Request, res: Response) => {
     // Execute query through SignalOrchestratorV2
     const result = await signalOrchestrator.fetchSignals(queryParams);
 
-    // If PostgreSQL has no signals, calculate on-demand
+    // Fast mode: skip on-demand calculation, return cached data or empty
+    if (fastMode && (!result.success || result.data.length === 0)) {
+      logger.info('Fast mode: no cached data, returning empty result');
+      res.set({
+        'Cache-Control': 'no-cache',
+        'X-Fast-Mode': 'true',
+      });
+      return res.json({
+        success: false,
+        data: [],
+        metadata: {
+          count: 0,
+          hasMore: false,
+          sources: {
+            primary: 'fast_mode_cache_miss',
+            fallbacksUsed: [],
+            failedSources: ['cache_empty']
+          },
+          quality: {
+            freshnessScore: 0,
+            completenessScore: 0,
+            consistencyScore: 0,
+            overallScore: 0
+          },
+          timing: {
+            totalMs: 0,
+            sourceMs: { fast_mode: 0 }
+          }
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // If PostgreSQL has no signals, calculate on-demand (only in normal mode)
     if (!result.success || result.data.length === 0) {
       logger.info('PostgreSQL empty - calculating signals on-demand');
 
@@ -408,11 +451,30 @@ app.get('/api/v2/signals', async (req: Request, res: Response) => {
       'Last-Modified': new Date().toUTCString(),
     });
 
-    // Return response
+    // Return response with metadata ALWAYS included (frontend requires it)
+    // Even if includeMetadata is false, return minimal metadata to prevent crashes
     res.json({
       success: result.success,
       data: result.data,
-      metadata: queryParams.includeMetadata ? result.metadata : undefined,
+      metadata: result.metadata || {
+        count: 0,
+        hasMore: false,
+        sources: {
+          primary: 'none',
+          fallbacksUsed: [],
+          failedSources: ['on_demand_calculation_failed']
+        },
+        quality: {
+          freshnessScore: 0,
+          completenessScore: 0,
+          consistencyScore: 0,
+          overallScore: 0
+        },
+        timing: {
+          totalMs: 0,
+          sourceMs: {}
+        }
+      },
       timestamp: new Date().toISOString(),
     });
 
