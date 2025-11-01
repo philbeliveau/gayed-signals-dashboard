@@ -332,7 +332,7 @@ app.get('/api/v2/signals', async (req: Request, res: Response) => {
         fallbackEnabled: true,
       });
 
-      if (marketDataResult.success && marketDataResult.data) {
+      if (marketDataResult.data && marketDataResult.data.length > 0) {
         // Transform market data to Record<symbol, MarketData[]> format
         const marketDataBySymbol: Record<string, MarketData[]> = {};
         marketDataResult.data.forEach((item: any) => {
