@@ -31,13 +31,40 @@ const nextConfig: NextConfig = {
   // CORS and security headers
   async headers() {
     return [
+      // Security headers for all routes
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains',
+          },
+        ],
+      },
+      // CORS headers for API routes
       {
         source: '/api/:path*',
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: process.env.NODE_ENV === 'production' 
-              ? process.env.ALLOWED_ORIGINS || 'https://yourdomain.com'
+            value: process.env.NODE_ENV === 'production'
+              ? process.env.ALLOWED_ORIGINS || '*'
               : '*',
           },
           {
