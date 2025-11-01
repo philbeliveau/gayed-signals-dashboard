@@ -26,7 +26,7 @@ export default function ProfessionalLayout({
       <ProfessionalSidebar />
 
       {/* Main Content Area - No padding on mobile, desktop padding for sidebar */}
-      <div className="md:pl-[70px]">
+      <div className="md:pl-[260px]">
         {/* Top Navigation */}
         <ProfessionalTopNav showThemeToggle={showThemeToggle} />
 

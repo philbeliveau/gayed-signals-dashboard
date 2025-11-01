@@ -335,8 +335,6 @@ export function UnifiedContentInput({
 
   return (
     <ContentCard
-      title="Unified Content Analysis"
-      subtitle="Analyze any financial content with AutoGen agent debates"
       className={className}
     >
       <div className="space-y-6">

@@ -49,15 +49,18 @@ function setCachedData(key: string, data: any, ttl: number = CACHE_TTL) {
  
 export async function GET(request: NextRequest) {
   try {
+    // Log usage for migration tracking
+    console.log('[DEPRECATED API] /api/signals called - consider migrating to Railway backend');
+
     // Clean up expired cache entries
     cleanupCache();
-    
+
     // Check for fast mode parameter
     const url = new URL(request.url);
     const fastMode = url.searchParams.get('fast') === 'true';
-    
+
     const cacheKey = fastMode ? 'fast_signals' : 'live_signals';
-    
+
     // Check cache first
     const cachedData = getCachedData(cacheKey);
     if (cachedData) {
@@ -66,6 +69,13 @@ export async function GET(request: NextRequest) {
         ...cachedData,
         cached: true,
         cacheTime: new Date().toISOString()
+      }, {
+        headers: {
+          'X-API-Deprecated': 'true',
+          'X-API-Sunset-Date': '2025-12-31',
+          'X-API-Replacement': '/api/v2/signals (Railway backend)',
+          'X-Migration-Status': 'Railway backend available - set NEXT_PUBLIC_USE_RAILWAY_BACKEND=true',
+        },
       });
     }
     
@@ -167,8 +177,16 @@ export async function GET(request: NextRequest) {
     // Cache the result
     const cacheTtl = fastMode ? FAST_CACHE_TTL : CACHE_TTL;
     setCachedData(cacheKey, responseData, cacheTtl);
-    
-    return NextResponse.json(responseData);
+
+    // Add deprecation headers
+    return NextResponse.json(responseData, {
+      headers: {
+        'X-API-Deprecated': 'true',
+        'X-API-Sunset-Date': '2025-12-31',
+        'X-API-Replacement': '/api/v2/signals (Railway backend)',
+        'X-Migration-Status': 'Railway backend available - set NEXT_PUBLIC_USE_RAILWAY_BACKEND=true',
+      },
+    });
     
   } catch (error) {
     console.error('❌ Error calculating Gayed signals:', error);

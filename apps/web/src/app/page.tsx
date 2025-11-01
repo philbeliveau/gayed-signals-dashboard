@@ -458,37 +458,31 @@ export default function Dashboard() {
       setError(null);
       setLoadingMode(fast ? 'fast' : 'full');
       
-      // Use full mode by default for home page to show all 5 signals
-      const apiUrl = fast ? '/api/signals?fast=true' : '/api/signals';
+      // Use Railway backend with automatic fallback to local API
       const startTime = Date.now();
-      const response = await fetch(apiUrl);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
+      const { fetchSignalsWithFallback } = await import('@/lib/api/fetch-signals');
+      const data = await fetchSignalsWithFallback({ fast });
+
+      if (!data || !data.signals) {
+        throw new Error('Invalid signal data received');
       }
       
       setSignals(data.signals || []);
       setConsensus(data.consensus);
       setLastUpdated(new Date());
       setDataLoaded(true);
-      // NEW: Set agent debate data
-      setAgentConversation(data.agentConversation || []);
-      setReasoning(data.reasoning || []);
-      setTransparentDecision(data.transparentDecision || false);
+      // NEW: Set agent debate data (from legacy format if available)
+      setAgentConversation((data as any).agentConversation || []);
+      setReasoning((data as any).reasoning || []);
+      setTransparentDecision((data as any).transparentDecision || false);
 
       const loadTime = Date.now() - startTime;
-      
-      // Show performance info
-      if (data.cached) {
-        console.log(`📦 Using cached signal data (${loadTime}ms)`);
+
+      // Show performance info with data source indicator
+      if (data.metadata.cached) {
+        console.log(`📦 Using cached signal data from ${data.metadata.dataSource} (${loadTime}ms)`);
       } else {
-        console.log(`⚡ ${fast ? 'Fast' : 'Full'} signals loaded in ${loadTime}ms`);
+        console.log(`⚡ ${fast ? 'Fast' : 'Full'} signals from ${data.metadata.dataSource} loaded in ${loadTime}ms`);
       }
       
     } catch (error) {
@@ -546,7 +540,7 @@ export default function Dashboard() {
     let totalReduction = 0;
 
     signals.forEach(signal => {
-      if (signal.provenance) {
+      if (signal && signal.provenance) {
         const { missingDataSources, confidenceReduction, sources } = signal.provenance;
 
         // Add issues for missing data sources
@@ -1007,9 +1001,9 @@ export default function Dashboard() {
   }
 
   const totalSignals = signals.length;
-  const riskOnSignals = signals.filter(s => s.signal === 'Risk-On').length;
-  const riskOffSignals = signals.filter(s => s.signal === 'Risk-Off').length;
-  const neutralSignals = signals.filter(s => s.signal === 'Neutral').length;
+  const riskOnSignals = signals.filter(s => s && s.signal === 'Risk-On').length;
+  const riskOffSignals = signals.filter(s => s && s.signal === 'Risk-Off').length;
+  const neutralSignals = signals.filter(s => s && s.signal === 'Neutral').length;
 
   return (
     <>
@@ -1139,7 +1133,7 @@ export default function Dashboard() {
 
         {/* Enhanced Individual Signal Cards - mobile optimized */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
-          {signals.map((signal, index) => (
+          {signals.filter(signal => signal !== null).map((signal, index) => (
             <div
               key={index}
               onClick={() => handleSignalClick(signal)}
@@ -1230,12 +1224,12 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Unified Content Input for AutoGen Analysis */}
-        <UnifiedContentInput
+        {/* Unified Content Input for AutoGen Analysis - HIDDEN */}
+        {/* <UnifiedContentInput
           onSubmit={handleContentSubmission}
           isLoading={textAnalysisLoading}
           className="mb-8"
-        />
+        /> */}
 
         {/* Processing Status Display */}
         {textAnalysisLoading && (

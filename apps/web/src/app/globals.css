@@ -455,21 +455,21 @@
 
 /* Dark Theme Variables */
 :root.dark {
-  /* Background Colors */
-  --theme-bg: #0F0F0F;
-  --theme-bg-secondary: #1A1A1A;
-  --theme-bg-tertiary: #1F1F1F;
+  /* Background Colors - Match sidebar for seamless design */
+  --theme-bg: #1e293b;
+  --theme-bg-secondary: #1e293b;
+  --theme-bg-tertiary: #1e293b;
 
-  /* Sidebar Colors - Keep dark for consistency with purple accent */
-  --theme-sidebar-bg: #1A1A1A;
+  /* Sidebar Colors - Match background for seamless design */
+  --theme-sidebar-bg: #1e293b;
   --theme-sidebar-text: #E2E8F0;
   --theme-sidebar-text-muted: #A0AEC0;
   --theme-sidebar-active: #8B5CF6;
 
-  /* Card Colors */
-  --theme-card: #1A1A1A;
-  --theme-card-hover: #242424;
-  --theme-card-secondary: #1F1F1F;
+  /* Card Colors - Slightly lighter for contrast */
+  --theme-card: #2d3748;
+  --theme-card-hover: #374151;
+  --theme-card-secondary: #334155;
   --theme-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   --theme-card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
 
@@ -1583,21 +1583,21 @@ main {
 
 /* Removed ripple effect for flat design */
 
-/* Modern sidebar styling - Premium refined design */
+/* Modern sidebar styling - Wide design with sections */
 .modern-sidebar {
-  background: #1a202c;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  width: 70px;
+  background: #1e293b;
+  border-right: none;
+  width: 260px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
 }
 
-/* Modern top nav - Blends with sidebar */
+/* Modern top nav - Blends seamlessly with background */
 .modern-topnav {
-  background: #1a202c;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  border-bottom: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
 }
 
 /* Navigation item container */
@@ -1662,30 +1662,12 @@ main {
   color: white;
 }
 
-/* Modern top navigation */
-.modern-topnav {
-  background: var(--theme-card) !important;
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--theme-border);
-  box-shadow: var(--theme-card-shadow);
-}
+/* Modern top navigation - removed duplicated styles, uses above seamless blend */
 
-/* Dark mode specific overrides for top navigation */
-:root.dark .modern-topnav {
-  background: #1A1A1A !important;
-  border-bottom: 1px solid #2A2A2A !important;
-}
-
-/* Additional override using data attribute */
-[data-theme="dark"] .modern-topnav {
-  background: #1A1A1A !important;
-  border-bottom: 1px solid #2A2A2A !important;
-}
-
-/* Dark class override */
+/* Dark class override - also transparent to blend */
 .dark .modern-topnav {
-  background: #1A1A1A !important;
-  border-bottom: 1px solid #2A2A2A !important;
+  background: transparent !important;
+  border-bottom: none !important;
 }
 
 /* Consensus flat backgrounds */

@@ -24,12 +24,13 @@ jest.mock('next/router', () => ({
 }))
 
 // Mock yahoo-finance2 at the module level to avoid import issues
-jest.mock('yahoo-finance2', () => ({
-  __esModule: true,
-  default: {
-    historical: jest.fn(),
-  },
-}))
+// DISABLED: Removed dependency as part of data pipeline restructuring
+// jest.mock('yahoo-finance2', () => ({
+//   __esModule: true,
+//   default: {
+//     historical: jest.fn(),
+//   },
+// }))
 
 // Mock Clerk modules to handle ES6 import issues
 jest.mock('@clerk/nextjs', () => ({

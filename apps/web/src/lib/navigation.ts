@@ -6,6 +6,7 @@ export interface NavigationRoute {
   path: string;
   displayName: string;
   icon?: string;
+  section?: string;
   adminOnly?: boolean;
   requiresAuth?: boolean;
 }
@@ -15,12 +16,7 @@ export const publicRoutes: NavigationRoute[] = [
     path: '/',
     displayName: 'Home',
     icon: 'home',
-    requiresAuth: false
-  },
-  {
-    path: '/demo/live-conversation',
-    displayName: 'AI Agent Debates',
-    icon: 'message-square-more',
+    section: 'MAIN',
     requiresAuth: false
   }
 ];
@@ -30,30 +26,21 @@ export const authenticatedRoutes: NavigationRoute[] = [
     path: '/',
     displayName: 'Dashboard',
     icon: 'layout-dashboard',
+    section: 'MAIN',
     requiresAuth: true
   },
   {
     path: '/interactive-charts',
     displayName: 'Interactive Charts',
     icon: 'line-chart',
+    section: 'MAIN',
     requiresAuth: true
   },
   {
     path: '/backtrader',
     displayName: 'Backtesting',
     icon: 'trending-up',
-    requiresAuth: true
-  },
-  {
-    path: '/simple-youtube',
-    displayName: 'Video Analysis',
-    icon: 'youtube',
-    requiresAuth: true
-  },
-  {
-    path: '/demo/live-conversation',
-    displayName: 'AI Agent Debates',
-    icon: 'message-square-more',
+    section: 'ANALYSIS',
     requiresAuth: true
   }
 ];
@@ -63,6 +50,7 @@ export const adminRoutes: NavigationRoute[] = [
     path: '/admin',
     displayName: 'Admin Panel',
     icon: 'shield',
+    section: 'PROFILE',
     adminOnly: true,
     requiresAuth: true
   }

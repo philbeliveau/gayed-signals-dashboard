@@ -10,6 +10,21 @@ We are actively restructuring the entire data pipeline to resolve severe data re
 
 ---
 
+## 🎨 **UI CONFIGURATION**
+
+### **Hidden Navigation Tabs**
+The following navigation items are currently hidden from the sidebar but remain accessible via direct URL:
+- **AI Agent Debates** (`/demo/live-conversation`) - AutoGen multi-agent debate system
+- **Video Analysis** (`/simple-youtube`) - YouTube content analysis feature
+
+### **Hidden Dashboard Components**
+The following components are hidden from the main dashboard:
+- **Direct Text Content Analysis Box** - Unified content input component below the 5 main signals
+
+**Reason:** Simplifying the UI to focus on core market signal functionality during data pipeline restructuring.
+
+---
+
 ## 📊 **DATA INTEGRITY CRISIS - WHAT WE'RE FIXING**
 
 ### **Critical Issues Identified:**

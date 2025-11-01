@@ -10,6 +10,8 @@ import { UnifiedDataService } from './services/UnifiedDataService';
 import { Logger } from './services/Logger';
 import { SignalOrchestratorV2 } from './src/services/SignalOrchestratorV2';
 import { LegacySignalsAdapter } from './src/adapters/LegacySignalsAdapter';
+import { SignalOrchestrator } from './src/engines/SignalOrchestrator';
+import { MarketData } from './src/types/signals';
 import validationRoutes from './src/validation/routes';
 
 const app = express();
@@ -318,6 +320,80 @@ app.get('/api/v2/signals', async (req: Request, res: Response) => {
 
     // Execute query through SignalOrchestratorV2
     const result = await signalOrchestrator.fetchSignals(queryParams);
+
+    // If PostgreSQL has no signals, calculate on-demand
+    if (!result.success || result.data.length === 0) {
+      logger.info('PostgreSQL empty - calculating signals on-demand');
+
+      // Fetch market data
+      const symbols = SignalOrchestrator.getRequiredSymbols();
+      const marketDataResult = await dataService.fetchMarketData(symbols, {
+        useCache: true,
+        fallbackEnabled: true,
+      });
+
+      if (marketDataResult.success && marketDataResult.data) {
+        // Transform market data to Record<symbol, MarketData[]> format
+        const marketDataBySymbol: Record<string, MarketData[]> = {};
+        marketDataResult.data.forEach((item: any) => {
+          if (!marketDataBySymbol[item.symbol]) {
+            marketDataBySymbol[item.symbol] = [];
+          }
+          marketDataBySymbol[item.symbol].push({
+            symbol: item.symbol,
+            date: item.date,
+            close: item.close,
+            volume: item.volume
+          });
+        });
+
+        // Calculate signals
+        const signals = SignalOrchestrator.calculateAllSignals(marketDataBySymbol);
+        const consensus = SignalOrchestrator.calculateConsensusSignal(signals);
+
+        // Transform to V2 API format
+        const validSignals = signals.filter((s): s is NonNullable<typeof s> => s !== null);
+        const signalData = validSignals.map((signal, index) => ({
+          id: index + 1,
+          signalName: signal.type,
+          signalType: 'timing',
+          calculationDate: new Date(),
+          calculationTimestamp: new Date(),
+          signalValue: signal.rawValue,
+          signalStrength: signal.strength === 'Strong' ? 1.0 : signal.strength === 'Moderate' ? 0.75 : 0.5,
+          confidenceScore: signal.confidence,
+          dataQualityScore: 0.90,
+          signalStatus: signal.signal.toLowerCase().replace('-', '_'),
+          statusChanged: false,
+          inputData: signal.metadata,
+          marketDataIds: [],
+          provenanceIds: [],
+        }));
+
+        return res.json({
+          success: true,
+          data: signalData,
+          metadata: {
+            count: signalData.length,
+            hasMore: false,
+            sources: {
+              primary: 'on_demand_calculation',
+              fallbacksUsed: ['market_data_api'],
+              failedSources: []
+            },
+            quality: {
+              averageScore: 0.85,
+              issues: []
+            },
+            timing: {
+              totalMs: 0,
+              cached: false
+            }
+          },
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
 
     // Set caching headers
     res.set({
