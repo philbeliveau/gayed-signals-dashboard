@@ -3,12 +3,17 @@
 ## Date
 2025-10-31
 
-## Problem
+## Status
+✅ **RESOLVED** - Application successfully deployed and running on Railway
+
+## Problem Summary
 Railway deployment failing with multiple Dockerfile-related issues:
 
 1. **Wrong Dockerfile Detected**: Railway was using the Python backend Dockerfile from project root instead of the Node.js Dockerfile in `domains/data-pipeline/`
 2. **TypeScript Build Failure**: `tsc: not found` error during build phase
 3. **Root Directory Configuration**: Railway wasn't respecting the `domains/data-pipeline` root directory setting
+4. **Missing DATABASE_URL**: Environment variable not set in Railway
+5. **Prisma OpenSSL Dependency**: `libssl.so.1.1: cannot open shared object file: No such file or directory`
 
 ## Root Cause Analysis
 
@@ -137,8 +142,62 @@ After these fixes, Railway deployment should:
 3. ✅ Generate Prisma Client
 4. ✅ Start with health checks passing
 
+### Fix 4: Add Missing DATABASE_URL Environment Variable
+Railway environment was missing the PostgreSQL connection string. Added via Railway MCP:
+
+```bash
+railway variables set DATABASE_URL="postgresql://postgres:***@tramway.proxy.rlwy.net:16396/railway"
+```
+
+This triggered an automatic restart of the service with the new variable.
+
+### Fix 5: Install OpenSSL for Prisma
+Prisma requires OpenSSL library which is not included in `node:20-slim` image.
+
+**Error:**
+```
+PrismaClientInitializationError: Unable to require(`/app/node_modules/.prisma/client/libquery_engine-debian-openssl-1.1.x.so.node`).
+Prisma cannot find the required `libssl` system library in your system.
+Details: libssl.so.1.1: cannot open shared object file: No such file or directory
+```
+
+**Solution:**
+Updated Dockerfile to install OpenSSL before any Prisma operations:
+
+```dockerfile
+FROM node:20-slim
+
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl
+
+# ... rest of Dockerfile
+```
+
+This was the **final fix** - after this change, the application deployed successfully!
+
+## Final Deployment Status
+
+### ✅ Successful Deployment
+- **URL**: https://gayed-backend-production.up.railway.app
+- **Health Endpoint**: https://gayed-backend-production.up.railway.app/health
+- **Build Time**: ~2 minutes
+- **Container**: Node.js 20-slim with OpenSSL
+- **Services Connected**:
+  - ✅ PostgreSQL (Railway Database)
+  - ✅ Redis Cloud (External)
+  - ✅ API Routes Active
+
+### Environment Variables Set
+- `DATABASE_URL`: PostgreSQL connection string
+- `REDIS_URL`: Redis Cloud connection string
+- `API_KEY`: gayed-signals-dev-key-2024
+- `PORT`: Automatically set by Railway
+
 ## Lessons Learned
 1. **Multiple Dockerfiles**: When you have multiple services with different Dockerfiles, rename non-active ones or use clear directory separation
 2. **Production Builds**: Build phase needs devDependencies (TypeScript, build tools), runtime can use production-only
 3. **Railway Configuration**: Dashboard settings override CLI/file-based config - keep it simple and use one source of truth
 4. **Root Directory Paths**: Use relative paths without leading slashes for Railway root directory setting
+5. **Prisma + Slim Images**: Always install OpenSSL when using Prisma with slim Node.js images (`node:20-slim`)
+6. **Environment Variables**: Railway requires manual configuration of DATABASE_URL - it's not auto-injected like some other platforms
+7. **Sequential Debugging**: Each error revealed the next issue - systematic resolution was key to success
