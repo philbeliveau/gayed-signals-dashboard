@@ -1,16 +1,7 @@
 {
-  "buildCommand": "turbo run build --filter=web",
-  "installCommand": "npm ci",
-  "framework": "nextjs",
-  "env": {
-    "NODE_ENV": "production",
-    "ENVIRONMENT": "production",
-    "NEXT_PUBLIC_RAILWAY_BACKEND_URL": "https://gayed-backend-production.up.railway.app",
-    "NEXT_PUBLIC_USE_RAILWAY_BACKEND": "true",
-    "NEXT_PUBLIC_RAILWAY_API_KEY": "gayed-signals-dev-key-2024"
-  },
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "src/app/api/**/*.ts": {
+    "apps/web/src/app/api/**/*.ts": {
       "maxDuration": 60
     }
   },
