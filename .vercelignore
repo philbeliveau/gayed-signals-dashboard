@@ -1,6 +1,6 @@
 # Ignore Railway backend (deployed separately)
-apps/backend/
-domains/data-pipeline/
+apps/backend/**
+domains/data-pipeline/**
 
 # Ignore Python services
-python-services/
+python-services/**
