@@ -23,6 +23,17 @@ The following components are hidden from the main dashboard:
 
 **Reason:** Simplifying the UI to focus on core market signal functionality during data pipeline restructuring.
 
+### **Disabled API Endpoints**
+The following API endpoints are temporarily disabled (commented out to prevent build errors):
+- **`/api/mcp-bridge`** - Perplexity MCP and web search services (not currently needed)
+- **`/api/metrics`** - Prometheus metrics endpoint (stub returns empty data)
+
+**Files Affected:**
+- `apps/web/src/app/api/mcp-bridge/route.ts` - Perplexity/web-search handlers commented out
+- `apps/web/src/app/api/metrics/route.ts` - Metrics collection disabled, returns 503
+
+**Reason:** These services depend on unused external integrations. Can be re-enabled when needed.
+
 ---
 
 ## 📊 **DATA INTEGRITY CRISIS - WHAT WE'RE FIXING**

@@ -7,7 +7,8 @@
  */
 
 import { NextResponse } from 'next/server';
-import { metricsAggregator } from '@/lib/monitoring/metrics-stub';
+// TEMPORARILY DISABLED - Metrics stub returns empty data, not useful for production
+// import { metricsAggregator } from '@/lib/monitoring/metrics-stub';
 
 // Prometheus metric types
 type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary';
@@ -23,38 +24,50 @@ interface PrometheusMetric {
 /**
  * GET /api/metrics
  * Returns Prometheus-formatted metrics
+ * TEMPORARILY DISABLED - Metrics stub returns empty data
  */
 export async function GET(request: Request) {
-  try {
-    const metrics = await collectMetrics();
-    const prometheusFormat = formatPrometheusMetrics(metrics);
+  return NextResponse.json(
+    {
+      status: 'disabled',
+      message: 'Metrics endpoint temporarily disabled - stub returns empty data',
+      timestamp: new Date().toISOString(),
+    },
+    { status: 503 }
+  );
 
-    return new NextResponse(prometheusFormat, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain; version=0.0.4',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-      },
-    });
-  } catch (error) {
-    console.error('Error generating metrics:', error);
-
-    return NextResponse.json(
-      {
-        error: 'Failed to generate metrics',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  // TEMPORARILY DISABLED
+  // try {
+  //   const metrics = await collectMetrics();
+  //   const prometheusFormat = formatPrometheusMetrics(metrics);
+  //
+  //   return new NextResponse(prometheusFormat, {
+  //     status: 200,
+  //     headers: {
+  //       'Content-Type': 'text/plain; version=0.0.4',
+  //       'Cache-Control': 'no-cache, no-store, must-revalidate',
+  //     },
+  //   });
+  // } catch (error) {
+  //   console.error('Error generating metrics:', error);
+  //
+  //   return NextResponse.json(
+  //     {
+  //       error: 'Failed to generate metrics',
+  //       details: error instanceof Error ? error.message : 'Unknown error',
+  //     },
+  //     { status: 500 }
+  //   );
+  // }
 }
 
-/**
- * Collect all metrics from the system
- */
+// TEMPORARILY DISABLED - Metrics stub returns empty data
+// /**
+//  * Collect all metrics from the system
+//  */
 async function collectMetrics(): Promise<PrometheusMetric[]> {
   const metrics: PrometheusMetric[] = [];
-  const aggregated = metricsAggregator.getAggregatedMetrics('1h');
+  // const aggregated = metricsAggregator.getAggregatedMetrics('1h');
   const now = Date.now();
 
   // ============================================================================

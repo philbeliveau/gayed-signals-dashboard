@@ -10,8 +10,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { perplexityMCPClient } from '@/lib/fact-check/perplexity-mcp-client';
-import { webSearchService } from '@/lib/fact-check/web-search-service';
+// TEMPORARILY DISABLED - Not needed for current platform functionality
+// import { perplexityMCPClient } from '@/lib/fact-check/perplexity-mcp-client';
+// import { webSearchService } from '@/lib/fact-check/web-search-service';
 import { signalService } from '@/domains/trading-signals/services/signalService';
 
 export interface MCPBridgeRequest {
@@ -51,17 +52,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     let result: any;
 
     switch (body.service) {
-      case 'perplexity':
-        result = await handlePerplexityRequest(body.method, body.params || {});
-        break;
+      // TEMPORARILY DISABLED - Not needed for current platform functionality
+      // case 'perplexity':
+      //   result = await handlePerplexityRequest(body.method, body.params || {});
+      //   break;
 
       case 'signals':
         result = await handleSignalsRequest(body.method, body.params || {});
         break;
 
-      case 'web-search':
-        result = await handleWebSearchRequest(body.method, body.params || {});
-        break;
+      // TEMPORARILY DISABLED - Not needed for current platform functionality
+      // case 'web-search':
+      //   result = await handleWebSearchRequest(body.method, body.params || {});
+      //   break;
 
       case 'economic-data':
         result = await handleEconomicDataRequest(body.method, body.params || {});
@@ -98,24 +101,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-/**
- * Handle Perplexity MCP service requests
- */
-async function handlePerplexityRequest(method: string, params: Record<string, any>): Promise<any> {
-  switch (method) {
-    case 'researchClaim':
-      if (!params.claimText) {
-        throw new Error('Missing required parameter: claimText');
-      }
-      return await perplexityMCPClient.researchClaim(params.claimText);
-
-    case 'testConnection':
-      return await perplexityMCPClient.testConnection();
-
-    default:
-      throw new Error(`Unknown Perplexity method: ${method}`);
-  }
-}
+// TEMPORARILY DISABLED - Not needed for current platform functionality
+// /**
+//  * Handle Perplexity MCP service requests
+//  */
+// async function handlePerplexityRequest(method: string, params: Record<string, any>): Promise<any> {
+//   switch (method) {
+//     case 'researchClaim':
+//       if (!params.claimText) {
+//         throw new Error('Missing required parameter: claimText');
+//       }
+//       return await perplexityMCPClient.researchClaim(params.claimText);
+//
+//     case 'testConnection':
+//       return await perplexityMCPClient.testConnection();
+//
+//     default:
+//       throw new Error(`Unknown Perplexity method: ${method}`);
+//   }
+// }
 
 /**
  * Handle signals service requests
@@ -152,32 +156,33 @@ async function handleSignalsRequest(method: string, params: Record<string, any>)
   }
 }
 
-/**
- * Handle web search service requests
- */
-async function handleWebSearchRequest(method: string, params: Record<string, any>): Promise<any> {
-  switch (method) {
-    case 'search':
-      if (!params.query) {
-        throw new Error('Missing required parameter: query');
-      }
-
-      const config = {
-        agentType: params.agentType || 'NEWS',
-        maxResults: params.maxResults || 5,
-        includeDomains: params.includeDomains,
-        excludeDomains: params.excludeDomains
-      };
-
-      return await webSearchService.searchForEvidence(params.query, config);
-
-    case 'testConnectivity':
-      return await webSearchService.testConnectivity();
-
-    default:
-      throw new Error(`Unknown web search method: ${method}`);
-  }
-}
+// TEMPORARILY DISABLED - Not needed for current platform functionality
+// /**
+//  * Handle web search service requests
+//  */
+// async function handleWebSearchRequest(method: string, params: Record<string, any>): Promise<any> {
+//   switch (method) {
+//     case 'search':
+//       if (!params.query) {
+//         throw new Error('Missing required parameter: query');
+//       }
+//
+//       const config = {
+//         agentType: params.agentType || 'NEWS',
+//         maxResults: params.maxResults || 5,
+//         includeDomains: params.includeDomains,
+//         excludeDomains: params.excludeDomains
+//       };
+//
+//       return await webSearchService.searchForEvidence(params.query, config);
+//
+//     case 'testConnectivity':
+//       return await webSearchService.testConnectivity();
+//
+//     default:
+//       throw new Error(`Unknown web search method: ${method}`);
+//   }
+// }
 
 /**
  * Handle economic data requests (FRED API, etc.)
@@ -353,10 +358,10 @@ export async function GET(): Promise<NextResponse> {
   return NextResponse.json({
     status: 'healthy',
     services: {
-      perplexity: 'available',
+      // perplexity: 'disabled', // TEMPORARILY DISABLED
       signals: 'available',
-      webSearch: 'available',
-      economicData: 'partial' // Not fully implemented yet
+      // webSearch: 'disabled', // TEMPORARILY DISABLED
+      economicData: 'available'
     },
     timestamp: new Date().toISOString()
   });
