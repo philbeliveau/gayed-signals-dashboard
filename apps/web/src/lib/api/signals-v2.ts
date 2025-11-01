@@ -27,14 +27,14 @@ export class SignalsV2Service {
     const endpoint = `/api/v2/signals${queryString}`;
 
     try {
-      const response = await this.client.request<SignalV2Response['data']>(
+      const response = await this.client.request<SignalV2Response>(
         endpoint
       );
 
       // Validate response structure
       this.validateResponse(response);
 
-      return response as SignalV2Response;
+      return response;
     } catch (error) {
       console.error('[SignalsV2Service] Failed to fetch signals:', error);
       throw error;
