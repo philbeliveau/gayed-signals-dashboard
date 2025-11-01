@@ -10,9 +10,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { perplexityMCPClient } from '../../../lib/fact-check/perplexity-mcp-client';
-import { webSearchService } from '../../../lib/fact-check/web-search-service';
-import { signalService } from '../../../domains/trading-signals/services/signalService';
+import { perplexityMCPClient } from '@/lib/fact-check/perplexity-mcp-client';
+import { webSearchService } from '@/lib/fact-check/web-search-service';
+import { signalService } from '@/domains/trading-signals/services/signalService';
 
 export interface MCPBridgeRequest {
   service: 'perplexity' | 'signals' | 'web-search' | 'economic-data';

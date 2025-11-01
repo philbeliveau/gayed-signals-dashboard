@@ -55,6 +55,7 @@
     "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
+    "ignore-loader": "^0.1.2",
     "jest": "^30.0.3",
     "jest-environment-jsdom": "^30.0.2",
     "msw": "^2.10.2",

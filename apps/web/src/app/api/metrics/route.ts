@@ -7,7 +7,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { metricsAggregator } from '@/domains/data-pipeline/src/services/MetricsAggregator';
+import { metricsAggregator } from '@/lib/monitoring/metrics-stub';
 
 // Prometheus metric types
 type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary';
