@@ -55,7 +55,7 @@
   ],
   "redirects": [],
   "buildCommand": "turbo run build --filter=web",
-  "outputDirectory": ".next",
+  "outputDirectory": "apps/web/.next",
   "installCommand": "npm ci",
   "framework": "nextjs"
 }
