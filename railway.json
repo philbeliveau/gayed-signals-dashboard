@@ -3,6 +3,7 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "domains/data-pipeline/Dockerfile",
+    "buildContext": "domains/data-pipeline",
     "watchPatterns": [
       "domains/data-pipeline/**"
     ]
