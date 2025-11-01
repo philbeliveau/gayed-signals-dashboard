@@ -1,11 +1,8 @@
-# Explicitly include web app (whitelist approach)
-!apps/web/**
+# Ignore Railway backend deployment
+apps/backend/**
 
-# Ignore everything else in apps/ except web
-apps/backend
-
-# Ignore domains/data-pipeline (Railway deployment)
-domains/data-pipeline
+# Ignore data pipeline (Railway deployment)
+domains/data-pipeline/**
 
 # Ignore Python services
-python-services
+python-services/**
