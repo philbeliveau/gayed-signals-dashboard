@@ -25,16 +25,18 @@ export default function ProfessionalTopNav({
 
   return (
     <header className={`modern-topnav relative md:sticky top-0 z-40 ${className}`}>
-      <div className="px-3 md:px-6 py-3 md:py-5">
+      <div className="px-3 md:px-6 py-3 md:py-4">
         <div className="flex items-center justify-between">
-          {/* Logo - Left side */}
+          {/* Title - Only visible on desktop, sidebar has logo */}
           <div className="flex items-center space-x-3">
+            {/* Mobile: Show logo */}
             <img
               src="/logo.webp"
               alt="The Gayed Report"
-              className="h-10 w-10 md:h-12 md:w-12 object-contain"
+              className="h-10 w-10 md:hidden object-contain"
             />
-            <div className="hidden md:block">
+            {/* Desktop: Show title text only (logo in sidebar) */}
+            <div className="hidden md:block md:ml-2">
               <h1 className="text-lg font-light text-theme-text tracking-wide">
                 THE GAYED REPORT
               </h1>

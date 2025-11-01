@@ -68,14 +68,14 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
     <aside className={`hidden md:block fixed inset-y-0 left-0 z-50 modern-sidebar ${className}`}>
       {/* Ultra Slim Sidebar - Hidden on mobile, visible on desktop */}
       <div className="flex flex-col w-[70px] h-full">
-        {/* Trading Logo */}
-        <div className="flex items-center justify-center h-16 border-b border-theme-border/30">
+        {/* Trading Logo - Premium Design */}
+        <div className="flex items-center justify-center h-20 border-b border-white/10">
           <div className="nav-item-container relative">
-            <Link href="/" className="modern-nav-container w-12 h-12 flex items-center justify-center p-1">
+            <Link href="/" className="modern-nav-container w-14 h-14 flex items-center justify-center p-2.5 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300">
               <img
                 src="/logo.webp"
                 alt="The Gayed Report"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain drop-shadow-lg"
               />
             </Link>
             <div className="nav-tooltip">The Gayed Report</div>
@@ -105,11 +105,14 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
           })}
         </nav>
 
-        {/* Bottom section for live data indicator */}
-        <div className="px-2 py-4 border-t border-theme-border/30">
+        {/* Bottom section for live data indicator - Premium */}
+        <div className="px-2 py-6 border-t border-white/10">
           <div className="nav-item-container relative flex justify-center">
-            <div className="modern-nav-button">
-              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>
+            <div className="modern-nav-button cursor-default">
+              <div className="relative">
+                <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></div>
+                <div className="absolute inset-0 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping opacity-75"></div>
+              </div>
             </div>
             <div className="nav-tooltip">Live Market Data</div>
           </div>

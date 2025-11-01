@@ -1449,81 +1449,109 @@ main {
   background-color: rgba(124, 58, 237, 0.05);
 }
 
-/* Modern floating buttons */
+/* Modern floating buttons - Premium refined */
 .modern-nav-button {
   outline: 0 !important;
   border: 0 !important;
   width: 44px;
   height: 44px;
-  border-radius: 50%;
-  background-color: transparent;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  transition: all ease-in-out 0.3s;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all cubic-bezier(0.4, 0, 0.2, 1) 0.25s;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .modern-nav-button:hover {
-  transform: translateY(-1px);
-  background-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  background-color: rgba(124, 58, 237, 0.15);
+  border-color: rgba(124, 58, 237, 0.3);
+  color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
 }
 
 .modern-nav-button:active {
-  transform: translateY(-1px);
+  transform: translateY(0);
+  transition-duration: 0.1s;
 }
 
 .modern-nav-button.active {
-  background-color: rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(124, 58, 237, 0.15) 100%);
+  border-color: rgba(124, 58, 237, 0.5);
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1),
+              inset 0 1px 2px rgba(255, 255, 255, 0.1);
 }
 
 /* Removed ripple effect for flat design */
 
-/* Modern sidebar styling - Ultra Slim with flat design */
+/* Modern sidebar styling - Premium refined design */
 .modern-sidebar {
-  background: #2D3748;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, #1a202c 0%, #2D3748 100%);
+  border-right: 1px solid rgba(124, 58, 237, 0.2);
   width: 70px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Tooltip styles for slim sidebar - Flat design with purple */
+/* Modern top nav - Blends with sidebar */
+.modern-topnav {
+  background: linear-gradient(180deg, #1a202c 0%, #2D3748 100%);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Navigation item container */
+.nav-item-container {
+  padding: 4px 0;
+}
+
+/* Tooltip styles for slim sidebar - Premium refined */
 .nav-tooltip {
   position: absolute;
   left: 75px;
   top: 50%;
-  transform: translateY(-50%);
-  background: #7C3AED;
+  transform: translateY(-50%) scale(0.95);
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
   color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: all 0.2s ease;
+  transition: all cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
   z-index: 1000;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25),
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
 }
 
 .nav-tooltip::before {
   content: '';
   position: absolute;
-  left: -5px;
+  left: -6px;
   top: 50%;
   transform: translateY(-50%);
-  border: 5px solid transparent;
-  border-right-color: #7C3AED;
+  border: 6px solid transparent;
+  border-right-color: #8B5CF6;
+  filter: drop-shadow(-2px 0 2px rgba(0, 0, 0, 0.1));
 }
 
 .nav-item-container:hover .nav-tooltip {
   opacity: 1;
   left: 80px;
+  transform: translateY(-50%) scale(1);
 }
 
 .modern-sidebar-item {
