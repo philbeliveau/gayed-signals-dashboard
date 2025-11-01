@@ -22,7 +22,7 @@ export class SignalOrchestrator {
       'GLD',     // Gold ETF
       'IEF',     // 10-year Treasury ETF
       'TLT',     // 30-year Treasury ETF
-      '^VIX'     // VIX volatility index
+      'VIXY'     // VIX Short-Term Futures ETF (proxy for volatility)
     ];
   }
 
@@ -227,7 +227,7 @@ export class SignalOrchestrator {
     marketData: Record<string, MarketData[]>
   ): Signal | null {
     try {
-      const vixData = marketData['^VIX'];
+      const vixData = marketData['VIXY'];
 
       if (!vixData) {
         return null;
