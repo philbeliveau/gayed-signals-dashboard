@@ -1,0 +1,705 @@
+"""
+Story 4.0d: Base Signal Calculator
+Abstract base class for all signal calculators with Railway PostgreSQL and Redis integration
+Provides standardized lifecycle: fetch -> validate -> calculate -> persist -> cache
+"""
+
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar, Optional, Dict, Any, List
+from datetime import datetime, timedelta
+import time
+import logging
+from decimal import Decimal
+
+# Types
+from signals.types import (
+    SignalConfig,
+    SignalType,
+    SignalStatus,
+    CalculationContext,
+    SignalResult,
+    SignalMetadata,
+    ValidationResult,
+    OHLCData,
+    InsufficientDataError,
+    CalculationError,
+    DataValidationError,
+)
+
+# Type variables for generic signal calculator
+TInput = TypeVar('TInput')
+TOutput = TypeVar('TOutput')
+TParams = TypeVar('TParams')
+
+logger = logging.getLogger(__name__)
+
+
+class BaseSignalCalculator(ABC, Generic[TInput, TOutput, TParams]):
+    """
+    Abstract base class for all signal calculators
+    Deployed on Railway backend with PostgreSQL and Redis integration
+
+    Lifecycle:
+    1. Check cache
+    2. Fetch data from Railway PostgreSQL
+    3. Validate data quality
+    4. Prepare/transform data
+    5. Calculate signal
+    6. Post-process result
+    7. Persist to PostgreSQL
+    8. Update cache
+    9. Record metrics
+    """
+
+    def __init__(
+        self,
+        config: SignalConfig[TParams],
+        prisma_client: Any,  # PrismaClient instance
+        redis_client: Any,   # Redis instance
+        validator: Any,      # DataValidationService instance
+        market_data_repo: Any,  # MarketDataRepository instance
+    ):
+        """
+        Initialize signal calculator
+
+        Args:
+            config: Signal configuration with parameters
+            prisma_client: Railway PostgreSQL client (Prisma)
+            redis_client: Railway Redis client for caching
+            validator: Data quality validator
+            market_data_repo: Market data repository
+        """
+        self.config = config
+        self.prisma = prisma_client
+        self.redis = redis_client
+        self.validator = validator
+        self.market_data_repo = market_data_repo
+        self.logger = logging.getLogger(f"{__name__}.{config.name}")
+
+        # Validate configuration on initialization
+        self._validate_config()
+
+    # ===== MAIN ENTRY POINT =====
+
+    async def compute(self, context: CalculationContext) -> SignalResult[TOutput]:
+        """
+        Main entry point for signal calculation
+        Orchestrates the full lifecycle: fetch -> validate -> calculate -> persist
+
+        Args:
+            context: Calculation execution context
+
+        Returns:
+            SignalResult with calculated signal value and metadata
+
+        Raises:
+            DataValidationError: If data quality is insufficient
+            CalculationError: If calculation fails
+        """
+        start_time = time.time()
+        context.start_time = start_time
+
+        try:
+            self.logger.info(
+                f"Starting {self.config.name} calculation",
+                extra={'context': context.dict()}
+            )
+
+            # 1. Check cache first (unless force recalculate)
+            if not context.force_recalculate:
+                cached = await self._check_cache(context)
+                if cached:
+                    self.logger.info("Returning cached result")
+                    return cached
+
+            # 2. Fetch required data from Railway PostgreSQL
+            raw_data = await self.fetch_data(context)
+
+            # 3. Validate input data quality
+            if context.validate_before_calc:
+                validation_result = await self.validate_data(raw_data, context)
+                if not validation_result.is_valid():
+                    raise DataValidationError(
+                        f"Data validation failed for {self.config.name}",
+                        validation_result
+                    )
+
+            # 4. Transform/prepare data for calculation
+            prepared_data = await self.prepare_data(raw_data, context)
+
+            # 5. Perform core calculation
+            calculation_result = await self.calculate(prepared_data, context)
+
+            # 6. Post-process result (add metadata, format)
+            processed_result = await self.post_process(
+                calculation_result,
+                prepared_data,
+                context
+            )
+
+            # 7. Persist result to Railway PostgreSQL
+            if context.save_to_database:
+                await self._persist_result(processed_result, context)
+
+            # 8. Update cache in Railway Redis
+            await self._update_cache(processed_result, context)
+
+            # 9. Record performance metrics
+            duration = (time.time() - start_time) * 1000  # milliseconds
+            await self._record_metrics(duration, processed_result, context)
+
+            self.logger.info(
+                f"Completed {self.config.name} calculation",
+                extra={
+                    'duration_ms': duration,
+                    'signal_status': self.determine_status(calculation_result)
+                }
+            )
+
+            return processed_result
+
+        except DataValidationError:
+            raise  # Re-raise validation errors
+        except Exception as error:
+            self.logger.error(
+                f"Error in {self.config.name} calculation",
+                exc_info=True,
+                extra={'context': context.dict()}
+            )
+            return await self._handle_error(error, context)
+
+    # ===== BATCH & INCREMENTAL CALCULATIONS =====
+
+    async def compute_batch(
+        self,
+        contexts: List[CalculationContext]
+    ) -> List[SignalResult[TOutput]]:
+        """
+        Batch calculation for multiple contexts (dates, symbols, etc.)
+        Optimized for parallel execution with concurrency limits
+
+        Args:
+            contexts: List of calculation contexts
+
+        Returns:
+            List of signal results
+        """
+        # Pre-fetch all required data in bulk
+        data_map = await self._fetch_data_batch(contexts)
+
+        # Calculate in batches with concurrency limit
+        concurrency_limit = 5
+        results: List[SignalResult[TOutput]] = []
+
+        for i in range(0, len(contexts), concurrency_limit):
+            batch = contexts[i:i + concurrency_limit]
+            # Note: In async Python, would use asyncio.gather here
+            batch_results = []
+            for ctx in batch:
+                result = await self.compute(ctx)
+                batch_results.append(result)
+            results.extend(batch_results)
+
+        return results
+
+    async def compute_incremental(
+        self,
+        context: CalculationContext
+    ) -> SignalResult[TOutput]:
+        """
+        Incremental calculation - only calculate for new/updated data
+        Checks if new data is available since last calculation
+
+        Args:
+            context: Calculation context
+
+        Returns:
+            SignalResult (latest or newly calculated)
+        """
+        # Get latest calculation from PostgreSQL
+        latest_result = await self._get_latest_signal()
+
+        if not latest_result:
+            # No previous calculation, do full calculation
+            return await self.compute(context)
+
+        # Check if new data is available
+        has_new_data = await self._has_new_data_since(
+            latest_result['calculation_date']
+        )
+
+        if not has_new_data:
+            self.logger.info("No new data available, returning latest result")
+            return self._map_to_signal_result(latest_result)
+
+        # Perform incremental calculation
+        return await self.compute(context)
+
+    # ===== ABSTRACT METHODS (must be implemented by subclasses) =====
+
+    @abstractmethod
+    async def fetch_data(self, context: CalculationContext) -> TInput:
+        """
+        Fetch raw data required for calculation from Railway PostgreSQL
+
+        Args:
+            context: Calculation context with date, symbol, etc.
+
+        Returns:
+            Raw input data for calculation
+        """
+        pass
+
+    @abstractmethod
+    async def calculate(
+        self,
+        data: TInput,
+        context: CalculationContext
+    ) -> TOutput:
+        """
+        Core calculation logic - the "heart" of the signal
+        This is where the actual signal algorithm is implemented
+
+        Args:
+            data: Prepared input data
+            context: Calculation context
+
+        Returns:
+            Calculated signal output
+        """
+        pass
+
+    @abstractmethod
+    def get_signal_metadata(self) -> Dict[str, Any]:
+        """
+        Get signal-specific metadata (description, interpretation, etc.)
+
+        Returns:
+            Signal metadata dictionary
+        """
+        pass
+
+    @abstractmethod
+    def extract_numeric_value(self, result: TOutput) -> float:
+        """
+        Extract numeric value from result for storage in database
+
+        Args:
+            result: Calculation result
+
+        Returns:
+            Numeric representation of signal value
+        """
+        pass
+
+    @abstractmethod
+    def calculate_strength(self, result: TOutput) -> float:
+        """
+        Calculate signal strength (normalized -1 to 1 or 0 to 1)
+
+        Args:
+            result: Calculation result
+
+        Returns:
+            Signal strength score
+        """
+        pass
+
+    @abstractmethod
+    def determine_status(self, result: TOutput) -> SignalStatus:
+        """
+        Determine signal status (bullish, bearish, neutral, etc.)
+
+        Args:
+            result: Calculation result
+
+        Returns:
+            Signal status enum
+        """
+        pass
+
+    # ===== DEFAULT IMPLEMENTATIONS (can be overridden) =====
+
+    def _validate_config(self) -> None:
+        """
+        Validate configuration parameters
+        Subclasses can override to add parameter validation
+        """
+        if not self.config.name:
+            raise ValueError('Signal name is required')
+        if not self.config.type:
+            raise ValueError('Signal type is required')
+
+    async def validate_data(
+        self,
+        data: TInput,
+        context: CalculationContext
+    ) -> ValidationResult:
+        """
+        Validate input data before calculation
+        Uses DataValidationService from Story 4.0c
+
+        Args:
+            data: Input data to validate
+            context: Calculation context
+
+        Returns:
+            ValidationResult with quality score and issues
+        """
+        validation_options = context.validation_options or {}
+        validation_options.update({
+            'signal': self.config.name,
+            'date': context.date,
+        })
+
+        return await self.validator.validate(data, validation_options)
+
+    async def prepare_data(
+        self,
+        data: TInput,
+        context: CalculationContext
+    ) -> TInput:
+        """
+        Prepare/transform data before calculation
+        Default: return data as-is
+        Subclasses can override for data transformation
+
+        Args:
+            data: Raw input data
+            context: Calculation context
+
+        Returns:
+            Prepared data
+        """
+        return data
+
+    async def post_process(
+        self,
+        result: TOutput,
+        input_data: TInput,
+        context: CalculationContext
+    ) -> SignalResult[TOutput]:
+        """
+        Post-process calculation result - add metadata, format output
+
+        Args:
+            result: Calculation result
+            input_data: Original input data
+            context: Calculation context
+
+        Returns:
+            Complete SignalResult with metadata
+        """
+        metadata_dict = self.get_signal_metadata()
+
+        # Calculate data quality score
+        data_quality = await self._assess_data_quality(input_data)
+
+        # Calculate duration
+        duration = (time.time() - (context.start_time or time.time())) * 1000
+
+        metadata = SignalMetadata(
+            version=self.config.version,
+            parameters=self.config.parameters,
+            confidence=metadata_dict.get('confidence'),
+            data_quality=data_quality,
+            calculation_duration=duration,
+            description=metadata_dict.get('description'),
+            interpretation=metadata_dict.get('interpretation'),
+            thresholds=metadata_dict.get('thresholds'),
+        )
+
+        return SignalResult(
+            signal_name=self.config.name,
+            signal_type=self.config.type,
+            calculation_date=context.date,
+            calculation_timestamp=datetime.now(),
+            value=result,
+            metadata=metadata,
+        )
+
+    async def _persist_result(
+        self,
+        result: SignalResult[TOutput],
+        context: CalculationContext
+    ) -> None:
+        """
+        Persist calculation result to Railway PostgreSQL
+
+        Args:
+            result: Signal result to persist
+            context: Calculation context
+        """
+        try:
+            signal_value = self.extract_numeric_value(result.value)
+            signal_strength = self.calculate_strength(result.value)
+            signal_status = self.determine_status(result.value)
+
+            await self.prisma.signalhistory.create({
+                'data': {
+                    'signalName': result.signal_name,
+                    'signalType': result.signal_type.value,
+                    'calculationDate': result.calculation_date,
+                    'calculationTimestamp': result.calculation_timestamp,
+                    'signalValue': Decimal(str(signal_value)),
+                    'signalStrength': Decimal(str(signal_strength)),
+                    'signalStatus': signal_status.value,
+                    'confidenceScore': (
+                        Decimal(str(result.metadata.confidence))
+                        if result.metadata.confidence else None
+                    ),
+                    'dataQualityScore': Decimal(str(result.metadata.data_quality)),
+                    'inputData': context.input_summary or {},
+                    'calculationParams': self.config.parameters,
+                    'calculationVersion': self.config.version,
+                }
+            })
+
+            self.logger.debug(f"Persisted {self.config.name} result to PostgreSQL")
+
+        except Exception as error:
+            self.logger.error(
+                f"Failed to persist signal result: {error}",
+                exc_info=True
+            )
+            # Don't fail the calculation if persistence fails
+
+    async def _handle_error(
+        self,
+        error: Exception,
+        context: CalculationContext
+    ) -> SignalResult[TOutput]:
+        """
+        Handle calculation errors - log and persist error record
+
+        Args:
+            error: Exception that occurred
+            context: Calculation context
+
+        Returns:
+            Error signal result
+
+        Raises:
+            CalculationError: Re-raises with context
+        """
+        # Log error with full context to PostgreSQL
+        try:
+            await self.prisma.signalhistory.create({
+                'data': {
+                    'signalName': self.config.name,
+                    'signalType': self.config.type.value,
+                    'calculationDate': context.date,
+                    'signalValue': None,
+                    'signalStatus': SignalStatus.ERROR.value,
+                    'confidenceScore': Decimal('0'),
+                    'dataQualityScore': Decimal('0'),
+                    'calculationParams': self.config.parameters,
+                    'errorMessage': str(error),
+                }
+            })
+        except Exception as persist_error:
+            self.logger.error(
+                f"Failed to persist error record: {persist_error}",
+                exc_info=True
+            )
+
+        # Re-raise as CalculationError
+        raise CalculationError(str(error), self.config.name, context)
+
+    # ===== CACHE MANAGEMENT =====
+
+    async def _check_cache(
+        self,
+        context: CalculationContext
+    ) -> Optional[SignalResult[TOutput]]:
+        """
+        Check Railway Redis cache for existing result
+
+        Args:
+            context: Calculation context
+
+        Returns:
+            Cached result or None
+        """
+        try:
+            cache_key = self._get_cache_key(context)
+            cached_data = await self.redis.get(cache_key)
+
+            if cached_data:
+                # Increment hit count in PostgreSQL (async, don't wait)
+                self._increment_cache_hit_count(cache_key)
+                return SignalResult.parse_raw(cached_data)
+
+            return None
+
+        except Exception as error:
+            self.logger.warning(f"Cache check failed: {error}")
+            return None
+
+    async def _update_cache(
+        self,
+        result: SignalResult[TOutput],
+        context: CalculationContext
+    ) -> None:
+        """
+        Update Railway Redis cache with new result
+
+        Args:
+            result: Signal result to cache
+            context: Calculation context
+        """
+        try:
+            cache_key = self._get_cache_key(context)
+            ttl = self.config.cache_ttl or 3600  # 1 hour default
+
+            await self.redis.setex(
+                cache_key,
+                ttl,
+                result.json()
+            )
+
+            self.logger.debug(f"Cached result with TTL {ttl}s")
+
+        except Exception as error:
+            self.logger.warning(f"Cache update failed: {error}")
+
+    def _get_cache_key(self, context: CalculationContext) -> str:
+        """
+        Generate cache key for signal calculation
+
+        Args:
+            context: Calculation context
+
+        Returns:
+            Cache key string
+        """
+        date_str = context.date.strftime('%Y-%m-%d')
+        params_str = str(sorted(self.config.parameters.items()))
+        return f"signal:{self.config.name}:{date_str}:{hash(params_str)}"
+
+    # ===== HELPER METHODS =====
+
+    async def _assess_data_quality(self, data: TInput) -> float:
+        """
+        Assess overall data quality score (0-1)
+
+        Args:
+            data: Input data to assess
+
+        Returns:
+            Quality score 0-1
+        """
+        try:
+            validation_result = await self.validator.validate(
+                data,
+                {'signal': self.config.name}
+            )
+            return validation_result.score
+        except Exception:
+            return 0.5  # Default quality score if assessment fails
+
+    async def _get_latest_signal(self) -> Optional[Dict[str, Any]]:
+        """
+        Get latest signal calculation from PostgreSQL
+
+        Returns:
+            Latest signal record or None
+        """
+        try:
+            result = await self.prisma.signalhistory.find_first({
+                'where': {'signalName': self.config.name},
+                'orderBy': {'calculationDate': 'desc'}
+            })
+            return result
+        except Exception as error:
+            self.logger.warning(f"Failed to get latest signal: {error}")
+            return None
+
+    async def _has_new_data_since(self, since_date: datetime) -> bool:
+        """
+        Check if new data is available since a date
+
+        Args:
+            since_date: Date to check from
+
+        Returns:
+            True if new data available
+        """
+        # Default implementation - subclasses can override
+        return True
+
+    async def _fetch_data_batch(
+        self,
+        contexts: List[CalculationContext]
+    ) -> Dict[str, TInput]:
+        """
+        Fetch data for batch calculation (optimized bulk fetching)
+        Default: fetch individually. Subclasses can override for optimization
+
+        Args:
+            contexts: List of calculation contexts
+
+        Returns:
+            Map of date -> input data
+        """
+        data_map = {}
+        for context in contexts:
+            data = await self.fetch_data(context)
+            data_map[context.date.isoformat()] = data
+        return data_map
+
+    def _map_to_signal_result(self, db_record: Dict[str, Any]) -> SignalResult[TOutput]:
+        """
+        Map database record to SignalResult
+
+        Args:
+            db_record: Database record from SignalHistory
+
+        Returns:
+            SignalResult instance
+        """
+        # This is a simplified mapping - subclasses may need custom logic
+        # to reconstruct the full TOutput value from stored numeric value
+        raise NotImplementedError(
+            "Subclasses must implement _map_to_signal_result if using incremental calculation"
+        )
+
+    async def _record_metrics(
+        self,
+        duration: float,
+        result: SignalResult[TOutput],
+        context: CalculationContext
+    ) -> None:
+        """
+        Record performance metrics (Prometheus, StatsD, etc.)
+        Default: log only. Subclasses can override for metrics integration
+
+        Args:
+            duration: Calculation duration in milliseconds
+            result: Calculation result
+            context: Calculation context
+        """
+        self.logger.info(
+            f"Signal calculation metrics",
+            extra={
+                'signal_name': self.config.name,
+                'duration_ms': duration,
+                'data_quality': result.metadata.data_quality,
+                'status': self.determine_status(result.value).value,
+            }
+        )
+
+    def _increment_cache_hit_count(self, cache_key: str) -> None:
+        """
+        Increment cache hit count in PostgreSQL (fire and forget)
+
+        Args:
+            cache_key: Cache key that was hit
+        """
+        # Fire and forget - don't wait for completion
+        try:
+            # Would be: await self.prisma.signalcache.update(...)
+            # But we don't want to block the response
+            pass
+        except Exception:
+            pass  # Ignore errors in cache metrics

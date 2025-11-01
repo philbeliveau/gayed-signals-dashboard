@@ -29,6 +29,13 @@ PyJWT==2.8.0
 celery==5.3.4
 redis==5.0.8
 
+# Story 4.0d: Signal Calculation Framework Dependencies
+# Prisma ORM for Railway PostgreSQL
+prisma>=0.11.0
+
+# Additional Pydantic validators for signal types
+pydantic[email]==2.10.2
+
 # AutoGen Stack - Pinned versions for compatibility (TECH-001 fix)
 autogen-agentchat>=0.2.36,<0.3.0
 autogen-ext[openai]>=0.2.0,<0.3.0

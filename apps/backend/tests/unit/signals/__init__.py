@@ -1,0 +1,3 @@
+"""
+Signal calculator unit tests
+"""

@@ -1,0 +1,218 @@
+// Prisma schema for Signal Calculation Service (Backend)
+// Story: 4.0d - Signal Calculation Standardization
+// Extends domains/data-pipeline/prisma/schema.prisma with signal-specific tables
+// Deployed on Railway with PostgreSQL and Redis integration
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_PUBLIC_URL")
+}
+
+// ===== SIGNAL CONFIGURATION TABLES (Story 4.0d) =====
+
+// Story 4.0d: Signal Configuration
+// Stores signal parameters and settings in Railway PostgreSQL
+model SignalConfiguration {
+  id           String   @id @default(uuid())
+  signalType   String   @unique @db.VarChar(100) @map("signal_type") // 'gayed_8_month', 'gayed_20d', etc.
+  parameters   Json     // Signal-specific parameters (periods, thresholds, etc.)
+  enabled      Boolean  @default(true)
+  description  String?  @db.Text
+  version      String   @default("1.0.0") @db.VarChar(20)
+
+  // Metadata
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  createdBy    String?  @db.VarChar(100) @map("created_by")
+
+  @@index([signalType])
+  @@index([enabled])
+  @@map("signal_configuration")
+}
+
+// Story 4.0d: Signal Calculation Cache
+// Railway Redis-backed cache for expensive signal calculations
+model SignalCache {
+  id         String   @id @default(uuid())
+  cacheKey   String   @unique @db.VarChar(500) @map("cache_key")
+  signalType String   @db.VarChar(100) @map("signal_type")
+  value      Json     // Cached calculation result
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz()
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  hitCount   Int      @default(0) @map("hit_count")
+
+  @@index([signalType])
+  @@index([expiresAt])
+  @@index([createdAt(sort: Desc)])
+  @@map("signal_cache")
+}
+
+// ===== SHARED TABLES FROM DATA PIPELINE (Story 4.0b) =====
+// These mirror the tables in domains/data-pipeline/prisma/schema.prisma
+// Backend service reads from these tables for signal calculations
+
+// Market data (OHLCV) with provenance tracking
+model MarketData {
+  id              Int              @id @default(autoincrement())
+
+  // Identifiers
+  symbol          String           @db.VarChar(20)
+  dataType        String           @db.VarChar(50) @map("data_type")
+
+  // Temporal data
+  timestamp       DateTime         @db.Timestamptz()
+  date            DateTime         @db.Date
+
+  // Market data fields
+  open            Decimal?         @db.Decimal(12, 4)
+  high            Decimal?         @db.Decimal(12, 4)
+  low             Decimal?         @db.Decimal(12, 4)
+  close           Decimal          @db.Decimal(12, 4)
+  volume          BigInt?
+  adjustedClose   Decimal?         @db.Decimal(12, 4) @map("adjusted_close")
+  splitCoefficient Decimal?        @db.Decimal(8, 6) @map("split_coefficient")
+
+  // Metadata
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz()
+
+  // Provenance tracking
+  provenanceId    Int?             @map("provenance_id")
+  provenance      DataProvenance?  @relation(fields: [provenanceId], references: [id])
+
+  @@unique([symbol, dataType, timestamp], name: "unique_market_data")
+  @@index([symbol, date(sort: Desc)])
+  @@index([dataType, date(sort: Desc)])
+  @@index([timestamp(sort: Desc)])
+  @@index([provenanceId])
+  @@map("market_data")
+}
+
+// Data provenance tracking
+model DataProvenance {
+  id                  Int         @id @default(autoincrement())
+
+  // Source information
+  sourceSystem        String      @db.VarChar(100) @map("source_system")
+  sourceEndpoint      String?     @db.VarChar(255) @map("source_endpoint")
+  sourceQueryParams   Json?       @map("source_query_params")
+
+  // Request metadata
+  requestTimestamp    DateTime    @default(now()) @map("request_timestamp") @db.Timestamptz()
+  responseTimestamp   DateTime?   @map("response_timestamp") @db.Timestamptz()
+  responseStatus      Int?        @map("response_status")
+  responseHeaders     Json?       @map("response_headers")
+
+  // Data quality
+  recordsReceived     Int?        @map("records_received")
+  recordsValid        Int?        @map("records_valid")
+  recordsInvalid      Int?        @map("records_invalid")
+  validationErrors    Json?       @map("validation_errors")
+
+  // Transformation tracking
+  transformationApplied String?   @db.VarChar(100) @map("transformation_applied")
+  transformationParams  Json?     @map("transformation_params")
+
+  // API usage tracking
+  apiCreditsUsed      Int?        @map("api_credits_used")
+  rateLimitRemaining  Int?        @map("rate_limit_remaining")
+
+  // Audit fields
+  createdBy           String?     @db.VarChar(100) @map("created_by")
+  createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  deletedAt           DateTime?   @map("deleted_at") @db.Timestamptz()
+
+  // Data lineage
+  parentProvenanceId  Int?        @map("parent_provenance_id")
+  parent              DataProvenance?  @relation("ProvenanceLineage", fields: [parentProvenanceId], references: [id])
+  children            DataProvenance[] @relation("ProvenanceLineage")
+
+  // Status tracking
+  status              String      @default("completed")
+  errorMessage        String?     @db.Text @map("error_message")
+
+  // Relationships
+  marketData          MarketData[]
+
+  @@index([sourceSystem, requestTimestamp(sort: Desc)])
+  @@index([status, requestTimestamp(sort: Desc)])
+  @@index([parentProvenanceId])
+  @@map("data_provenance")
+}
+
+// Signal calculation history and results
+model SignalHistory {
+  id                  Int         @id @default(autoincrement())
+
+  // Signal identification
+  signalName          String      @db.VarChar(100) @map("signal_name")
+  signalType          String      @db.VarChar(50) @map("signal_type")
+
+  // Temporal data
+  calculationDate     DateTime    @db.Date @map("calculation_date")
+  calculationTimestamp DateTime   @default(now()) @map("calculation_timestamp") @db.Timestamptz()
+
+  // Signal value
+  signalValue         Decimal     @db.Decimal(12, 6) @map("signal_value")
+  signalStrength      Decimal?    @db.Decimal(5, 4) @map("signal_strength")
+
+  // Signal metadata
+  confidenceScore     Decimal?    @db.Decimal(5, 4) @map("confidence_score")
+  dataQualityScore    Decimal?    @db.Decimal(5, 4) @map("data_quality_score")
+
+  // Signal status
+  signalStatus        String      @db.VarChar(20) @map("signal_status")
+  previousStatus      String?     @db.VarChar(20) @map("previous_status")
+  statusChanged       Boolean     @default(false) @map("status_changed")
+
+  // Supporting data
+  inputData           Json?       @map("input_data")
+  intermediateValues  Json?       @map("intermediate_values")
+  calculationParams   Json?       @map("calculation_params")
+
+  // Data dependencies
+  marketDataIds       Int[]       @map("market_data_ids")
+  provenanceIds       Int[]       @map("provenance_ids")
+
+  // Version tracking
+  calculationVersion  String?     @db.VarChar(20) @map("calculation_version")
+
+  // Error tracking
+  errorMessage        String?     @db.Text @map("error_message")
+
+  // Audit fields
+  createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  createdBy           String      @default("system") @db.VarChar(100) @map("created_by")
+  deletedAt           DateTime?   @map("deleted_at") @db.Timestamptz()
+
+  @@unique([signalName, calculationDate], name: "unique_signal_calc")
+  @@index([signalName, calculationDate(sort: Desc)])
+  @@index([signalType, calculationDate(sort: Desc)])
+  @@index([signalStatus, calculationDate(sort: Desc)])
+  @@index([calculationTimestamp(sort: Desc)])
+  @@map("signal_history")
+}
+
+// Validation results from Story 4.0c
+model ValidationResult {
+  id          String   @id @default(uuid())
+  timestamp   DateTime @default(now()) @db.Timestamptz()
+  dataCount   Int      @map("data_count")
+  errors      Json[]
+  warnings    Json[]
+  score       Decimal  @db.Decimal(5, 4)
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([timestamp(sort: Desc)])
+  @@index([score])
+  @@map("validation_results")
+}
