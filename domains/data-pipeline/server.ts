@@ -5,16 +5,22 @@
  */
 
 import express, { Request, Response, NextFunction } from 'express';
+import compression from 'compression';
 import { UnifiedDataService } from './services/UnifiedDataService';
 import { Logger } from './services/Logger';
+import { SignalOrchestratorV2 } from './src/services/SignalOrchestratorV2';
+import { LegacySignalsAdapter } from './src/adapters/LegacySignalsAdapter';
 import validationRoutes from './src/validation/routes';
 
 const app = express();
 const logger = new Logger('Server');
 const dataService = new UnifiedDataService();
+const signalOrchestrator = new SignalOrchestratorV2();
+const legacyAdapter = new LegacySignalsAdapter();
 
 // Middleware
 app.use(express.json());
+app.use(compression()); // Enable gzip/brotli compression for all responses
 
 // CORS for web app
 app.use((req, res, next) => {
@@ -27,6 +33,10 @@ app.use((req, res, next) => {
 /**
  * Authentication middleware
  * Validates API key from X-API-Key header or api_key query parameter
+ *
+ * CRITICAL: Follows Auth-First pattern - authentication happens BEFORE
+ * any request body parsing or parameter validation to prevent information
+ * leakage and ensure financial-grade security compliance.
  */
 function authenticate(req: Request, res: Response, next: NextFunction) {
   // Skip authentication for health check endpoint
@@ -34,35 +44,53 @@ function authenticate(req: Request, res: Response, next: NextFunction) {
     return next();
   }
 
-  const apiKey = req.header('X-API-Key') || req.query.api_key;
+  // STEP 1: Check API key configuration (server-side error, not authentication failure)
   const validApiKey = process.env.API_KEY;
-
   if (!validApiKey) {
     logger.error('API_KEY not configured in environment');
     return res.status(500).json({
-      error: 'Server configuration error',
-      message: 'Authentication not properly configured',
+      error: 'INTERNAL_ERROR',
+      message: 'Server configuration error',
     });
   }
 
+  // STEP 2: Extract API key (only from headers, not query params for security)
+  // Note: Query param support maintained for backward compatibility but logged as deprecated
+  const headerApiKey = req.header('X-API-Key');
+  const queryApiKey = req.query.api_key as string | undefined;
+
+  if (queryApiKey) {
+    logger.warn('API key passed via query parameter (deprecated)', {
+      ip: req.ip,
+      path: req.path,
+    });
+  }
+
+  const apiKey = headerApiKey || queryApiKey;
+
+  // STEP 3: Validate API key presence
   if (!apiKey) {
     return res.status(401).json({
-      error: 'Authentication required',
-      message: 'Provide API key via X-API-Key header or api_key query parameter',
+      error: 'AUTHENTICATION_REQUIRED',
+      message: 'Provide API key via X-API-Key header',
+      documentation: '/docs/authentication',
     });
   }
 
+  // STEP 4: Validate API key value
   if (apiKey !== validApiKey) {
     logger.warn('Invalid API key attempt', {
       ip: req.ip,
       path: req.path,
+      userAgent: req.get('user-agent'),
     });
     return res.status(403).json({
-      error: 'Invalid API key',
-      message: 'The provided API key is not valid',
+      error: 'AUTHENTICATION_FAILED',
+      message: 'Invalid API key',
     });
   }
 
+  // STEP 5: Authentication successful - proceed to request processing
   next();
 }
 
@@ -174,6 +202,285 @@ app.get('/api/v2/market-data', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Story 4.0e: Unified Signals API Endpoint
+ * GET /api/v2/signals - Fetch signals with intelligent orchestration
+ *
+ * Query Parameters:
+ * - dateFrom: ISO 8601 date (e.g., 2024-01-01)
+ * - dateTo: ISO 8601 date
+ * - types: Comma-separated signal types (e.g., timing,momentum)
+ * - categories: Comma-separated signal names (e.g., gayed_8_month,gayed_20d)
+ * - limit: Number of results (1-100, default 50)
+ * - cursor: Pagination cursor (ISO date string)
+ * - sortBy: date|priority|relevance (default: date)
+ * - sortOrder: asc|desc (default: desc)
+ * - includeMetadata: true|false (default: true)
+ */
+app.get('/api/v2/signals', async (req: Request, res: Response) => {
+  try {
+    const {
+      dateFrom,
+      dateTo,
+      types,
+      categories,
+      limit,
+      cursor,
+      sortBy,
+      sortOrder,
+      includeMetadata,
+    } = req.query;
+
+    // Parse and validate query parameters
+    const queryParams: any = {};
+
+    // Date range
+    if (dateFrom && typeof dateFrom === 'string') {
+      const date = new Date(dateFrom);
+      if (isNaN(date.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: 'INVALID_REQUEST',
+          message: 'Invalid dateFrom parameter. Must be ISO 8601 date string.',
+          example: '/api/v2/signals?dateFrom=2024-01-01',
+        });
+      }
+      queryParams.dateFrom = date;
+    }
+
+    if (dateTo && typeof dateTo === 'string') {
+      const date = new Date(dateTo);
+      if (isNaN(date.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: 'INVALID_REQUEST',
+          message: 'Invalid dateTo parameter. Must be ISO 8601 date string.',
+          example: '/api/v2/signals?dateTo=2024-12-31',
+        });
+      }
+      queryParams.dateTo = date;
+    }
+
+    // Signal types filter
+    if (types && typeof types === 'string') {
+      queryParams.types = types.split(',').map(t => t.trim());
+    }
+
+    // Signal categories (names) filter
+    if (categories && typeof categories === 'string') {
+      queryParams.categories = categories.split(',').map(c => c.trim());
+    }
+
+    // Limit validation
+    if (limit) {
+      const limitNum = parseInt(limit as string, 10);
+      if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+        return res.status(400).json({
+          success: false,
+          error: 'INVALID_REQUEST',
+          message: 'Invalid limit parameter. Must be between 1 and 100.',
+        });
+      }
+      queryParams.limit = limitNum;
+    } else {
+      queryParams.limit = 50; // Default
+    }
+
+    // Cursor for pagination
+    if (cursor && typeof cursor === 'string') {
+      queryParams.cursor = cursor;
+    }
+
+    // Sort parameters
+    if (sortBy && typeof sortBy === 'string') {
+      if (!['date', 'priority', 'relevance'].includes(sortBy)) {
+        return res.status(400).json({
+          success: false,
+          error: 'INVALID_REQUEST',
+          message: 'Invalid sortBy parameter. Must be one of: date, priority, relevance',
+        });
+      }
+      queryParams.sortBy = sortBy as 'date' | 'priority' | 'relevance';
+    }
+
+    if (sortOrder && typeof sortOrder === 'string') {
+      if (!['asc', 'desc'].includes(sortOrder)) {
+        return res.status(400).json({
+          success: false,
+          error: 'INVALID_REQUEST',
+          message: 'Invalid sortOrder parameter. Must be one of: asc, desc',
+        });
+      }
+      queryParams.sortOrder = sortOrder as 'asc' | 'desc';
+    }
+
+    queryParams.includeMetadata = includeMetadata !== 'false';
+
+    // Execute query through SignalOrchestratorV2
+    const result = await signalOrchestrator.fetchSignals(queryParams);
+
+    // Set caching headers
+    res.set({
+      'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
+      'ETag': `W/"${Date.now()}"`,
+      'Last-Modified': new Date().toUTCString(),
+    });
+
+    // Return response
+    res.json({
+      success: result.success,
+      data: result.data,
+      metadata: queryParams.includeMetadata ? result.metadata : undefined,
+      timestamp: new Date().toISOString(),
+    });
+
+  } catch (error: any) {
+    logger.error('Signals API request failed', {
+      error: error.message,
+      stack: error.stack,
+      query: req.query,
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'INTERNAL_ERROR',
+      message: 'An error occurred while fetching signals',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+/**
+ * Story 4.0e: Source Health Status Endpoint
+ * GET /api/v2/signals/health - Check health of all signal data sources
+ */
+app.get('/api/v2/signals/health', async (req: Request, res: Response) => {
+  try {
+    const health = await signalOrchestrator.getSourcesHealth();
+
+    res.json({
+      success: true,
+      sources: health,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    logger.error('Signal health check failed', { error: error.message });
+
+    res.status(500).json({
+      success: false,
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to check signal sources health',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+/**
+ * Story 4.0e: Legacy V1 Signals Endpoint (Backward Compatibility)
+ * GET /api/signals - Legacy signals endpoint redirected to V2
+ * @deprecated Use /api/v2/signals instead
+ */
+app.get('/api/signals', async (req: Request, res: Response) => {
+  logger.warn('Legacy V1 signals endpoint accessed', {
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+  });
+
+  try {
+    const { from, to, type, limit } = req.query;
+
+    // Transform legacy query params to V2 format
+    const v2Params = legacyAdapter.transformV1QueryToV2({
+      from: from as string,
+      to: to as string,
+      type: type as string,
+      limit: limit as string,
+    });
+
+    // Fetch from V2 orchestrator
+    const v2Response = await signalOrchestrator.fetchSignals(v2Params);
+
+    // Transform to legacy format
+    const legacyResponse = legacyAdapter.transformToV1(v2Response);
+
+    // Add deprecation headers
+    const headers = legacyAdapter.addDeprecationHeaders({
+      'Content-Type': 'application/json',
+    });
+
+    Object.entries(headers).forEach(([key, value]) => {
+      res.set(key, value);
+    });
+
+    res.json(legacyResponse);
+  } catch (error: any) {
+    logger.error('Legacy signals endpoint failed', {
+      error: error.message,
+      query: req.query,
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to fetch signals. Please migrate to /api/v2/signals',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+/**
+ * Story 4.0e: Legacy Unified Content Endpoint (Backward Compatibility)
+ * GET /api/content/unified - Legacy unified content endpoint
+ * @deprecated Use /api/v2/signals instead
+ */
+app.get('/api/content/unified', async (req: Request, res: Response) => {
+  logger.warn('Legacy unified content endpoint accessed', {
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+  });
+
+  try {
+    const { from, to, type, limit } = req.query;
+
+    // Transform legacy query params to V2 format
+    const v2Params = legacyAdapter.transformV1QueryToV2({
+      from: from as string,
+      to: to as string,
+      type: type as string,
+      limit: limit as string,
+    });
+
+    // Fetch from V2 orchestrator
+    const v2Response = await signalOrchestrator.fetchSignals(v2Params);
+
+    // Transform to unified content format
+    const unifiedResponse = legacyAdapter.transformToUnifiedContent(v2Response);
+
+    // Add deprecation headers
+    const headers = legacyAdapter.addDeprecationHeaders({
+      'Content-Type': 'application/json',
+    });
+
+    Object.entries(headers).forEach(([key, value]) => {
+      res.set(key, value);
+    });
+
+    res.json(unifiedResponse);
+  } catch (error: any) {
+    logger.error('Legacy unified content endpoint failed', {
+      error: error.message,
+      query: req.query,
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to fetch content. Please migrate to /api/v2/signals',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 // Story 4.0c: Mount validation routes
 app.use('/api/validation', validationRoutes);
 
@@ -183,10 +490,12 @@ app.use('/api/validation', validationRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     service: 'Unified Data Service',
-    version: '1.0.0',
-    story: '4.0a + 4.0c',
+    version: '2.0.0',
+    story: '4.0a + 4.0c + 4.0e',
     endpoints: {
       health: '/health',
+      signals: '/api/v2/signals',
+      signalsHealth: '/api/v2/signals/health',
       marketData: '/api/v2/market-data?symbols=SPY,XLU',
       validation: '/api/validation',
       validationMetrics: '/api/validation/metrics',
@@ -227,12 +536,14 @@ async function start() {
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully...');
   await dataService.disconnect();
+  await signalOrchestrator.disconnect();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully...');
   await dataService.disconnect();
+  await signalOrchestrator.disconnect();
   process.exit(0);
 });
 

@@ -1,0 +1,167 @@
+# Artillery Load Testing Configuration for /api/v2/signals
+# Story 4.0e: API Route Consolidation
+#
+# Performance Targets:
+# - Cached responses: <500ms (p95)
+# - Fresh data: <2s (p95)
+# - Target load: 1000 req/min
+#
+# Usage:
+#   npm install -g artillery@latest
+#   artillery run test-scenarios/api-v2-load.yml
+#
+# Prerequisites:
+#   - Railway backend server running (localhost:3001 or staging)
+#   - PostgreSQL database populated with test data
+#   - Redis cache enabled (optional but recommended)
+#   - Valid API key set in ARTILLERY_API_KEY env var
+
+config:
+  target: 'http://localhost:3001'  # Change to staging URL for production testing
+  phases:
+    # Warm-up phase: Low load to populate caches
+    - duration: 60
+      arrivalRate: 5
+      name: 'Warm-up (5 req/sec)'
+
+    # Ramp-up phase: Gradually increase to target load
+    - duration: 120
+      arrivalRate: 5
+      rampTo: 17  # 17 req/sec ≈ 1000 req/min
+      name: 'Ramp-up (5→17 req/sec)'
+
+    # Sustained load phase: Maintain target load
+    - duration: 300
+      arrivalRate: 17
+      name: 'Sustained load (17 req/sec = 1000 req/min)'
+
+    # Spike test: Brief traffic spike
+    - duration: 60
+      arrivalRate: 50
+      name: 'Spike test (50 req/sec)'
+
+    # Cool-down phase: Return to normal load
+    - duration: 60
+      arrivalRate: 10
+      name: 'Cool-down (10 req/sec)'
+
+  # Performance assertions (story requirements)
+  ensure:
+    # Cached responses should be <500ms at p95
+    p95: 500
+
+    # Error rate should be <1%
+    maxErrorRate: 1
+
+  # HTTP defaults
+  http:
+    timeout: 10  # 10 second timeout for requests
+
+  # Environment variables
+  variables:
+    apiKey: '{{ $processEnvironment.ARTILLERY_API_KEY }}'
+
+# Test scenarios
+scenarios:
+  # Scenario 1: Fetch recent signals (most common, should hit cache)
+  - name: 'Fetch recent signals'
+    weight: 50
+    flow:
+      - get:
+          url: '/api/v2/signals'
+          headers:
+            x-api-key: '{{ apiKey }}'
+          qs:
+            limit: 50
+            sortBy: 'date'
+            sortOrder: 'desc'
+          capture:
+            - json: '$.metadata.timing.totalMs'
+              as: 'responseTime'
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: 'success'
+            - hasProperty: 'data'
+            - hasProperty: 'metadata.sources.primary'
+
+  # Scenario 2: Filtered query (date range)
+  - name: 'Date range query'
+    weight: 20
+    flow:
+      - get:
+          url: '/api/v2/signals'
+          headers:
+            x-api-key: '{{ apiKey }}'
+          qs:
+            dateFrom: '2024-01-01'
+            dateTo: '2024-12-31'
+            limit: 50
+          expect:
+            - statusCode: 200
+            - contentType: json
+
+  # Scenario 3: Type filtering
+  - name: 'Filter by signal type'
+    weight: 15
+    flow:
+      - get:
+          url: '/api/v2/signals'
+          headers:
+            x-api-key: '{{ apiKey }}'
+          qs:
+            types: 'timing,momentum'
+            limit: 50
+          expect:
+            - statusCode: 200
+
+  # Scenario 4: Pagination
+  - name: 'Paginated query'
+    weight: 10
+    flow:
+      - get:
+          url: '/api/v2/signals'
+          headers:
+            x-api-key: '{{ apiKey }}'
+          qs:
+            limit: 20
+            sortBy: 'date'
+          capture:
+            - json: '$.metadata.nextCursor'
+              as: 'nextCursor'
+          expect:
+            - statusCode: 200
+
+      # Follow pagination cursor if available
+      - get:
+          url: '/api/v2/signals'
+          headers:
+            x-api-key: '{{ apiKey }}'
+          qs:
+            limit: 20
+            cursor: '{{ nextCursor }}'
+          expect:
+            - statusCode: 200
+          ifTrue: 'nextCursor'
+
+  # Scenario 5: Health check (lightweight, should always succeed)
+  - name: 'Health check'
+    weight: 5
+    flow:
+      - get:
+          url: '/api/v2/signals/health'
+          expect:
+            - statusCode: 200
+            - contentType: json
+
+# Custom metrics to track
+plugins:
+  metrics-by-endpoint:
+    # Track metrics separately for each endpoint
+    stripQueryString: true
+    metricsNamespace: 'api_v2'
+
+# After test completion, generate HTML report
+after:
+  flow:
+    - log: 'Load test completed. Check Artillery report for performance metrics.'
