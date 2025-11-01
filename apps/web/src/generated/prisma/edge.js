@@ -35,12 +35,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.16.2
- * Query Engine version: 1c57fdcd7e44b29b9313256c76699e91c3ac3c43
+ * Prisma Client JS version: 6.18.0
+ * Query Engine version: 34b5a692b7bd79939a9a2c3ef97d816e749cda2f
  */
 Prisma.prismaVersion = {
-  client: "6.16.2",
-  engine: "1c57fdcd7e44b29b9313256c76699e91c3ac3c43"
+  client: "6.18.0",
+  engine: "34b5a692b7bd79939a9a2c3ef97d816e749cda2f"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -189,6 +189,10 @@ const config = {
         "fromEnvVar": null,
         "value": "darwin-arm64",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "rhel-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -200,8 +204,8 @@ const config = {
     "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
-  "clientVersion": "6.16.2",
-  "engineVersion": "1c57fdcd7e44b29b9313256c76699e91c3ac3c43",
+  "clientVersion": "6.18.0",
+  "engineVersion": "34b5a692b7bd79939a9a2c3ef97d816e749cda2f",
   "datasourceNames": [
     "db"
   ],
@@ -215,8 +219,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// Prisma schema for AutoGen Financial Intelligence Demo\n// Maps to conversation_models.py Pydantic models\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// User management integrated with Clerk authentication\nmodel User {\n  id        String   @id @default(cuid())\n  clerkId   String   @unique\n  email     String?\n  firstName String?\n  lastName  String?\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  // Relationships\n  conversations Conversation[]\n\n  @@map(\"users\")\n}\n\n// Core conversation session - maps to ConversationSession Pydantic model\nmodel Conversation {\n  id     String @id @default(cuid())\n  userId String\n  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  // Content source information - maps to ContentSource Pydantic model\n  contentType        String // ContentSourceType enum: \"text\", \"substack_article\", \"youtube_video\", etc.\n  contentTitle       String    @db.VarChar(500)\n  contentContent     String    @db.Text // Main content text\n  contentUrl         String?\n  contentAuthor      String?   @db.VarChar(200)\n  contentPublishedAt DateTime?\n  contentMetadata    Json      @default(\"{}\")\n\n  // Conversation state - maps to ConversationStatus enum\n  status              String  @default(\"initialized\") // \"initialized\", \"running\", \"paused\", \"completed\", \"error\", \"cancelled\"\n  consensusReached    Boolean @default(false)\n  finalRecommendation String? @db.Text\n  confidenceScore     Float?  @db.Real\n\n  // Timing\n  createdAt   DateTime  @default(now())\n  updatedAt   DateTime  @updatedAt\n  completedAt DateTime?\n\n  // Metadata for additional conversation data\n  metadata Json @default(\"{}\")\n\n  // Relationships\n  messages AgentMessage[]\n\n  // Performance indexes for common query patterns\n  @@index([userId, createdAt])\n  @@index([status, createdAt])\n  @@index([contentType, createdAt])\n  @@map(\"conversations\")\n}\n\n// Individual agent messages within conversations - maps to AgentMessage Pydantic model\nmodel AgentMessage {\n  id             String       @id @default(cuid())\n  conversationId String\n  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)\n\n  // Agent information - maps to AgentType enum\n  agentType String // \"financial_analyst\", \"market_context\", \"risk_challenger\"\n  agentName String @db.VarChar(100)\n\n  // Message content\n  content         String @db.Text\n  confidenceLevel Float? @db.Real\n  messageOrder    Int\n\n  // References and sources - arrays for financial analysis citations\n  citedSources     String[] @default([])\n  signalReferences String[] @default([])\n\n  // Timing\n  timestamp DateTime @default(now())\n\n  // Metadata for additional message data\n  metadata Json @default(\"{}\")\n\n  // Performance indexes for conversation retrieval and agent analysis\n  @@index([conversationId, messageOrder])\n  @@index([agentType, timestamp])\n  @@index([timestamp])\n  @@map(\"agent_messages\")\n}\n",
-  "inlineSchemaHash": "2a0de03606453a3744370c09c8b1402606e560e7b2644f163bed98c6aec6f120",
+  "inlineSchema": "// Prisma schema for AutoGen Financial Intelligence Demo\n// Maps to conversation_models.py Pydantic models\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/generated/prisma\"\n  binaryTargets = [\"native\", \"rhel-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// User management integrated with Clerk authentication\nmodel User {\n  id        String   @id @default(cuid())\n  clerkId   String   @unique\n  email     String?\n  firstName String?\n  lastName  String?\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  // Relationships\n  conversations Conversation[]\n\n  @@map(\"users\")\n}\n\n// Core conversation session - maps to ConversationSession Pydantic model\nmodel Conversation {\n  id     String @id @default(cuid())\n  userId String\n  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  // Content source information - maps to ContentSource Pydantic model\n  contentType        String // ContentSourceType enum: \"text\", \"substack_article\", \"youtube_video\", etc.\n  contentTitle       String    @db.VarChar(500)\n  contentContent     String    @db.Text // Main content text\n  contentUrl         String?\n  contentAuthor      String?   @db.VarChar(200)\n  contentPublishedAt DateTime?\n  contentMetadata    Json      @default(\"{}\")\n\n  // Conversation state - maps to ConversationStatus enum\n  status              String  @default(\"initialized\") // \"initialized\", \"running\", \"paused\", \"completed\", \"error\", \"cancelled\"\n  consensusReached    Boolean @default(false)\n  finalRecommendation String? @db.Text\n  confidenceScore     Float?  @db.Real\n\n  // Timing\n  createdAt   DateTime  @default(now())\n  updatedAt   DateTime  @updatedAt\n  completedAt DateTime?\n\n  // Metadata for additional conversation data\n  metadata Json @default(\"{}\")\n\n  // Relationships\n  messages AgentMessage[]\n\n  // Performance indexes for common query patterns\n  @@index([userId, createdAt])\n  @@index([status, createdAt])\n  @@index([contentType, createdAt])\n  @@map(\"conversations\")\n}\n\n// Individual agent messages within conversations - maps to AgentMessage Pydantic model\nmodel AgentMessage {\n  id             String       @id @default(cuid())\n  conversationId String\n  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)\n\n  // Agent information - maps to AgentType enum\n  agentType String // \"financial_analyst\", \"market_context\", \"risk_challenger\"\n  agentName String @db.VarChar(100)\n\n  // Message content\n  content         String @db.Text\n  confidenceLevel Float? @db.Real\n  messageOrder    Int\n\n  // References and sources - arrays for financial analysis citations\n  citedSources     String[] @default([])\n  signalReferences String[] @default([])\n\n  // Timing\n  timestamp DateTime @default(now())\n\n  // Metadata for additional message data\n  metadata Json @default(\"{}\")\n\n  // Performance indexes for conversation retrieval and agent analysis\n  @@index([conversationId, messageOrder])\n  @@index([agentType, timestamp])\n  @@index([timestamp])\n  @@map(\"agent_messages\")\n}\n",
+  "inlineSchemaHash": "86335c3ab2f4d3f1513de632a7b29897996daff5c4427add9333f4b308b6468b",
   "copyEngine": true
 }
 config.dirname = '/'
