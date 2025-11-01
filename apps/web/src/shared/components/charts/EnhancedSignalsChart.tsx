@@ -121,28 +121,20 @@ export default function EnhancedSignalsChart({
   const fetchSignals = useCallback(async (fast = false) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const response = await fetch(`/api/signals?fast=${fast}`);
-      
-      if (!response.ok) {
-        throw new Error(`Signals API failed: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      
+      // Use unified signals client that respects Railway feature flag
+      const { fetchSignals: fetchSignalsAPI } = await import('../../../lib/api/signals-client');
+      const data = await fetchSignalsAPI({ fast });
+
       setSignals(data.signals || []);
       setConsensus(data.consensus || null);
       setLastUpdated(new Date());
-      
+
       // Transform signals data for chart display
       const transformedData = transformSignalsToChartData(data.signals || []);
       setChartData(transformedData);
-      
+
     } catch (err) {
       console.error('Error fetching signals:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch signals');

@@ -27,7 +27,7 @@ export class RailwayClient {
   constructor(config?: Partial<RailwayConfig>) {
     this.baseURL =
       config?.baseURL || process.env.NEXT_PUBLIC_RAILWAY_BACKEND_URL || '';
-    this.apiKey = config?.apiKey || process.env.RAILWAY_API_KEY || '';
+    this.apiKey = config?.apiKey || process.env.NEXT_PUBLIC_RAILWAY_API_KEY || '';
     this.timeout = config?.timeout || 10000; // 10 seconds default
     this.retryAttempts = config?.retryAttempts || 3;
     this.retryDelay = config?.retryDelay || 1000; // 1 second base delay
@@ -36,6 +36,12 @@ export class RailwayClient {
     if (!this.baseURL) {
       throw new Error(
         'Railway backend URL not configured. Set NEXT_PUBLIC_RAILWAY_BACKEND_URL environment variable.'
+      );
+    }
+
+    if (!this.apiKey) {
+      console.warn(
+        '[Railway Client] API key not configured. Set NEXT_PUBLIC_RAILWAY_API_KEY environment variable.'
       );
     }
   }
@@ -62,7 +68,7 @@ export class RailwayClient {
           ...options,
           headers: {
             'Content-Type': 'application/json',
-            ...(this.apiKey && { Authorization: `Bearer ${this.apiKey}` }),
+            ...(this.apiKey && { 'X-API-Key': this.apiKey }),
             ...options?.headers,
           },
           signal: controller.signal,
