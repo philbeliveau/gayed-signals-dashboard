@@ -6,7 +6,7 @@
  * Tracks signal status changes and data dependencies.
  */
 
-import { PrismaClient, SignalHistory as PrismaSignalHistory, Prisma } from '../../generated/client';
+import { PrismaClient, SignalHistory as PrismaSignalHistory, Prisma } from '@prisma/client';
 
 export interface SignalData {
   id?: number;

@@ -7,7 +7,7 @@
  * Story 4.0b Task 3.2
  */
 
-import { PrismaClient, Prisma } from '../../generated/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import {
   RetentionPolicy,
   getActiveRetentionPolicies,

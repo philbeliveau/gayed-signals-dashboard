@@ -15,7 +15,7 @@ jest.mock('ioredis');
 
 import yahooFinance from 'yahoo-finance2';
 import axios from 'axios';
-import { PrismaClient } from '../generated/client';
+import { PrismaClient } from '@prisma/client';
 
 // Mock yahoo finance quoteCombine
 (yahooFinance as any).quoteCombine = jest.fn();

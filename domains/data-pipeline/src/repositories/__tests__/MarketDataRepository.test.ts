@@ -6,7 +6,7 @@
  * Target: >90% code coverage
  */
 
-import { PrismaClient } from '../../../generated/client';
+import { PrismaClient } from '@prisma/client';
 import { MarketDataRepository, MarketData } from '../MarketDataRepository';
 
 describe('MarketDataRepository', () => {

@@ -7,7 +7,7 @@
  * Target: < 100ms for typical queries
  */
 
-import { PrismaClient } from '../../generated/client';
+import { PrismaClient } from '@prisma/client';
 
 interface BenchmarkResult {
   queryName: string;

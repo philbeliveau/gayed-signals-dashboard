@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import { PrismaClient } from '../generated/client';
+import { PrismaClient } from '@prisma/client';
 import {
   DataValidationService,
   CompletenessValidator,

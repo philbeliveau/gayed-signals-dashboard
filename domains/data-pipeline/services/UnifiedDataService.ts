@@ -6,7 +6,7 @@
  * Provides failover, caching, validation, and provenance tracking.
  */
 
-import { PrismaClient } from '../generated/client';
+import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './Logger';

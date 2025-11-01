@@ -8,7 +8,7 @@
  * Run with: npm run test:integration
  */
 
-import { PrismaClient } from '../../generated/client';
+import { PrismaClient } from '@prisma/client';
 import { MarketDataRepository } from '../../repositories/MarketDataRepository';
 import { ProvenanceRepository } from '../../repositories/ProvenanceRepository';
 import { SignalHistoryRepository } from '../../repositories/SignalHistoryRepository';

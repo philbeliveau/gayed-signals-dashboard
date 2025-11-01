@@ -11,7 +11,7 @@
  * 3. In-memory cache (Fastest but limited)
  */
 
-import { PrismaClient, SignalHistory } from '../../generated/client';
+import { PrismaClient, SignalHistory } from '@prisma/client';
 import { Logger } from '../../services/Logger';
 import { CircuitBreaker } from '../../services/CircuitBreaker';
 import type Redis from 'ioredis';

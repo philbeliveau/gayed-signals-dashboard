@@ -6,7 +6,7 @@
  * Supports recursive queries for data lineage tracing.
  */
 
-import { PrismaClient, DataProvenance as PrismaDataProvenance } from '../../generated/client';
+import { PrismaClient, DataProvenance as PrismaDataProvenance } from '@prisma/client';
 
 export interface ProvenanceData {
   id?: number;

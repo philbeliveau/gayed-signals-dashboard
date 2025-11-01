@@ -6,7 +6,7 @@
  * All operations use Railway PostgreSQL with automatic connection pooling.
  */
 
-import { PrismaClient, MarketData as PrismaMarketData, Prisma } from '../../generated/client';
+import { PrismaClient, MarketData as PrismaMarketData, Prisma } from '@prisma/client';
 
 export interface MarketData {
   id?: number;

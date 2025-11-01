@@ -3,7 +3,7 @@
  * Abstract base class for all validation categories
  */
 
-import { PrismaClient } from '../../../generated/client';
+import { PrismaClient } from '@prisma/client';
 import { ValidationResult, ValidationContext, ValidationCategory } from './ValidationResult';
 
 export interface ValidationConfig {

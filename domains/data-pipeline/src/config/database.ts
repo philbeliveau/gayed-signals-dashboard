@@ -5,7 +5,7 @@
  * Story 4.0b Task 4.3
  */
 
-import { PrismaClient } from '../../generated/client';
+import { PrismaClient } from '@prisma/client';
 
 export interface DatabaseConfig {
   connectionLimit: number;

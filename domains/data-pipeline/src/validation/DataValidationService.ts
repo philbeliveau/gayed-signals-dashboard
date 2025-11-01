@@ -3,7 +3,7 @@
  * Main service that orchestrates all validation categories with Prisma integration
  */
 
-import { PrismaClient } from '../../generated/client';
+import { PrismaClient } from '@prisma/client';
 import { ValidationResult, ValidationContext } from './core/ValidationResult';
 import { CompletenessValidator } from './categories/CompletenessValidator';
 import { FreshnessValidator } from './categories/FreshnessValidator';

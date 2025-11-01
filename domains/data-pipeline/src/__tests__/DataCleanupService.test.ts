@@ -5,7 +5,7 @@
  * Story 4.0b Task 3
  */
 
-import { PrismaClient } from '../../generated/client';
+import { PrismaClient } from '@prisma/client';
 import { DataCleanupService, FileArchiveStorage, CleanupSummary } from '../services/DataCleanupService';
 import {
   getRetentionPolicy,

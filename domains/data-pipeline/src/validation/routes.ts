@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '../../generated/client';
+import { PrismaClient } from '@prisma/client';
 import { DataValidationService } from './DataValidationService';
 
 const router = Router();
