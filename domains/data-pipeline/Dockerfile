@@ -7,21 +7,21 @@ RUN apt-get update -y && apt-get install -y openssl
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY tsconfig.json ./
+# Copy package files from data-pipeline directory
+COPY domains/data-pipeline/package*.json ./
+COPY domains/data-pipeline/tsconfig.json ./
 
 # Install ALL dependencies (including devDependencies for build)
 RUN npm ci
 
 # Copy Prisma schema
-COPY prisma ./prisma
+COPY domains/data-pipeline/prisma ./prisma
 
 # Generate Prisma Client
 RUN npx prisma generate --schema=./prisma/schema.prisma
 
 # Copy source code
-COPY . .
+COPY domains/data-pipeline/ .
 
 # Build TypeScript
 RUN npm run build
