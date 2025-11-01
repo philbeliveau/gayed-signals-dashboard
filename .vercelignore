@@ -1,8 +1,0 @@
-# Ignore Railway backend deployment
-apps/backend/**
-
-# Ignore data pipeline (Railway deployment)
-domains/data-pipeline/**
-
-# Ignore Python services
-python-services/**
