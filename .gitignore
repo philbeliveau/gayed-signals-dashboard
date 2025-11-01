@@ -199,3 +199,15 @@ apps/web/.next
 # Turbo cache and runtime
 .turbo/
 **/.turbo/
+
+# Jest cache
+.jest-cache/
+**/.jest-cache/
+
+# Test results
+test-results/
+**/test-results/
+artillery-results.txt
+
+# Load testing scenarios (optional - uncomment to track)
+# test-scenarios/

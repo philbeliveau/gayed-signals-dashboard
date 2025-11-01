@@ -31,7 +31,7 @@ export default function ProfessionalLayout({
         <ProfessionalTopNav showThemeToggle={showThemeToggle} />
 
         {/* Page Content - Mobile optimized with bottom nav spacing */}
-        <main className="p-3 md:p-6 bg-theme-bg min-h-screen pb-20 md:pb-6">
+        <main className="p-4 md:p-8 bg-theme-bg min-h-screen pb-20 md:pb-8">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
@@ -65,22 +65,22 @@ export function ContentCard({
   return (
     <div
       className={`
-        bg-theme-card rounded-theme shadow-theme-card border border-theme-border
-        ${hoverable ? 'hover:shadow-theme-card-hover transition-all duration-200 cursor-pointer' : ''}
+        bg-theme-card rounded-2xl shadow-sm border border-theme-border/50
+        ${hoverable ? 'hover:shadow-lg hover:border-theme-border transition-all duration-300 ease-out cursor-pointer' : ''}
         ${className}
       `}
     >
       {(title || subtitle) && (
-        <div className="px-6 py-4 border-b border-theme-border">
+        <div className="px-8 py-5 border-b border-theme-border/30">
           {title && (
-            <h3 className="text-lg font-semibold text-theme-text">{title}</h3>
+            <h3 className="text-lg font-medium text-theme-text tracking-wide">{title}</h3>
           )}
           {subtitle && (
-            <p className="text-sm text-theme-text-muted mt-1">{subtitle}</p>
+            <p className="text-sm text-theme-text-muted mt-1.5">{subtitle}</p>
           )}
         </div>
       )}
-      <div className="p-6">
+      <div className="p-8">
         {children}
       </div>
     </div>
@@ -140,11 +140,11 @@ export function PageHeader({
   className = ''
 }: PageHeaderProps) {
   return (
-    <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 ${className}`}>
+    <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12 ${className}`}>
       <div>
-        <h1 className="text-3xl font-bold text-theme-text">{title}</h1>
+        <h1 className="text-3xl font-semibold text-theme-text tracking-tight">{title}</h1>
         {subtitle && (
-          <p className="text-theme-text-muted mt-2">{subtitle}</p>
+          <p className="text-theme-text-muted mt-3 font-light">{subtitle}</p>
         )}
       </div>
       {actions && (
@@ -186,17 +186,17 @@ export function StatsCard({
     <ContentCard className={className} hoverable>
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-theme-text-muted mb-1">{title}</p>
-          <p className="text-2xl font-bold text-theme-text">{value}</p>
+          <p className="text-sm font-normal text-theme-text-muted mb-2 tracking-wide">{title}</p>
+          <p className="text-3xl font-semibold text-theme-text tabular-nums">{value}</p>
           {change && (
-            <p className={`text-sm ${changeColors[changeType]} mt-1`}>
+            <p className={`text-sm font-medium ${changeColors[changeType]} mt-2`}>
               {change}
             </p>
           )}
         </div>
         {icon && (
-          <div className="flex-shrink-0 ml-4">
-            <div className="w-12 h-12 bg-theme-primary/10 rounded-xl flex items-center justify-center">
+          <div className="flex-shrink-0 ml-6">
+            <div className="w-14 h-14 bg-theme-primary/5 rounded-2xl flex items-center justify-center">
               {icon}
             </div>
           </div>

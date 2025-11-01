@@ -1,0 +1,79 @@
+#
+# Artillery Stress Test Configuration
+# Story: 4.0g - Integration Testing Suite
+#
+# Tests system behavior at and beyond maximum capacity
+#
+
+config:
+  target: "http://localhost:3001"
+  phases:
+    # Warm-up
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm-up"
+
+    # Gradually increase load
+    - duration: 300
+      arrivalRate: 50
+      rampTo: 200
+      name: "Ramp to stress level"
+
+    # Maintain high load
+    - duration: 600
+      arrivalRate: 200
+      name: "Sustained stress - 12000 req/min"
+
+    # Push to breaking point
+    - duration: 180
+      arrivalRate: 200
+      rampTo: 500
+      name: "Push to limits"
+
+  ensure:
+    maxErrorRate: 1.0  # Allow up to 1% errors under stress
+
+  http:
+    timeout: 30
+    pool: 100
+
+  variables:
+    apiKey: "test-api-key"
+
+scenarios:
+  - name: "Heavy Query Load"
+    weight: 50
+    flow:
+      - get:
+          url: "/api/v2/signals"
+          qs:
+            limit: 100
+            includeMetadata: "true"
+          headers:
+            X-API-Key: "{{ apiKey }}"
+
+  - name: "Complex Filtering"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/v2/signals"
+          qs:
+            types: "timing,momentum,trend"
+            dateFrom: "2025-01-01"
+            dateTo: "2025-10-31"
+            sortBy: "value"
+            limit: 50
+          headers:
+            X-API-Key: "{{ apiKey }}"
+
+  - name: "Rapid Pagination"
+    weight: 20
+    flow:
+      - loop:
+          - get:
+              url: "/api/v2/signals"
+              qs:
+                limit: 20
+              headers:
+                X-API-Key: "{{ apiKey }}"
+        count: 5

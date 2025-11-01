@@ -304,7 +304,7 @@ export class ProvenanceRepository {
 
     // Calculate average response time
     const responseTimes = await this.prisma.$queryRaw<
-      Array<{ avg_response_time: number }>
+      Array<{ avg_response_time: any }>
     >`
       SELECT AVG(
         EXTRACT(EPOCH FROM (response_timestamp - request_timestamp))
@@ -316,6 +316,11 @@ export class ProvenanceRepository {
         AND response_timestamp IS NOT NULL
     `;
 
+    // Convert Decimal to number (PostgreSQL AVG returns Decimal type)
+    const avgResponseTime = responseTimes[0]?.avg_response_time
+      ? Number(responseTimes[0].avg_response_time)
+      : 0;
+
     return {
       totalRequests: stats._count,
       successfulRequests: successCount,
@@ -323,7 +328,7 @@ export class ProvenanceRepository {
       totalCreditsUsed: stats._sum.apiCreditsUsed || 0,
       totalRecordsReceived: stats._sum.recordsReceived || 0,
       totalRecordsValid: stats._sum.recordsValid || 0,
-      averageResponseTime: responseTimes[0]?.avg_response_time || 0,
+      averageResponseTime: avgResponseTime,
     };
   }
 

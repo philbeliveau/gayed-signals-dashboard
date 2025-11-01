@@ -1,0 +1,173 @@
+#
+# Artillery Load Test Configuration
+# Story: 4.0g - Integration Testing Suite
+#
+# Tests system performance under realistic load conditions
+# Target: 1000+ requests/minute
+#
+
+config:
+  target: "http://localhost:3001"
+  phases:
+    # Phase 1: Warm-up (1 minute)
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm-up phase"
+
+    # Phase 2: Ramp-up (2 minutes)
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 50
+      name: "Ramp-up to sustained load"
+
+    # Phase 3: Sustained load (5 minutes)
+    - duration: 300
+      arrivalRate: 50
+      name: "Sustained load - 3000 req/min"
+
+    # Phase 4: Peak load (2 minutes)
+    - duration: 120
+      arrivalRate: 100
+      name: "Peak load - 6000 req/min"
+
+    # Phase 5: Cool-down (1 minute)
+    - duration: 60
+      arrivalRate: 10
+      name: "Cool-down phase"
+
+  # Performance thresholds
+  ensure:
+    maxErrorRate: 0.1          # <0.1% error rate
+    p50: 300                    # p50 latency <300ms
+    p95: 1000                   # p95 latency <1000ms
+    p99: 2000                   # p99 latency <2000ms
+
+  # Plugin configuration
+  plugins:
+    metrics-by-endpoint:
+      stripQueryString: false
+      ignoreUnknownEndpoints: false
+      metricsNamespace: "artillery_metrics"
+
+  # HTTP defaults
+  http:
+    timeout: 10
+    pool: 50
+
+  # Variables
+  variables:
+    apiKey: "test-api-key"
+
+scenarios:
+  # Scenario 1: Fetch recent signals
+  - name: "Fetch Recent Signals"
+    weight: 40
+    flow:
+      - get:
+          url: "/api/v2/signals"
+          qs:
+            limit: 20
+            sortBy: "date"
+            sortOrder: "desc"
+          headers:
+            X-API-Key: "{{ apiKey }}"
+          capture:
+            - json: "$.metadata.timing.totalMs"
+              as: "responseTime"
+            - json: "$.metadata.sources.primary"
+              as: "dataSource"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: "success"
+
+      - think: 2  # 2 second pause
+
+  # Scenario 2: Filter by date range
+  - name: "Filter by Date Range"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/v2/signals"
+          qs:
+            dateFrom: "{{ $randomString(10) }}"
+            dateTo: "{{ $randomString(10) }}"
+            limit: 50
+          headers:
+            X-API-Key: "{{ apiKey }}"
+          expect:
+            - statusCode: [200, 400]  # May fail validation
+
+      - think: 3
+
+  # Scenario 3: Filter by signal type
+  - name: "Filter by Type"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/v2/signals"
+          qs:
+            types: "timing,momentum"
+            limit: 30
+          headers:
+            X-API-Key: "{{ apiKey }}"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+  # Scenario 4: Pagination
+  - name: "Paginate Results"
+    weight: 10
+    flow:
+      # First page
+      - get:
+          url: "/api/v2/signals"
+          qs:
+            limit: 25
+          headers:
+            X-API-Key: "{{ apiKey }}"
+          capture:
+            - json: "$.metadata.nextCursor"
+              as: "cursor"
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      # Second page (if cursor exists)
+      - get:
+          url: "/api/v2/signals"
+          qs:
+            limit: 25
+            cursor: "{{ cursor }}"
+          headers:
+            X-API-Key: "{{ apiKey }}"
+          ifTrue: "cursor"
+
+  # Scenario 5: Health check
+  - name: "Health Check"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/v2/signals/health"
+          headers:
+            X-API-Key: "{{ apiKey }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "success"
+
+  # Scenario 6: Legacy endpoint
+  - name: "Legacy Endpoint"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/signals"
+          qs:
+            from: "2025-01-01"
+            to: "2025-10-31"
+          headers:
+            X-API-Key: "{{ apiKey }}"
+          expect:
+            - statusCode: 200
+            - header: "x-api-deprecated"

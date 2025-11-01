@@ -935,7 +935,7 @@ export default function Dashboard() {
                 setLoading(true);
                 fetchSignals(!isFullMode);
               }}
-              className="w-full px-8 py-4 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-hover transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
+              className="w-full px-8 py-4 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-hover transition-all duration-300 ease-out font-semibold text-lg shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
             >
               <Activity className="w-6 h-6" />
               Load Market Dashboard
@@ -947,7 +947,7 @@ export default function Dashboard() {
                 setIsFullMode(false);
                 fetchSignals(true);
               }}
-              className="w-full px-8 py-4 bg-theme-card-secondary border border-theme-border rounded-xl text-theme-text hover:bg-theme-card-hover transition-all duration-200 font-medium flex items-center justify-center gap-3"
+              className="w-full px-8 py-4 bg-theme-card-secondary border border-theme-border/50 rounded-xl text-theme-text hover:bg-theme-card-hover hover:border-theme-border transition-all duration-300 ease-out font-medium flex items-center justify-center gap-3"
             >
               <RefreshCw className="w-5 h-5" />
               Load Fast Mode (Cached Data)
@@ -1014,11 +1014,11 @@ export default function Dashboard() {
   return (
     <>
       {/* Minimal Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-theme-text">Market Signals</h1>
+      <div className="mb-12">
+        <h1 className="text-2xl font-semibold text-theme-text tracking-tight">Market Signals</h1>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-12">
 
 
         {/* Market Overview Section */}
@@ -1077,14 +1077,14 @@ export default function Dashboard() {
               </div>
 
               {/* Main Consensus Display - mobile optimized */}
-              <div className="mb-6 sm:mb-8">
-                <div className={`text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 sm:mb-4 ${getSignalColor(consensus.consensus)} flex flex-col items-center justify-center space-y-3 sm:space-y-4`}>
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-2xl bg-current/10 flex items-center justify-center shadow-lg">
+              <div className="mb-8 sm:mb-10">
+                <div className={`text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 ${getSignalColor(consensus.consensus)} flex flex-col items-center justify-center space-y-4 sm:space-y-6`}>
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 xl:w-28 xl:h-28 rounded-3xl bg-current/5 flex items-center justify-center shadow-sm">
                     <div className="scale-110 sm:scale-125 lg:scale-150">
                       {getSignalIcon(consensus.consensus)}
                     </div>
                   </div>
-                  <span className="text-center tracking-tight px-4">{consensus.consensus}</span>
+                  <span className="text-center tracking-tight px-4 font-semibold">{consensus.consensus}</span>
                 </div>
                 <div className="text-sm sm:text-base lg:text-lg text-theme-text-muted font-medium px-4">
                   Market is showing <strong className="text-theme-text">{consensus.consensus.toLowerCase()}</strong> signals with{' '}
@@ -1093,12 +1093,12 @@ export default function Dashboard() {
               </div>
 
               {/* Enhanced Metrics Grid - mobile responsive */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 max-w-5xl mx-auto">
-                <div className="bg-theme-card border border-theme-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md hover:shadow-lg transition-all duration-300 touch-manipulation">
-                  <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-theme-text mb-2 sm:mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 max-w-5xl mx-auto">
+                <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 ease-out touch-manipulation">
+                  <div className="text-3xl sm:text-4xl font-semibold text-theme-text mb-3 tabular-nums">
                     {Math.round(consensus.confidence * 100)}%
                   </div>
-                  <div className="text-theme-text-muted font-semibold text-sm sm:text-base mb-2 sm:mb-3">Confidence Level</div>
+                  <div className="text-theme-text-muted font-normal text-sm tracking-wide mb-3">Confidence Level</div>
                   <div className="w-full bg-theme-border rounded-full h-2 sm:h-3">
                     <div
                       className="bg-theme-primary h-2 sm:h-3 rounded-full transition-all duration-1000"
@@ -1107,11 +1107,11 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="bg-theme-card border border-theme-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md hover:shadow-lg transition-all duration-300 touch-manipulation">
-                  <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-theme-success mb-2 sm:mb-3">
+                <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 ease-out touch-manipulation">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-theme-success mb-2 sm:mb-3 tabular-nums">
                     {consensus.riskOnCount}
                   </div>
-                  <div className="text-theme-text-muted font-semibold text-sm sm:text-base mb-2 sm:mb-3">Risk-On Signals</div>
+                  <div className="text-theme-text-muted font-normal text-sm tracking-wide mb-3">Risk-On Signals</div>
                   <div className="w-full bg-theme-border rounded-full h-2 sm:h-3">
                     <div
                       className="bg-theme-success h-2 sm:h-3 rounded-full transition-all duration-1000"
@@ -1120,11 +1120,11 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="bg-theme-card border border-theme-border rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md hover:shadow-lg transition-all duration-300 touch-manipulation">
-                  <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-theme-danger mb-2 sm:mb-3">
+                <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 ease-out touch-manipulation">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-theme-danger mb-2 sm:mb-3 tabular-nums">
                     {consensus.riskOffCount}
                   </div>
-                  <div className="text-theme-text-muted font-semibold text-sm sm:text-base mb-2 sm:mb-3">Risk-Off Signals</div>
+                  <div className="text-theme-text-muted font-normal text-sm tracking-wide mb-3">Risk-Off Signals</div>
                   <div className="w-full bg-theme-border rounded-full h-2 sm:h-3">
                     <div
                       className="bg-theme-danger h-2 sm:h-3 rounded-full transition-all duration-1000"
@@ -1138,12 +1138,12 @@ export default function Dashboard() {
         )}
 
         {/* Enhanced Individual Signal Cards - mobile optimized */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
           {signals.map((signal, index) => (
             <div
               key={index}
               onClick={() => handleSignalClick(signal)}
-              className="bg-theme-card border border-theme-border rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer touch-manipulation active:scale-95"
+              className="bg-theme-card border border-theme-border/50 rounded-2xl p-6 lg:p-8 hover:scale-[1.01] transition-all duration-300 ease-out shadow-sm hover:shadow-lg hover:border-theme-border cursor-pointer touch-manipulation active:scale-[0.99]"
             >
               {/* Header with mobile-optimized layout */}
               <div className="flex items-start justify-between mb-6 sm:mb-8">
@@ -1154,10 +1154,10 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-theme-text font-bold text-sm sm:text-base lg:text-lg uppercase tracking-wide mb-1 truncate">
+                    <h3 className="text-theme-text font-semibold text-sm sm:text-base lg:text-lg uppercase tracking-wider mb-1.5 truncate">
                       {signal.type.replace('_', ' / ')}
                     </h3>
-                    <div className="text-theme-text-muted font-medium text-xs sm:text-sm">
+                    <div className="text-theme-text-muted font-normal text-xs sm:text-sm">
                       {signal.strength} Signal
                     </div>
                   </div>
@@ -1172,7 +1172,7 @@ export default function Dashboard() {
 
               {/* Main signal display - mobile responsive */}
               <div className="text-center mb-6 sm:mb-8">
-                <div className={`text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 ${getSignalColor(signal.signal)}`}>
+                <div className={`text-3xl sm:text-4xl lg:text-5xl font-semibold mb-3 tracking-tight ${getSignalColor(signal.signal)}`}>
                   {signal.signal}
                 </div>
                 <div className="text-theme-text-muted text-xs sm:text-sm">
@@ -1194,11 +1194,11 @@ export default function Dashboard() {
               )}
 
               {/* Compact metrics display - mobile optimized */}
-              <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
-                <div className="flex items-center justify-between p-3 sm:p-4 bg-theme-card-secondary rounded-lg sm:rounded-xl">
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center justify-between p-4 bg-theme-card-secondary/50 rounded-xl border border-theme-border/20">
                   <div>
-                    <div className="text-theme-text-muted text-xs sm:text-sm font-medium">Signal Strength</div>
-                    <div className="text-theme-text text-sm sm:text-base lg:text-lg font-bold">{signal.strength}</div>
+                    <div className="text-theme-text-muted text-xs font-normal tracking-wide">Signal Strength</div>
+                    <div className="text-theme-text text-base lg:text-lg font-semibold">{signal.strength}</div>
                   </div>
                   <div className="w-16 sm:w-20 bg-theme-border rounded-full h-2">
                     <div
@@ -1208,10 +1208,10 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 sm:p-4 bg-theme-card-secondary rounded-lg sm:rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-theme-card-secondary/50 rounded-xl border border-theme-border/20">
                   <div className="flex-1 min-w-0 mr-2">
-                    <div className="text-theme-text-muted text-xs sm:text-sm font-medium">Raw Value</div>
-                    <div className="text-theme-text text-sm sm:text-base lg:text-lg font-mono font-bold truncate">
+                    <div className="text-theme-text-muted text-xs font-normal tracking-wide">Raw Value</div>
+                    <div className="text-theme-text text-base lg:text-lg font-mono font-medium tabular-nums truncate">
                       {signal.rawValue.toFixed(4)}
                     </div>
                   </div>
@@ -1222,7 +1222,7 @@ export default function Dashboard() {
               </div>
 
               {/* Action button - mobile optimized */}
-              <button className="w-full bg-theme-primary text-white py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold hover:bg-theme-primary-hover transition-colors flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation min-h-[48px]">
+              <button className="w-full bg-theme-primary text-white py-3 sm:py-4 rounded-xl font-semibold hover:bg-theme-primary-hover transition-all duration-300 ease-out hover:shadow-md flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation min-h-[48px]">
                 <span className="truncate">View ETF Recommendations</span>
                 <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               </button>

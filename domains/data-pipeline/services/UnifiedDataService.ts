@@ -356,7 +356,7 @@ export class UnifiedDataService {
     });
 
     // Convert Prisma Decimal to number for type compatibility
-    return sources.map(s => ({
+    return sources.map((s: any) => ({
       ...s,
       healthScore: Number(s.healthScore),
       errorRate: Number(s.errorRate),
@@ -570,7 +570,7 @@ export class UnifiedDataService {
     if (data.length === 0) return;
 
     try {
-      await this.prisma.$transaction(async (tx) => {
+      await this.prisma.$transaction(async (tx: any) => {
         // Store market data
         for (const item of data) {
           await tx.marketData.upsert({

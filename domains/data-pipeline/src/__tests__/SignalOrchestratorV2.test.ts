@@ -10,7 +10,7 @@ import { SignalOrchestratorV2, SignalQueryParams } from '../services/SignalOrche
 import { PrismaClient } from '@prisma/client';
 
 // Mock Prisma Client
-jest.mock('../../generated/client', () => {
+jest.mock('@prisma/client', () => {
   return {
     PrismaClient: jest.fn().mockImplementation(() => ({
       signalHistory: {

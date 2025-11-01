@@ -1,0 +1,57 @@
+#
+# Artillery Spike Test Configuration
+# Story: 4.0g - Integration Testing Suite
+#
+# Tests system resilience to sudden traffic spikes
+#
+
+config:
+  target: "http://localhost:3001"
+  phases:
+    # Normal load
+    - duration: 120
+      arrivalRate: 20
+      name: "Baseline load"
+
+    # SPIKE! Sudden 10x increase
+    - duration: 60
+      arrivalRate: 200
+      name: "Traffic spike - 10x increase"
+
+    # Return to normal
+    - duration: 120
+      arrivalRate: 20
+      name: "Recovery to baseline"
+
+    # Another spike
+    - duration: 60
+      arrivalRate: 300
+      name: "Second spike - 15x increase"
+
+    # Cool down
+    - duration: 120
+      arrivalRate: 10
+      name: "Cool down"
+
+  ensure:
+    maxErrorRate: 2.0  # Allow some errors during spike
+    p95: 2000          # Relaxed p95 during spike
+
+  http:
+    timeout: 20
+    pool: 150
+
+  variables:
+    apiKey: "test-api-key"
+
+scenarios:
+  - name: "Mixed Load"
+    flow:
+      - get:
+          url: "/api/v2/signals"
+          qs:
+            limit: "{{ $randomNumber(10, 50) }}"
+          headers:
+            X-API-Key: "{{ apiKey }}"
+
+      - think: 1

@@ -281,7 +281,7 @@ describe('Railway PostgreSQL Integration Tests', () => {
         signalValue: 0.75,
         signalStrength: 0.8,
         confidenceScore: 0.95,
-        signalStatus: 'bullish',
+        signalStatus: 'bullish' as const,
         marketDataIds: [1, 2, 3],
         provenanceIds: [1],
         calculationVersion: 'v1.0.0'
@@ -307,7 +307,7 @@ describe('Railway PostgreSQL Integration Tests', () => {
         signalType: 'timing',
         calculationDate: new Date(),
         signalValue: 0.5,
-        signalStatus: 'neutral',
+        signalStatus: 'neutral' as const,
         marketDataIds: [],
         provenanceIds: []
       };
@@ -322,7 +322,7 @@ describe('Railway PostgreSQL Integration Tests', () => {
       await signalHistoryRepo.insertSignal({
         ...baseSignal,
         calculationDate: nextDay,
-        signalStatus: 'bullish',
+        signalStatus: 'bullish' as const,
         previousStatus: 'neutral',
         statusChanged: true
       });
