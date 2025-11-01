@@ -143,7 +143,7 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
             );
           })}
 
-          {/* Add Profile section items if authenticated */}
+          {/* Profile section items - commented out until routes are implemented
           {isSignedIn && !groupedRoutes['PROFILE'] && (
             <div className="mb-8">
               <div className="px-3 mb-3">
@@ -169,6 +169,7 @@ export default function ProfessionalSidebar({ className = '' }: ProfessionalSide
               </div>
             </div>
           )}
+          */}
         </nav>
       </div>
     </aside>
