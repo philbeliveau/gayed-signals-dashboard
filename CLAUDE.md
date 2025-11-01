@@ -10,6 +10,50 @@ We are actively restructuring the entire data pipeline to resolve severe data re
 
 ---
 
+## 🚀 **VERCEL DEPLOYMENT CONFIGURATION**
+
+### **Monorepo Setup - CRITICAL**
+This is a **monorepo** with the Next.js app located in `apps/web/`. Vercel deployment requires specific configuration to work correctly.
+
+**✅ CORRECT CONFIGURATION:**
+
+1. **Vercel Project Settings (Dashboard):**
+   - Navigate to: **Settings → General → Root Directory**
+   - Set Root Directory to: `apps/web`
+   - This tells Vercel to build from the app directory, not the monorepo root
+
+2. **vercel.json Location:**
+   - File must be at: `apps/web/vercel.json` (NOT at monorepo root)
+   - Contains headers, redirects, and other deployment config
+   - **DO NOT** include `functions` pattern - Next.js auto-detects API routes
+
+3. **Why This Matters:**
+   - Next.js App Router uses `route.ts` files in `apps/web/src/app/api/**/`
+   - Vercel needs to build from `apps/web/` to find these routes
+   - Incorrect root directory causes: "doesn't match any Serverless Functions" error
+
+**❌ COMMON MISTAKES:**
+- ❌ Placing `vercel.json` at monorepo root
+- ❌ Using `functions` pattern like `"apps/web/src/app/api/**/route.ts"`
+- ❌ Not setting Root Directory in Vercel dashboard
+- ❌ Using incorrect path patterns that don't match actual file locations
+
+**🔧 TROUBLESHOOTING:**
+If you see: `The pattern "..." doesn't match any Serverless Functions inside the api directory`
+
+**Fix:**
+1. Move `vercel.json` from root to `apps/web/vercel.json`
+2. Remove any `functions` configuration from `vercel.json`
+3. Set Root Directory to `apps/web` in Vercel dashboard (Settings → General)
+4. Redeploy
+
+**Files:**
+- `/apps/web/vercel.json` - Deployment configuration (headers, redirects)
+- `/apps/web/next.config.ts` - Next.js build configuration
+- `/apps/web/src/app/api/**/route.ts` - API routes (auto-detected by Vercel)
+
+---
+
 ## 🎨 **UI CONFIGURATION**
 
 ### **Hidden Navigation Tabs**
