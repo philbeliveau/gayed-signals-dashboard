@@ -4,7 +4,16 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "DATABASE_URL",
+        "DATABASE_PUBLIC_URL",
+        "REDIS_URL",
+        "CLERK_SECRET_KEY",
+        "API_KEY",
+        "NODE_ENV",
+        "ENVIRONMENT"
+      ]
     },
     "dev": {
       "cache": false,
