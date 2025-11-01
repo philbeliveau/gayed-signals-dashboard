@@ -357,7 +357,8 @@ app.get('/api/v2/signals', async (req: Request, res: Response) => {
           },
           timing: {
             totalMs: 0,
-            sourceMs: { fast_mode: 0 }
+            sourceMs: { fast_mode: 0 },
+            cached: false
           }
         },
         timestamp: new Date().toISOString(),
@@ -472,7 +473,8 @@ app.get('/api/v2/signals', async (req: Request, res: Response) => {
         },
         timing: {
           totalMs: 0,
-          sourceMs: {}
+          sourceMs: {},
+          cached: false
         }
       },
       timestamp: new Date().toISOString(),

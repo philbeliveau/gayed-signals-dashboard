@@ -78,14 +78,14 @@ export class UnifiedDataService {
   private async seedDataSources(): Promise<void> {
     const sources = [
       {
-        name: 'YAHOO_FINANCE',
-        endpoint: 'https://query1.finance.yahoo.com/v8/finance/chart',
+        name: 'TIINGO',
+        endpoint: 'https://api.tiingo.com/tiingo/daily',
         priority: 1,
         healthScore: 1.0,
       },
       {
-        name: 'TIINGO',
-        endpoint: 'https://api.tiingo.com/tiingo/daily',
+        name: 'YAHOO_FINANCE',
+        endpoint: 'https://query1.finance.yahoo.com/v8/finance/chart',
         priority: 2,
         healthScore: 0.9,
       },

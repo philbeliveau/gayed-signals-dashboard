@@ -87,6 +87,7 @@ export interface SignalOrchestratorResult {
     timing: {
       totalMs: number;
       sourceMs: Record<string, number>;
+      cached: boolean;
     };
   };
 }
@@ -254,6 +255,7 @@ export class SignalOrchestratorV2 {
           timing: {
             totalMs,
             sourceMs: timings,
+            cached: false,
           },
         },
       };
@@ -281,6 +283,7 @@ export class SignalOrchestratorV2 {
         timing: {
           totalMs,
           sourceMs: timings,
+          cached: primarySource.includes('cache') || primarySource.includes('redis'),
         },
       },
     };
