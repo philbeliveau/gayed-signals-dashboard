@@ -368,19 +368,35 @@ app.get('/api/v2/signals', async (req: Request, res: Response) => {
     // If PostgreSQL has no signals, calculate on-demand (only in normal mode)
     if (!result.success || result.data.length === 0) {
       logger.info('PostgreSQL empty - calculating signals on-demand');
+      logger.info('Attempting on-demand signal calculation', {
+        fastMode,
+        resultSuccess: result.success,
+        resultDataLength: result.data.length
+      });
 
       // Fetch market data with historical data (252 trading days = ~1 year)
       const symbols = SignalOrchestrator.getRequiredSymbols();
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-      const marketDataResult = await dataService.fetchMarketData(symbols, {
-        useCache: true,
-        fallbackEnabled: true,
-        limit: 252,  // 252 trading days = ~1 year of data for signal calculations
-        endDate: new Date(),
-        startDate: oneYearAgo
-      });
+      let marketDataResult;
+      try {
+        logger.info('[On-Demand] Fetching market data for symbols:', { symbols });
+        marketDataResult = await dataService.fetchMarketData(symbols, {
+          useCache: true,
+          fallbackEnabled: true,
+          limit: 252,  // 252 trading days = ~1 year of data for signal calculations
+          endDate: new Date(),
+          startDate: oneYearAgo
+        });
+        logger.info('[On-Demand] Market data fetch completed');
+      } catch (fetchError: any) {
+        logger.error('[On-Demand] Market data fetch FAILED:', {
+          error: fetchError.message,
+          stack: fetchError.stack
+        });
+        throw fetchError; // Re-throw to be caught by outer try-catch
+      }
 
       if (marketDataResult.data && marketDataResult.data.length > 0) {
         // Transform market data to Record<symbol, MarketData[]> format
