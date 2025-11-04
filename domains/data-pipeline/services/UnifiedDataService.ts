@@ -319,7 +319,20 @@ export class UnifiedDataService {
   private async selectBestSource(symbols: string[]): Promise<DataSource> {
     const sources = await this.getHealthyDataSources();
 
+    // DIAGNOSTIC: Log all available sources
+    this.logger.info('[Source Selection] Available sources:', {
+      count: sources.length,
+      sources: sources.map(s => ({
+        name: s.name,
+        priority: s.priority,
+        healthScore: Number(s.healthScore),
+        enabled: s.enabled,
+        errorRate: Number(s.errorRate)
+      }))
+    });
+
     if (sources.length === 0) {
+      this.logger.error('[Source Selection] No healthy data sources available!');
       throw new Error('No healthy data sources available');
     }
 
@@ -330,13 +343,23 @@ export class UnifiedDataService {
       return scoreB - scoreA;
     });
 
-    return {
+    const selectedSource = {
       name: sources[0].name,
       endpoint: sources[0].endpoint,
       priority: sources[0].priority,
       healthScore: Number(sources[0].healthScore),
       circuitBreaker: this.getCircuitBreaker(sources[0].name),
     };
+
+    // DIAGNOSTIC: Log selected source
+    this.logger.info('[Source Selection] Selected data source:', {
+      name: selectedSource.name,
+      priority: selectedSource.priority,
+      healthScore: selectedSource.healthScore,
+      circuitBreakerState: selectedSource.circuitBreaker?.getState()
+    });
+
+    return selectedSource;
   }
 
   /**
@@ -374,18 +397,49 @@ export class UnifiedDataService {
     const breaker = this.getCircuitBreaker(source.name);
 
     return breaker.execute(async () => {
-      this.logger.info(`Fetching from ${source.name}`, { symbols });
+      this.logger.info(`[Data Fetch] Fetching from ${source.name}`, {
+        symbols,
+        options: {
+          useCache: options.useCache,
+          limit: options.limit,
+          startDate: options.startDate?.toISOString(),
+          endDate: options.endDate?.toISOString()
+        }
+      });
 
+      let data: MarketData[];
       switch (source.name) {
         case 'YAHOO_FINANCE':
-          return await this.fetchFromYahoo(symbols, options);
+          data = await this.fetchFromYahoo(symbols, options);
+          break;
         case 'TIINGO':
-          return await this.fetchFromTiingo(symbols, options);
+          data = await this.fetchFromTiingo(symbols, options);
+          break;
         case 'ALPHA_VANTAGE':
-          return await this.fetchFromAlphaVantage(symbols, options);
+          data = await this.fetchFromAlphaVantage(symbols, options);
+          break;
         default:
           throw new Error(`Unknown data source: ${source.name}`);
       }
+
+      // DIAGNOSTIC: Log fetch results
+      const dataBySymbol = data.reduce((acc, item) => {
+        acc[item.symbol] = (acc[item.symbol] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      this.logger.info(`[Data Fetch] ${source.name} returned data:`, {
+        totalDataPoints: data.length,
+        symbolCounts: dataBySymbol,
+        requestedSymbols: symbols,
+        missingSymbols: symbols.filter(s => !dataBySymbol[s]),
+        dateRange: data.length > 0 ? {
+          earliest: data[data.length - 1]?.date,
+          latest: data[0]?.date
+        } : 'no data'
+      });
+
+      return data;
     });
   }
 
@@ -439,8 +493,15 @@ export class UnifiedDataService {
   ): Promise<MarketData[]> {
     const apiKey = process.env.TIINGO_API_KEY;
     if (!apiKey) {
+      this.logger.error('[Tiingo] API key not configured!');
       throw new Error('TIINGO_API_KEY not configured');
     }
+
+    this.logger.info('[Tiingo] Starting fetch', {
+      symbols,
+      apiKeyConfigured: !!apiKey,
+      apiKeyPrefix: apiKey.substring(0, 8) + '...'
+    });
 
     const marketData: MarketData[] = [];
 
@@ -460,6 +521,8 @@ export class UnifiedDataService {
           params.endDate = options.endDate.toISOString().split('T')[0];
         }
 
+        this.logger.info(`[Tiingo] Fetching ${symbol}`, { params });
+
         const response = await axios.get(
           `https://api.tiingo.com/tiingo/daily/${symbol}/prices`,
           {
@@ -473,9 +536,17 @@ export class UnifiedDataService {
 
         const dataPoints = response.data;
         if (!dataPoints || dataPoints.length === 0) {
-          this.logger.warn(`No data from Tiingo for ${symbol}`);
+          this.logger.warn(`[Tiingo] No data returned for ${symbol}`);
           continue;
         }
+
+        this.logger.info(`[Tiingo] ${symbol} success:`, {
+          dataPoints: dataPoints.length,
+          dateRange: {
+            earliest: dataPoints[dataPoints.length - 1]?.date,
+            latest: dataPoints[0]?.date
+          }
+        });
 
         // If historical data requested, return all points; otherwise return latest
         const pointsToProcess = options.startDate || options.limit
@@ -486,6 +557,8 @@ export class UnifiedDataService {
         const limitedPoints = options.limit
           ? pointsToProcess.slice(0, options.limit)
           : pointsToProcess;
+
+        this.logger.info(`[Tiingo] ${symbol} processing ${limitedPoints.length} points (limit: ${options.limit || 'none'})`);
 
         // Convert all data points to MarketData format
         for (const point of limitedPoints) {
@@ -501,12 +574,21 @@ export class UnifiedDataService {
           });
         }
       } catch (error: any) {
-        this.logger.error(`Tiingo error for ${symbol}`, {
+        this.logger.error(`[Tiingo] Error for ${symbol}`, {
           error: error.message,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data
         });
         throw error;
       }
     }
+
+    this.logger.info('[Tiingo] Fetch complete', {
+      totalSymbolsRequested: symbols.length,
+      totalDataPointsReturned: marketData.length,
+      symbolsWithData: [...new Set(marketData.map(d => d.symbol))],
+    });
 
     return marketData;
   }
