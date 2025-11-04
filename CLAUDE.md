@@ -80,6 +80,7 @@ const data = await fetchSignalsWithFallback({
 #### **Hidden Components** (Available via Direct URL)
 - 🔗 **AI Agent Debates** (`/demo/live-conversation`) - AutoGen multi-agent system
 - 🔗 **Video Analysis** (`/simple-youtube`) - Content analysis feature
+- 🔗 **Interactive Charts** (`/interactive-charts`) - Hidden from navigation (not used)
 - 🔒 **Direct Text Analysis Box** - Hidden from main dashboard
 
 #### **Disabled Endpoints** (Not Needed Currently)

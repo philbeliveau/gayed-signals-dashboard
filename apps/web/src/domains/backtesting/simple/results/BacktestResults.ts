@@ -8,16 +8,11 @@
 import type { BacktestResult, PerformanceMetrics, TradeRecord, DailyPortfolioValue } from '../engine/types';
 
 /**
- * Format for chart display
+ * Format for chart display (Plotly)
  */
 export interface ChartData {
-  labels: string[];
-  datasets: {
-    label: string;
-    data: number[];
-    borderColor: string;
-    backgroundColor: string;
-  }[];
+  data: any[];
+  layout: any;
 }
 
 /**
@@ -35,116 +30,159 @@ export function formatPerformanceMetrics(metrics: PerformanceMetrics) {
 }
 
 /**
- * Format equity curve for chart display with transaction markers and signal indicator
+ * Format equity curve for Plotly chart with transaction markers and signal indicator
  */
 export function formatEquityCurve(
   equityCurve: DailyPortfolioValue[],
   trades?: TradeRecord[],
   signalThreshold?: number
 ): ChartData {
-  const labels = equityCurve.map(point => {
-    const date = new Date(point.date);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const dates = equityCurve.map(point => point.date);
+  const portfolioValues = equityCurve.map(point => point.value);
+  const signalValues = equityCurve.map(point => point.signalValue ?? null);
+  const hasSignalData = signalValues.some(val => val !== null);
+
+  const plotlyData: any[] = [];
+
+  // Portfolio value line (primary y-axis)
+  plotlyData.push({
+    x: dates,
+    y: portfolioValues,
+    name: 'Portfolio Value',
+    type: 'scatter',
+    mode: 'lines',
+    line: { color: 'rgb(59, 130, 246)', width: 2 },
+    fill: 'tozeroy',
+    fillcolor: 'rgba(59, 130, 246, 0.1)',
+    yaxis: 'y',
+    hovertemplate: '<b>Portfolio Value</b><br>Date: %{x}<br>Value: $%{y:,.2f}<extra></extra>',
   });
 
-  const portfolioData = equityCurve.map(point => point.value);
-
-  // Extract signal values if available
-  const signalData = equityCurve.map(point => point.signalValue ?? null);
-  const hasSignalData = signalData.some(val => val !== null);
-
-  const datasets: ChartData['datasets'] = [
-    {
-      label: 'Portfolio Value',
-      data: portfolioData,
-      borderColor: 'rgb(59, 130, 246)', // Blue
-      backgroundColor: 'rgba(59, 130, 246, 0.1)',
-      yAxisID: 'y',
-    } as any,
-  ];
-
-  // Add signal indicator line (secondary y-axis)
+  // Signal indicator line (secondary y-axis)
   if (hasSignalData) {
-    datasets.push({
-      label: 'Signal Indicator',
-      data: signalData,
-      borderColor: 'rgb(147, 51, 234)', // Purple
-      backgroundColor: 'rgba(147, 51, 234, 0.1)',
-      borderWidth: 2,
-      borderDash: [5, 5],
-      yAxisID: 'y1',
-      pointRadius: 0,
-      pointHoverRadius: 4,
-    } as any);
+    plotlyData.push({
+      x: dates,
+      y: signalValues,
+      name: 'Signal Indicator',
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: 'rgb(147, 51, 234)', width: 2, dash: 'dash' },
+      yaxis: 'y2',
+      hovertemplate: '<b>Signal Indicator</b><br>Date: %{x}<br>Value: %{y:.4f}<extra></extra>',
+    });
 
-    // Add threshold line if provided
+    // Threshold line (secondary y-axis)
     if (signalThreshold !== undefined) {
-      const thresholdData = new Array(equityCurve.length).fill(signalThreshold);
-      datasets.push({
-        label: `Threshold (${signalThreshold})`,
-        data: thresholdData,
-        borderColor: 'rgb(251, 146, 60)', // Orange
-        backgroundColor: 'rgba(251, 146, 60, 0.1)',
-        borderWidth: 2,
-        borderDash: [10, 5],
-        yAxisID: 'y1',
-        pointRadius: 0,
-        pointHoverRadius: 0,
-      } as any);
+      plotlyData.push({
+        x: dates,
+        y: new Array(dates.length).fill(signalThreshold),
+        name: `Threshold (${signalThreshold})`,
+        type: 'scatter',
+        mode: 'lines',
+        line: { color: 'rgb(251, 146, 60)', width: 2, dash: 'dot' },
+        yaxis: 'y2',
+        hovertemplate: '<b>Threshold</b><br>Value: %{y:.2f}<extra></extra>',
+      });
     }
   }
 
-  // Add transaction markers if trades are provided
+  // Transaction markers
   if (trades && trades.length > 0) {
-    // Create buy transactions dataset (green)
-    const buyData = new Array(equityCurve.length).fill(null);
-    const sellData = new Array(equityCurve.length).fill(null);
+    const buyTrades = trades.filter(t => t.action === 'BUY');
+    const sellTrades = trades.filter(t => t.action === 'SELL');
 
-    trades.forEach(trade => {
-      const tradeDate = new Date(trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      const dataIndex = labels.indexOf(tradeDate);
+    // Buy markers
+    if (buyTrades.length > 0) {
+      const buyDates = buyTrades.map(t => t.date);
+      const buyValues = buyTrades.map(trade => {
+        const idx = dates.indexOf(trade.date);
+        return idx !== -1 ? portfolioValues[idx] : null;
+      });
 
-      if (dataIndex !== -1) {
-        const portfolioValue = equityCurve[dataIndex].value;
-        if (trade.action === 'BUY') {
-          buyData[dataIndex] = portfolioValue;
-        } else if (trade.action === 'SELL') {
-          sellData[dataIndex] = portfolioValue;
-        }
-      }
-    });
+      plotlyData.push({
+        x: buyDates,
+        y: buyValues,
+        name: 'Buy',
+        type: 'scatter',
+        mode: 'markers',
+        marker: {
+          color: 'rgb(34, 197, 94)',
+          size: 12,
+          symbol: 'triangle-up',
+          line: { color: 'white', width: 1 },
+        },
+        yaxis: 'y',
+        hovertemplate: '<b>BUY</b><br>Date: %{x}<br>Portfolio: $%{y:,.2f}<extra></extra>',
+      });
+    }
 
-    // Add BUY markers (green points)
-    datasets.push({
-      label: 'Buy',
-      data: buyData,
-      borderColor: 'rgb(34, 197, 94)', // Green
-      backgroundColor: 'rgba(34, 197, 94, 0.8)',
-      pointRadius: 8,
-      pointHoverRadius: 10,
-      showLine: false,
-      pointStyle: 'triangle',
-      yAxisID: 'y',
-    } as any);
+    // Sell markers
+    if (sellTrades.length > 0) {
+      const sellDates = sellTrades.map(t => t.date);
+      const sellValues = sellTrades.map(trade => {
+        const idx = dates.indexOf(trade.date);
+        return idx !== -1 ? portfolioValues[idx] : null;
+      });
 
-    // Add SELL markers (red points)
-    datasets.push({
-      label: 'Sell',
-      data: sellData,
-      borderColor: 'rgb(239, 68, 68)', // Red
-      backgroundColor: 'rgba(239, 68, 68, 0.8)',
-      pointRadius: 8,
-      pointHoverRadius: 10,
-      showLine: false,
-      pointStyle: 'triangle',
-      rotation: 180, // Flip triangle for sell
-      yAxisID: 'y',
-    } as any);
+      plotlyData.push({
+        x: sellDates,
+        y: sellValues,
+        name: 'Sell',
+        type: 'scatter',
+        mode: 'markers',
+        marker: {
+          color: 'rgb(239, 68, 68)',
+          size: 12,
+          symbol: 'triangle-down',
+          line: { color: 'white', width: 1 },
+        },
+        yaxis: 'y',
+        hovertemplate: '<b>SELL</b><br>Date: %{x}<br>Portfolio: $%{y:,.2f}<extra></extra>',
+      });
+    }
   }
 
+  // Layout configuration with dual y-axes
+  const layout = {
+    autosize: true,
+    margin: { l: 80, r: 80, t: 20, b: 60 },
+    hovermode: 'closest',
+    showlegend: true,
+    legend: {
+      orientation: 'h',
+      yanchor: 'bottom',
+      y: 1.02,
+      xanchor: 'right',
+      x: 1,
+    },
+    xaxis: {
+      title: 'Date',
+      type: 'date',
+      showgrid: true,
+      gridcolor: 'rgba(128, 128, 128, 0.2)',
+    },
+    yaxis: {
+      title: 'Portfolio Value ($)',
+      showgrid: true,
+      gridcolor: 'rgba(128, 128, 128, 0.2)',
+      tickformat: '$,.0f',
+      side: 'left',
+    },
+    yaxis2: hasSignalData ? {
+      title: 'Signal Indicator',
+      overlaying: 'y',
+      side: 'right',
+      showgrid: false,
+      tickformat: '.2f',
+    } : undefined,
+    dragmode: 'zoom',
+    plot_bgcolor: 'rgba(0, 0, 0, 0)',
+    paper_bgcolor: 'rgba(0, 0, 0, 0)',
+  };
+
   return {
-    labels,
-    datasets,
+    data: plotlyData,
+    layout,
   };
 }
 

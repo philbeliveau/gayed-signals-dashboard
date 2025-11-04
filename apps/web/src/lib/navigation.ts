@@ -29,13 +29,13 @@ export const authenticatedRoutes: NavigationRoute[] = [
     section: 'MAIN',
     requiresAuth: true
   },
-  {
-    path: '/interactive-charts',
-    displayName: 'Interactive Charts',
-    icon: 'line-chart',
-    section: 'MAIN',
-    requiresAuth: true
-  },
+  // {
+  //   path: '/interactive-charts',
+  //   displayName: 'Interactive Charts',
+  //   icon: 'line-chart',
+  //   section: 'MAIN',
+  //   requiresAuth: true
+  // },
   {
     path: '/backtest-simple',
     displayName: 'Simple Backtesting',

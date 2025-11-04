@@ -7,31 +7,11 @@
 
 import { useState } from 'react';
 import { Play, Loader2, TrendingUp, TrendingDown, Activity, Calendar, DollarSign, Zap } from 'lucide-react';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
+import dynamic from 'next/dynamic';
 import { PageHeader, ContentCard, CardGrid, StatsCard } from '@/components/layout/ProfessionalLayout';
 
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+// Dynamic import of Plotly to avoid SSR issues
+const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
 interface BacktestRequest {
   signalType: string;
@@ -96,8 +76,8 @@ const SIGNAL_OPTIONS = [
 export default function SimpleBacktestPage() {
   const [config, setConfig] = useState<BacktestRequest>({
     signalType: 'utilities-spy',
-    startDate: '2023-01-01',
-    endDate: '2023-12-31',
+    startDate: '2015-01-01',
+    endDate: '2024-12-31',
     initialCapital: 10000,
     fastMode: false,
   });
@@ -315,89 +295,26 @@ export default function SimpleBacktestPage() {
             </ContentCard>
 
             {/* Equity Curve Chart */}
-            <ContentCard title="Equity Curve" subtitle="Portfolio value and signal indicator over time">
+            <ContentCard title="Equity Curve" subtitle="Portfolio value and signal indicator over time (zoom/pan enabled)">
               <div className="h-96">
-                <Line
-                  data={result.equityCurve}
-                  options={{
+                <Plot
+                  data={result.equityCurve.data}
+                  layout={result.equityCurve.layout}
+                  config={{
                     responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                      mode: 'index',
-                      intersect: false,
-                    },
-                    plugins: {
-                      legend: {
-                        display: true,
-                        position: 'top' as const,
-                        labels: {
-                          usePointStyle: true,
-                          padding: 15,
-                          font: {
-                            size: 12,
-                            weight: 500,
-                          },
-                        },
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: (context: any) => {
-                            if (context.parsed.y === null) return '';
-                            const label = context.dataset.label || '';
-
-                            // Portfolio value and transaction markers
-                            if (label === 'Portfolio Value' || label === 'Buy' || label === 'Sell') {
-                              const value = `$${context.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                              return label === 'Buy' || label === 'Sell'
-                                ? `${label}: ${value}`
-                                : `${label}: ${value}`;
-                            }
-
-                            // Signal indicator and threshold
-                            if (label === 'Signal Indicator' || label.startsWith('Threshold')) {
-                              return `${label}: ${context.parsed.y.toFixed(4)}`;
-                            }
-
-                            return `${label}: ${context.parsed.y}`;
-                          },
-                        },
-                      },
-                    },
-                    scales: {
-                      y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: {
-                          display: true,
-                          text: 'Portfolio Value ($)',
-                        },
-                        ticks: {
-                          callback: (value: any) => `$${Number(value).toLocaleString()}`,
-                        },
-                      },
-                      y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: {
-                          display: true,
-                          text: 'Signal Indicator',
-                        },
-                        grid: {
-                          drawOnChartArea: false,
-                        },
-                        ticks: {
-                          callback: (value: any) => Number(value).toFixed(2),
-                        },
-                      },
-                    },
-                    elements: {
-                      line: {
-                        tension: 0.1,
-                      },
+                    displayModeBar: true,
+                    displaylogo: false,
+                    modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+                    toImageButtonOptions: {
+                      format: 'png',
+                      filename: 'backtest_equity_curve',
+                      height: 800,
+                      width: 1400,
+                      scale: 2,
                     },
                   }}
+                  style={{ width: '100%', height: '100%' }}
+                  useResizeHandler={true}
                 />
               </div>
             </ContentCard>
