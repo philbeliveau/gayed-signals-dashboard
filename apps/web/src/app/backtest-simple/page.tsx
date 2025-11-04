@@ -128,7 +128,7 @@ export default function SimpleBacktestPage() {
       <div className="space-y-8">
         {/* Configuration Panel */}
         <ContentCard title="Backtest Configuration" subtitle="Configure your backtest parameters">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             {/* Signal Selection */}
             <div>
               <label className="block text-sm font-medium text-theme-text mb-2">
@@ -137,11 +137,11 @@ export default function SimpleBacktestPage() {
               <select
                 value={config.signalType}
                 onChange={(e) => setConfig({ ...config, signalType: e.target.value })}
-                className="w-full px-4 py-3 border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
+                className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
               >
                 {SIGNAL_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label} - {option.description}
+                    {option.label}
                   </option>
                 ))}
               </select>
@@ -158,7 +158,7 @@ export default function SimpleBacktestPage() {
                 onChange={(e) => setConfig({ ...config, initialCapital: Number(e.target.value) })}
                 min="1000"
                 step="1000"
-                className="w-full px-4 py-3 border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
+                className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
               />
             </div>
 
@@ -171,7 +171,7 @@ export default function SimpleBacktestPage() {
                 type="date"
                 value={config.startDate}
                 onChange={(e) => setConfig({ ...config, startDate: e.target.value })}
-                className="w-full px-4 py-3 border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
+                className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
               />
             </div>
 
@@ -184,7 +184,7 @@ export default function SimpleBacktestPage() {
                 type="date"
                 value={config.endDate}
                 onChange={(e) => setConfig({ ...config, endDate: e.target.value })}
-                className="w-full px-4 py-3 border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
+                className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
               />
             </div>
           </div>
@@ -296,10 +296,26 @@ export default function SimpleBacktestPage() {
 
             {/* Equity Curve Chart */}
             <ContentCard title="Equity Curve" subtitle="Portfolio value and signal indicator over time (zoom/pan enabled)">
-              <div className="h-[600px]">
+              <div className="h-[400px] md:h-[600px]">
                 <Plot
                   data={result.equityCurve.data}
-                  layout={result.equityCurve.layout}
+                  layout={{
+                    ...result.equityCurve.layout,
+                    // Mobile-specific overrides
+                    margin: {
+                      l: 60,
+                      r: 60,
+                      t: 20,
+                      b: 50,
+                    },
+                    legend: {
+                      orientation: 'h',
+                      yanchor: 'bottom',
+                      y: 1.02,
+                      xanchor: 'center',
+                      x: 0.5,
+                    },
+                  }}
                   config={{
                     responsive: true,
                     displayModeBar: true,
@@ -321,23 +337,23 @@ export default function SimpleBacktestPage() {
 
             {/* Trade History */}
             <ContentCard title="Trade History" subtitle={`${result.trades.length} trades executed`}>
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="overflow-x-auto -mx-8 px-8">
+                <table className="w-full min-w-[600px]">
                   <thead className="bg-theme-card-secondary">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-theme-text">Date</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-theme-text">Action</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-theme-text">Symbol</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-theme-text">Price</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-theme-text">Reason</th>
+                      <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text">Date</th>
+                      <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text">Action</th>
+                      <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text">Symbol</th>
+                      <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text">Price</th>
+                      <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text hidden sm:table-cell">Reason</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-theme-border">
                     {result.trades.map((trade, index) => (
                       <tr key={index} className="hover:bg-theme-card-hover transition-colors">
-                        <td className="px-4 py-3 text-sm text-theme-text">{trade.date}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-theme-text whitespace-nowrap">{trade.date}</td>
+                        <td className="px-3 md:px-4 py-3">
+                          <span className={`inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-medium ${
                             trade.action === 'BUY'
                               ? 'bg-theme-success-bg text-theme-success border border-theme-success-border'
                               : 'bg-theme-danger-bg text-theme-danger border border-theme-danger-border'
@@ -345,9 +361,9 @@ export default function SimpleBacktestPage() {
                             {trade.action}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm font-medium text-theme-text">{trade.symbol}</td>
-                        <td className="px-4 py-3 text-sm text-theme-text">{trade.price}</td>
-                        <td className="px-4 py-3 text-sm text-theme-text-muted">{trade.reason}</td>
+                        <td className="px-3 md:px-4 py-3 text-xs md:text-sm font-medium text-theme-text">{trade.symbol}</td>
+                        <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-theme-text whitespace-nowrap">{trade.price}</td>
+                        <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-theme-text-muted hidden sm:table-cell">{trade.reason}</td>
                       </tr>
                     ))}
                   </tbody>
