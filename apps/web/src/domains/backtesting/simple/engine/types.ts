@@ -42,6 +42,8 @@ export interface BacktestConfig {
   startDate: string;
   endDate: string;
   initialCapital: number;
+  riskOnSymbol?: string;
+  riskOffSymbol?: string;
 }
 
 export interface BacktestResult {

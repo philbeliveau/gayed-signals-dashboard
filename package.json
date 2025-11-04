@@ -35,6 +35,7 @@
   },
   "packageManager": "npm@10.0.0",
   "dependencies": {
+    "@vercel/blob": "^2.0.0",
     "axios": "^1.13.1",
     "yahoo-finance2": "^3.10.0"
   }

@@ -19,6 +19,8 @@ interface BacktestRequest {
   startDate: string;
   endDate: string;
   initialCapital?: number;
+  riskOnSymbol?: string;
+  riskOffSymbol?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     // 2. THEN parse request body
     const body = await request.json() as BacktestRequest;
-    const { signalType, startDate, endDate, initialCapital = 10000 } = body;
+    const { signalType, startDate, endDate, initialCapital = 10000, riskOnSymbol, riskOffSymbol } = body;
 
     // Validate inputs
     if (!signalType || !startDate || !endDate) {
@@ -85,8 +87,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get required symbols for this signal
-    const requiredSymbols = SignalAdapter.getAllRequiredSymbols(signalType);
+    // Get required symbols for this signal (including custom symbols if provided)
+    const requiredSymbols = SignalAdapter.getAllRequiredSymbols(signalType, riskOnSymbol, riskOffSymbol);
 
     console.log(`[BacktestAPI] Starting backtest for ${signalType}`);
     console.log(`[BacktestAPI] Date range: ${startDate} to ${endDate}`);
@@ -126,6 +128,8 @@ export async function POST(request: NextRequest) {
       startDate,
       endDate,
       initialCapital,
+      riskOnSymbol,
+      riskOffSymbol,
     };
 
     // Run backtest
@@ -169,7 +173,7 @@ export async function GET() {
     endpoint: '/api/backtest-simple',
     methods: ['POST'],
     requiredFields: ['signalType', 'startDate', 'endDate'],
-    optionalFields: ['initialCapital'],
+    optionalFields: ['initialCapital', 'riskOnSymbol', 'riskOffSymbol'],
     signalTypes: [
       'utilities-spy',
       'lumber-gold',

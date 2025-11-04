@@ -38,7 +38,7 @@ export const authenticatedRoutes: NavigationRoute[] = [
   // },
   {
     path: '/backtest-simple',
-    displayName: 'Simple Backtesting',
+    displayName: 'Backtesting Signals',
     icon: 'trending-up',
     section: 'ANALYSIS',
     requiresAuth: true

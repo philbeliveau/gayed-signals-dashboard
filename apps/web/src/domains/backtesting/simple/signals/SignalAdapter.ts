@@ -184,21 +184,48 @@ export class SignalAdapter {
 
   /**
    * Get the ETF symbol for a given position
+   * Supports custom Risk-On/Risk-Off symbols (Story 4.0k)
+   *
+   * @param signalType - Signal type for default symbols
+   * @param position - Risk-On or Risk-Off position
+   * @param customRiskOn - Optional custom Risk-On symbol
+   * @param customRiskOff - Optional custom Risk-Off symbol
+   * @returns Symbol to trade for the given position
    */
-  static getPositionSymbol(signalType: SignalType, position: Position): string {
+  static getPositionSymbol(
+    signalType: SignalType,
+    position: Position,
+    customRiskOn?: string,
+    customRiskOff?: string
+  ): string {
+    // Use custom symbols if provided
+    if (customRiskOn && position === 'RISK_ON') return customRiskOn;
+    if (customRiskOff && position === 'RISK_OFF') return customRiskOff;
+
+    // Fallback to default configuration
     const config = SIGNAL_CONFIGS[signalType];
     return position === 'RISK_ON' ? config.riskOnSymbol : config.riskOffSymbol;
   }
 
   /**
    * Get all required symbols for a signal type (including position symbols)
+   * Supports custom Risk-On/Risk-Off symbols (Story 4.0k)
+   *
+   * @param signalType - Signal type
+   * @param customRiskOn - Optional custom Risk-On symbol
+   * @param customRiskOff - Optional custom Risk-Off symbol
+   * @returns All symbols needed for backtesting
    */
-  static getAllRequiredSymbols(signalType: SignalType): string[] {
+  static getAllRequiredSymbols(
+    signalType: SignalType,
+    customRiskOn?: string,
+    customRiskOff?: string
+  ): string[] {
     const config = SIGNAL_CONFIGS[signalType];
     const symbols = new Set([
       ...config.requiredSymbols,
-      config.riskOnSymbol,
-      config.riskOffSymbol,
+      customRiskOn || config.riskOnSymbol,
+      customRiskOff || config.riskOffSymbol,
     ]);
     return Array.from(symbols);
   }

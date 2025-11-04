@@ -33,7 +33,7 @@ export class SimpleBacktestEngine {
     config: BacktestConfig,
     marketData: Record<string, MarketDataPoint[]>
   ): BacktestResult {
-    const { signalType, startDate, endDate, initialCapital } = config;
+    const { signalType, startDate, endDate, initialCapital, riskOnSymbol, riskOffSymbol } = config;
 
     // Get all trading dates from SPY (most liquid)
     const tradingDates = this.getTradingDates(marketData, startDate, endDate);
@@ -80,8 +80,13 @@ export class SimpleBacktestEngine {
         continue;
       }
 
-      // Determine target position
-      const targetSymbol = SignalAdapter.getPositionSymbol(signalType, signal.position);
+      // Determine target position (Story 4.0k - support custom symbols)
+      const targetSymbol = SignalAdapter.getPositionSymbol(
+        signalType,
+        signal.position,
+        riskOnSymbol,
+        riskOffSymbol
+      );
 
       // Check if position change is needed
       if (currentPosition !== signal.position || currentSymbol !== targetSymbol) {

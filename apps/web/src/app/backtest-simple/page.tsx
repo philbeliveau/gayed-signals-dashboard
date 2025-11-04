@@ -5,10 +5,11 @@
  * Story: 4.0j - Simple Gayed Signals Backtesting Platform
  */
 
-import { useState } from 'react';
-import { Play, Loader2, TrendingUp, TrendingDown, Activity, Calendar, DollarSign, Zap } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Play, Loader2, TrendingUp, TrendingDown, Activity, Calendar, DollarSign } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { PageHeader, ContentCard, CardGrid, StatsCard } from '@/components/layout/ProfessionalLayout';
+import { SIGNAL_CONFIGS } from '@/domains/backtesting/simple/signals/SignalAdapter';
 
 // Dynamic import of Plotly to avoid SSR issues
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
@@ -19,6 +20,8 @@ interface BacktestRequest {
   endDate: string;
   initialCapital: number;
   fastMode?: boolean;
+  riskOnSymbol?: string;
+  riskOffSymbol?: string;
 }
 
 interface BacktestResult {
@@ -73,10 +76,81 @@ const SIGNAL_OPTIONS = [
   { value: 'vix-defensive', label: 'VIX Defensive Signal', description: 'VIXY volatility indicator' },
 ];
 
+// Signal-specific ETF options (matches dashboard ETF_RECOMMENDATIONS)
+const SIGNAL_SPECIFIC_ETFS = {
+  'utilities-spy': {
+    riskOn: [
+      { value: 'SPY', label: 'SPY - S&P 500 (default)' },
+      { value: 'QQQ', label: 'QQQ - Nasdaq 100' },
+      { value: 'IWM', label: 'IWM - Russell 2000' },
+      { value: 'SPXL', label: 'SPXL - 3x S&P 500 (leveraged)' },
+    ],
+    riskOff: [
+      { value: 'XLU', label: 'XLU - Utilities (default)' },
+      { value: 'SPLV', label: 'SPLV - Low Volatility' },
+      { value: 'USMV', label: 'USMV - Min Volatility' },
+    ],
+  },
+  'lumber-gold': {
+    riskOn: [
+      { value: 'WOOD', label: 'WOOD - Timber & Forestry (default for signal calc)' },
+      { value: 'XLI', label: 'XLI - Industrials' },
+      { value: 'XLB', label: 'XLB - Materials' },
+      { value: 'IYM', label: 'IYM - Basic Materials' },
+    ],
+    riskOff: [
+      { value: 'GLD', label: 'GLD - Gold (default)' },
+      { value: 'IAU', label: 'IAU - Gold Trust' },
+      { value: 'TLT', label: 'TLT - 20+ Year Treasury' },
+      { value: 'PDBC', label: 'PDBC - Commodities' },
+    ],
+  },
+  'treasury-curve': {
+    riskOn: [
+      { value: 'IEF', label: 'IEF - 7-10 Year Treasury (default for signal calc)' },
+      { value: 'SHY', label: 'SHY - 1-3 Year Treasury' },
+      { value: 'VTEB', label: 'VTEB - Municipal Bonds' },
+    ],
+    riskOff: [
+      { value: 'TLT', label: 'TLT - 20+ Year Treasury (default)' },
+      { value: 'EDV', label: 'EDV - Extended Duration Treasury' },
+      { value: 'VGLT', label: 'VGLT - Long-Term Treasury' },
+    ],
+  },
+  'sp500-ma': {
+    riskOn: [
+      { value: 'SPY', label: 'SPY - S&P 500 (default)' },
+      { value: 'SPXL', label: 'SPXL - 3x S&P 500 (leveraged)' },
+      { value: 'QQQ', label: 'QQQ - Nasdaq 100' },
+      { value: 'VTI', label: 'VTI - Total Stock Market' },
+    ],
+    riskOff: [
+      { value: 'SHY', label: 'SHY - 1-3 Year Treasury (default)' },
+      { value: 'TLT', label: 'TLT - 20+ Year Treasury' },
+      { value: 'SPLV', label: 'SPLV - Low Volatility' },
+      { value: 'VMOT', label: 'VMOT - Multi-Asset' },
+    ],
+  },
+  'vix-defensive': {
+    riskOn: [
+      { value: 'SPHB', label: 'SPHB - High Beta (default)' },
+      { value: 'SPXL', label: 'SPXL - 3x S&P 500 (leveraged)' },
+      { value: 'TQQQ', label: 'TQQQ - 3x Nasdaq (leveraged)' },
+      { value: 'UPRO', label: 'UPRO - 3x S&P 500 (leveraged)' },
+    ],
+    riskOff: [
+      { value: 'SPLV', label: 'SPLV - Low Volatility (default)' },
+      { value: 'USMV', label: 'USMV - Min Volatility' },
+      { value: 'VXX', label: 'VXX - VIX Futures (very high risk)' },
+      { value: 'VIXY', label: 'VIXY - VIX Futures (very high risk)' },
+    ],
+  },
+};
+
 export default function SimpleBacktestPage() {
   const [config, setConfig] = useState<BacktestRequest>({
     signalType: 'utilities-spy',
-    startDate: '2015-01-01',
+    startDate: '2023-01-01',
     endDate: '2024-12-31',
     initialCapital: 10000,
     fastMode: false,
@@ -85,6 +159,15 @@ export default function SimpleBacktestPage() {
   const [result, setResult] = useState<BacktestResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Get default symbols for the selected signal
+  const currentDefaults = useMemo(() => {
+    const signalConfig = SIGNAL_CONFIGS[config.signalType as keyof typeof SIGNAL_CONFIGS];
+    return {
+      riskOn: signalConfig?.riskOnSymbol || 'SPY',
+      riskOff: signalConfig?.riskOffSymbol || 'XLU',
+    };
+  }, [config.signalType]);
 
   const runBacktest = async () => {
     setLoading(true);
@@ -121,23 +204,23 @@ export default function SimpleBacktestPage() {
     <>
       {/* Page Header */}
       <PageHeader
-        title="Simple Backtesting"
-        subtitle="Test historical performance of Gayed signals"
+        title="Strategy Backtesting"
+        subtitle="Validate signal performance with historical market data"
       />
 
       <div className="space-y-8">
         {/* Configuration Panel */}
-        <ContentCard title="Backtest Configuration" subtitle="Configure your backtest parameters">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+        <ContentCard title="Configuration" subtitle="Set your strategy parameters">
+          <div className="space-y-8">
             {/* Signal Selection */}
-            <div>
-              <label className="block text-sm font-medium text-theme-text mb-2">
-                Signal Type
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-theme-text">
+                Signal Strategy
               </label>
               <select
                 value={config.signalType}
                 onChange={(e) => setConfig({ ...config, signalType: e.target.value })}
-                className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
+                className="w-full px-4 py-3 text-base border border-theme-border rounded-lg bg-theme-card text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-all hover:border-theme-primary/50 cursor-pointer"
               >
                 {SIGNAL_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -145,102 +228,148 @@ export default function SimpleBacktestPage() {
                   </option>
                 ))}
               </select>
+              <p className="text-xs text-theme-text-muted leading-relaxed">
+                {SIGNAL_OPTIONS.find(opt => opt.value === config.signalType)?.description}
+              </p>
             </div>
 
-            {/* Initial Capital */}
-            <div>
-              <label className="block text-sm font-medium text-theme-text mb-2">
-                Initial Capital ($)
-              </label>
-              <input
-                type="number"
-                value={config.initialCapital}
-                onChange={(e) => setConfig({ ...config, initialCapital: Number(e.target.value) })}
-                min="1000"
-                step="1000"
-                className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
-              />
+            {/* Asset Pair Selection */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Risk-On Asset */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-theme-text">
+                  Risk-On Asset
+                </label>
+                <select
+                  value={config.riskOnSymbol || ''}
+                  onChange={(e) => setConfig({ ...config, riskOnSymbol: e.target.value || undefined })}
+                  className="w-full px-4 py-3 text-base border border-theme-border rounded-lg bg-theme-card text-theme-text focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 hover:border-green-500/50 transition-all cursor-pointer"
+                >
+                  <option value="">Default ({currentDefaults.riskOn})</option>
+                  {SIGNAL_SPECIFIC_ETFS[config.signalType as keyof typeof SIGNAL_SPECIFIC_ETFS]?.riskOn.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-theme-text-muted">Hold when signal is bullish</p>
+              </div>
+
+              {/* Risk-Off Asset */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-theme-text">
+                  Risk-Off Asset
+                </label>
+                <select
+                  value={config.riskOffSymbol || ''}
+                  onChange={(e) => setConfig({ ...config, riskOffSymbol: e.target.value || undefined })}
+                  className="w-full px-4 py-3 text-base border border-theme-border rounded-lg bg-theme-card text-theme-text focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 hover:border-red-500/50 transition-all cursor-pointer"
+                >
+                  <option value="">Default ({currentDefaults.riskOff})</option>
+                  {SIGNAL_SPECIFIC_ETFS[config.signalType as keyof typeof SIGNAL_SPECIFIC_ETFS]?.riskOff.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-theme-text-muted">Hold when signal is defensive</p>
+              </div>
             </div>
 
-            {/* Start Date */}
-            <div>
-              <label className="block text-sm font-medium text-theme-text mb-2">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={config.startDate}
-                onChange={(e) => setConfig({ ...config, startDate: e.target.value })}
-                className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
-              />
-            </div>
-
-            {/* End Date */}
-            <div>
-              <label className="block text-sm font-medium text-theme-text mb-2">
-                End Date
-              </label>
-              <input
-                type="date"
-                value={config.endDate}
-                onChange={(e) => setConfig({ ...config, endDate: e.target.value })}
-                className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-theme-border rounded-xl bg-theme-card text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary/50 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Run Button with Mode Toggle */}
-          <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            {/* Fast Mode Toggle */}
-            <div className="flex items-center space-x-3">
-              <label className="text-sm font-medium text-theme-text">Fast Mode</label>
-              <button
-                onClick={() => setConfig({ ...config, fastMode: !config.fastMode })}
-                className={`group relative flex items-center px-2 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-primary/50 ${
-                  config.fastMode
-                    ? 'bg-theme-primary/10 hover:bg-theme-primary/20 border-theme-primary/20 hover:border-theme-primary/30'
-                    : 'bg-theme-border/10 hover:bg-theme-border/20 border-theme-border hover:border-theme-border'
-                }`}
-                aria-label={`Fast mode ${config.fastMode ? 'enabled' : 'disabled'}`}
-                title={config.fastMode ? 'Disable fast mode (approximate data)' : 'Enable fast mode (approximate data)'}
-              >
-                {/* Toggle Track */}
-                <div className="relative w-11 h-6 bg-theme-border rounded-full transition-colors duration-200">
-                  {/* Toggle Slider */}
-                  <div
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-sm transition-all duration-200 flex items-center justify-center ${
-                      config.fastMode
-                        ? 'translate-x-5 bg-theme-primary'
-                        : 'translate-x-0 bg-theme-card'
-                    }`}
-                  >
-                    {config.fastMode && <Zap className="w-3 h-3 text-white" />}
-                  </div>
+            {/* Test Parameters */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {/* Initial Capital */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-theme-text">
+                  Initial Capital
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-theme-text-muted">$</span>
+                  <input
+                    type="number"
+                    value={config.initialCapital}
+                    onChange={(e) => setConfig({ ...config, initialCapital: Number(e.target.value) })}
+                    min="1000"
+                    step="1000"
+                    className="w-full pl-8 pr-4 py-3 text-base border border-theme-border rounded-lg bg-theme-card text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-all hover:border-theme-primary/50"
+                  />
                 </div>
-              </button>
-              <span className="text-xs text-theme-text-muted">
-                {config.fastMode ? 'Approximate data' : 'Detailed data'}
-              </span>
+              </div>
+
+              {/* Date Range */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-theme-text">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={config.startDate}
+                  onChange={(e) => setConfig({ ...config, startDate: e.target.value })}
+                  className="w-full px-4 py-3 text-base border border-theme-border rounded-lg bg-theme-card text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-all hover:border-theme-primary/50 cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-theme-text">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={config.endDate}
+                  onChange={(e) => setConfig({ ...config, endDate: e.target.value })}
+                  className="w-full px-4 py-3 text-base border border-theme-border rounded-lg bg-theme-card text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-all hover:border-theme-primary/50 cursor-pointer"
+                />
+              </div>
             </div>
 
-            {/* Run Button */}
-            <button
-              onClick={runBacktest}
-              disabled={loading}
-              className="w-full sm:w-auto px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl flex items-center justify-center space-x-2 transition-all shadow-sm hover:shadow-lg"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Running Backtest...</span>
-                </>
-              ) : (
-                <>
-                  <Play className="h-5 w-5" />
-                  <span>Run Backtest</span>
-                </>
-              )}
-            </button>
+            {/* Action Bar */}
+            <div className="pt-6 border-t border-theme-border/30">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                {/* Fast Mode Toggle */}
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <button
+                    onClick={() => setConfig({ ...config, fastMode: !config.fastMode })}
+                    className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary/30 ${
+                      config.fastMode ? 'bg-theme-primary' : 'bg-theme-border'
+                    }`}
+                    aria-label={`Fast mode ${config.fastMode ? 'enabled' : 'disabled'}`}
+                  >
+                    <div
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                        config.fastMode ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-theme-text group-hover:text-theme-primary transition-colors">
+                      Fast Mode
+                    </span>
+                    <p className="text-xs text-theme-text-muted">
+                      {config.fastMode ? 'Approximate data' : 'Full precision'}
+                    </p>
+                  </div>
+                </label>
+
+                {/* Run Button */}
+                <button
+                  onClick={runBacktest}
+                  disabled={loading}
+                  className="sm:w-auto px-8 py-3 bg-theme-primary hover:bg-theme-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg flex items-center justify-center gap-2.5 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Running...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4" />
+                      <span>Run Backtest</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </ContentCard>
 
@@ -342,30 +471,44 @@ export default function SimpleBacktestPage() {
                   <thead className="bg-theme-card-secondary">
                     <tr>
                       <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text">Date</th>
-                      <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text">Action</th>
-                      <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text">Symbol</th>
+                      <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text">Position</th>
                       <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text">Price</th>
                       <th className="px-3 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-theme-text hidden sm:table-cell">Reason</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-theme-border">
-                    {result.trades.map((trade, index) => (
-                      <tr key={index} className="hover:bg-theme-card-hover transition-colors">
-                        <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-theme-text whitespace-nowrap">{trade.date}</td>
-                        <td className="px-3 md:px-4 py-3">
-                          <span className={`inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-medium ${
-                            trade.action === 'BUY'
-                              ? 'bg-theme-success-bg text-theme-success border border-theme-success-border'
-                              : 'bg-theme-danger-bg text-theme-danger border border-theme-danger-border'
-                          }`}>
-                            {trade.action}
-                          </span>
-                        </td>
-                        <td className="px-3 md:px-4 py-3 text-xs md:text-sm font-medium text-theme-text">{trade.symbol}</td>
-                        <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-theme-text whitespace-nowrap">{trade.price}</td>
-                        <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-theme-text-muted hidden sm:table-cell">{trade.reason}</td>
-                      </tr>
-                    ))}
+                    {result.trades.map((trade, index) => {
+                      const isRiskOn = trade.action === 'BUY';
+                      return (
+                        <tr key={index} className="hover:bg-theme-card-hover transition-colors">
+                          <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-theme-text whitespace-nowrap">{trade.date}</td>
+                          <td className="px-3 md:px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <span className={`inline-flex items-center gap-1.5 px-2 md:px-3 py-1 rounded-lg text-xs font-medium ${
+                                isRiskOn
+                                  ? 'bg-green-500/10 text-green-600 border border-green-500/30'
+                                  : 'bg-red-500/10 text-red-600 border border-red-500/30'
+                              }`}>
+                                {isRiskOn ? (
+                                  <>
+                                    <TrendingUp className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Risk-On:</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <TrendingDown className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Risk-Off:</span>
+                                  </>
+                                )}
+                                <span className="font-semibold">{trade.symbol}</span>
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-theme-text whitespace-nowrap">{trade.price}</td>
+                          <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-theme-text-muted hidden sm:table-cell">{trade.reason}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

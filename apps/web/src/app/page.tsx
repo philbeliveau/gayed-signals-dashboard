@@ -13,6 +13,7 @@ import { AnalysisType, TextAnalysisResponse } from '../types/agents';
 import DataProvenanceBadge from '../components/signals/DataProvenanceBadge';
 import DataQualityWarning, { DataQualityIssue } from '../components/signals/DataQualityWarning';
 import SignalConfidenceTooltip from '../components/signals/SignalConfidenceTooltip';
+import SignalMethodologyCard from '../components/signals/SignalMethodologyCard';
 // import AgentDebateView from '../components/AgentDebateView';
 
 interface DataProvenance {
@@ -1136,8 +1137,7 @@ export default function Dashboard() {
           {signals.filter(signal => signal !== null).map((signal, index) => (
             <div
               key={index}
-              onClick={() => handleSignalClick(signal)}
-              className="bg-theme-card border border-theme-border/50 rounded-2xl p-6 lg:p-8 hover:scale-[1.01] transition-all duration-300 ease-out shadow-sm hover:shadow-lg hover:border-theme-border cursor-pointer touch-manipulation active:scale-[0.99]"
+              className="bg-theme-card border border-theme-border/50 rounded-2xl p-6 lg:p-8 hover:scale-[1.01] transition-all duration-300 ease-out shadow-sm hover:shadow-lg hover:border-theme-border touch-manipulation"
             >
               {/* Header with mobile-optimized layout */}
               <div className="flex items-start justify-between mb-6 sm:mb-8">
@@ -1215,8 +1215,18 @@ export default function Dashboard() {
                 </div>
               </div>
 
+              {/* Signal Methodology Card - PROMINENT with PDF Preview */}
+              <SignalMethodologyCard
+                signalType={signal.type}
+                currentSignal={signal.signal}
+                className="mb-6"
+              />
+
               {/* Action button - mobile optimized */}
-              <button className="w-full bg-theme-primary text-white py-3 sm:py-4 rounded-xl font-semibold hover:bg-theme-primary-hover transition-all duration-300 ease-out hover:shadow-md flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation min-h-[48px]">
+              <button
+                onClick={() => handleSignalClick(signal)}
+                className="w-full bg-theme-primary text-white py-3 sm:py-4 rounded-xl font-semibold hover:bg-theme-primary-hover transition-all duration-300 ease-out hover:shadow-md flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation min-h-[48px] cursor-pointer active:scale-[0.99]"
+              >
                 <span className="truncate">View ETF Recommendations</span>
                 <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               </button>

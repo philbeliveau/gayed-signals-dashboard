@@ -5,7 +5,8 @@
  * Formats backtest results for display and charting
  */
 
-import type { BacktestResult, PerformanceMetrics, TradeRecord, DailyPortfolioValue } from '../engine/types';
+import type { BacktestResult, PerformanceMetrics, TradeRecord, DailyPortfolioValue, BacktestConfig } from '../engine/types';
+import { SIGNAL_CONFIGS } from '../signals/SignalAdapter';
 
 /**
  * Format for chart display (Plotly)
@@ -35,7 +36,8 @@ export function formatPerformanceMetrics(metrics: PerformanceMetrics) {
 export function formatEquityCurve(
   equityCurve: DailyPortfolioValue[],
   trades?: TradeRecord[],
-  signalThreshold?: number
+  signalThreshold?: number,
+  config?: BacktestConfig
 ): ChartData {
   const dates = equityCurve.map(point => point.date);
   const portfolioValues = equityCurve.map(point => point.value);
@@ -86,60 +88,112 @@ export function formatEquityCurve(
     }
   }
 
-  // Transaction markers
-  if (trades && trades.length > 0) {
-    const buyTrades = trades.filter(t => t.action === 'BUY');
-    const sellTrades = trades.filter(t => t.action === 'SELL');
+  // Calculate position shading shapes (Risk-On vs Risk-Off periods)
+  const shapes: any[] = [];
 
-    // Buy markers
-    if (buyTrades.length > 0) {
-      const buyDates = buyTrades.map(t => t.date);
-      const buyValues = buyTrades.map(trade => {
-        const idx = dates.indexOf(trade.date);
-        return idx !== -1 ? portfolioValues[idx] : null;
-      });
+  if (trades && trades.length > 0 && config) {
+    // Determine Risk-On and Risk-Off symbols from config
+    // Use custom symbols if provided, otherwise use defaults from SIGNAL_CONFIGS
+    const signalConfig = SIGNAL_CONFIGS[config.signalType];
+    const riskOnSymbol = config.riskOnSymbol || signalConfig.riskOnSymbol;
+    const riskOffSymbol = config.riskOffSymbol || signalConfig.riskOffSymbol;
 
-      plotlyData.push({
-        x: buyDates,
-        y: buyValues,
-        name: 'Buy',
-        type: 'scatter',
-        mode: 'markers',
-        marker: {
-          color: 'rgb(34, 197, 94)',
-          size: 12,
-          symbol: 'triangle-up',
-          line: { color: 'white', width: 1 },
-        },
-        yaxis: 'y',
-        hovertemplate: '<b>BUY</b><br>Date: %{x}<br>Portfolio: $%{y:,.2f}<extra></extra>',
+    // Build position timeline from equity curve data (most reliable source)
+    // The equityCurve contains the actual position held each day
+    let currentPosition: string | null = null;
+    let periodStart: string | null = null;
+
+    for (let i = 0; i < equityCurve.length; i++) {
+      const point = equityCurve[i];
+      const positionSymbol = point.position;
+
+      // Determine if this is Risk-On or Risk-Off based on the symbol held
+      // Compare against config symbols (definitive source of truth)
+      let positionType: string | null = null;
+
+      if (positionSymbol && positionSymbol !== 'CASH') {
+        if (positionSymbol === riskOnSymbol) {
+          positionType = 'RISK_ON';
+        } else if (positionSymbol === riskOffSymbol) {
+          positionType = 'RISK_OFF';
+        }
+        // If symbol doesn't match either config symbol, it remains null (no shading)
+      }
+
+      // If position changed, close previous period and start new one
+      if (positionType !== currentPosition) {
+        // Close previous period
+        if (currentPosition !== null && periodStart !== null) {
+          shapes.push({
+            type: 'rect',
+            xref: 'x',
+            yref: 'paper',
+            x0: periodStart,
+            x1: point.date,
+            y0: 0,
+            y1: 1,
+            fillcolor: currentPosition === 'RISK_ON'
+              ? 'rgba(34, 197, 94, 0.15)'  // Green for Risk-On
+              : 'rgba(239, 68, 68, 0.15)',  // Red for Risk-Off
+            line: { width: 0 },
+            layer: 'below',
+          });
+        }
+
+        // Start new period
+        currentPosition = positionType;
+        periodStart = point.date;
+      }
+    }
+
+    // Close final period
+    if (currentPosition !== null && periodStart !== null) {
+      shapes.push({
+        type: 'rect',
+        xref: 'x',
+        yref: 'paper',
+        x0: periodStart,
+        x1: dates[dates.length - 1],
+        y0: 0,
+        y1: 1,
+        fillcolor: currentPosition === 'RISK_ON'
+          ? 'rgba(34, 197, 94, 0.15)'
+          : 'rgba(239, 68, 68, 0.15)',
+        line: { width: 0 },
+        layer: 'below',
       });
     }
 
-    // Sell markers
-    if (sellTrades.length > 0) {
-      const sellDates = sellTrades.map(t => t.date);
-      const sellValues = sellTrades.map(trade => {
-        const idx = dates.indexOf(trade.date);
-        return idx !== -1 ? portfolioValues[idx] : null;
-      });
+    // Add position indicator traces for legend only (invisible points)
+    plotlyData.push({
+      x: [dates[0]],
+      y: [null],
+      name: 'Risk-On Period',
+      type: 'scatter',
+      mode: 'markers',
+      marker: {
+        color: 'rgba(34, 197, 94, 0.3)',
+        size: 15,
+        symbol: 'square',
+      },
+      showlegend: true,
+      hoverinfo: 'skip',
+    });
 
-      plotlyData.push({
-        x: sellDates,
-        y: sellValues,
-        name: 'Sell',
-        type: 'scatter',
-        mode: 'markers',
-        marker: {
-          color: 'rgb(239, 68, 68)',
-          size: 12,
-          symbol: 'triangle-down',
-          line: { color: 'white', width: 1 },
-        },
-        yaxis: 'y',
-        hovertemplate: '<b>SELL</b><br>Date: %{x}<br>Portfolio: $%{y:,.2f}<extra></extra>',
-      });
-    }
+    plotlyData.push({
+      x: [dates[0]],
+      y: [null],
+      name: 'Risk-Off Period',
+      type: 'scatter',
+      mode: 'markers',
+      marker: {
+        color: 'rgba(239, 68, 68, 0.3)',
+        size: 15,
+        symbol: 'square',
+      },
+      showlegend: true,
+      hoverinfo: 'skip',
+    });
   }
 
   // Layout configuration with dual y-axes
@@ -178,6 +232,7 @@ export function formatEquityCurve(
     dragmode: 'zoom',
     plot_bgcolor: 'rgba(0, 0, 0, 0)',
     paper_bgcolor: 'rgba(0, 0, 0, 0)',
+    shapes: shapes.length > 0 ? shapes : undefined,
   };
 
   return {
@@ -328,7 +383,7 @@ export function formatBacktestResult(result: BacktestResult): FormattedBacktestR
       result.config.startDate,
       result.config.endDate
     ),
-    equityCurve: formatEquityCurve(result.equityCurve, result.trades, threshold),
+    equityCurve: formatEquityCurve(result.equityCurve, result.trades, threshold, result.config),
     trades: formatTradeHistory(result.trades),
     dataQuality: result.dataQuality,
     signalThreshold: threshold,
