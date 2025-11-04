@@ -69,6 +69,15 @@ export async function fetchSignalsWithFallback(
       const adapted = SignalsAdapter.toLegacyFormat(v2Response);
       const duration = Date.now() - startTime;
 
+      // Check if we got all expected signals
+      const signalCount = adapted.signals.length;
+      if (signalCount < 5) {
+        console.warn(
+          `[Signal Fetch] Railway only returned ${signalCount} signal(s), expected 5. Falling back to local API for complete data.`
+        );
+        throw new Error(`Incomplete signals from Railway: only ${signalCount} of 5`);
+      }
+
       logMigrationMetric('railway', true, {
         endpoint: '/api/v2/signals',
         duration,
