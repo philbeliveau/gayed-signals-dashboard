@@ -315,26 +315,86 @@ export default function SimpleBacktestPage() {
             </ContentCard>
 
             {/* Equity Curve Chart */}
-            <ContentCard title="Equity Curve" subtitle="Portfolio value over time">
+            <ContentCard title="Equity Curve" subtitle="Portfolio value and signal indicator over time">
               <div className="h-96">
                 <Line
                   data={result.equityCurve}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                      mode: 'index',
+                      intersect: false,
+                    },
                     plugins: {
-                      legend: { display: false },
+                      legend: {
+                        display: true,
+                        position: 'top' as const,
+                        labels: {
+                          usePointStyle: true,
+                          padding: 15,
+                          font: {
+                            size: 12,
+                            weight: 500,
+                          },
+                        },
+                      },
                       tooltip: {
                         callbacks: {
-                          label: (context: any) => `$${context.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                          label: (context: any) => {
+                            if (context.parsed.y === null) return '';
+                            const label = context.dataset.label || '';
+
+                            // Portfolio value and transaction markers
+                            if (label === 'Portfolio Value' || label === 'Buy' || label === 'Sell') {
+                              const value = `$${context.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                              return label === 'Buy' || label === 'Sell'
+                                ? `${label}: ${value}`
+                                : `${label}: ${value}`;
+                            }
+
+                            // Signal indicator and threshold
+                            if (label === 'Signal Indicator' || label.startsWith('Threshold')) {
+                              return `${label}: ${context.parsed.y.toFixed(4)}`;
+                            }
+
+                            return `${label}: ${context.parsed.y}`;
+                          },
                         },
                       },
                     },
                     scales: {
                       y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                          display: true,
+                          text: 'Portfolio Value ($)',
+                        },
                         ticks: {
                           callback: (value: any) => `$${Number(value).toLocaleString()}`,
                         },
+                      },
+                      y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                          display: true,
+                          text: 'Signal Indicator',
+                        },
+                        grid: {
+                          drawOnChartArea: false,
+                        },
+                        ticks: {
+                          callback: (value: any) => Number(value).toFixed(2),
+                        },
+                      },
+                    },
+                    elements: {
+                      line: {
+                        tension: 0.1,
                       },
                     },
                   }}
