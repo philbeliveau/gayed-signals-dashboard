@@ -27,7 +27,16 @@ gayed-signals-dashboard/
 │   │   │   │   │   ├── factories/     # NEW: Signal factory pattern
 │   │   │   │   │   ├── calculators/   # Individual signal calculators
 │   │   │   │   │   └── engines/       # Signal orchestration
-│   │   │   │   ├── market-data/       # Existing market data (DEPRECATED - use data-pipeline)
+│   │   │   │   ├── market-data/       # DEPRECATED - Use Railway backend via @/lib/api/market-data-v2
+│   │   │   │   ├── backtesting/       # Backtesting infrastructure
+│   │   │   │   │   ├── engines/       # Complex backtest execution engines
+│   │   │   │   │   ├── simple/        # NEW (Story 4.0j): Simple Gayed signals backtesting
+│   │   │   │   │   │   ├── engine/    # SimpleBacktestEngine.ts
+│   │   │   │   │   │   ├── signals/   # SignalAdapter.ts (wraps signal calculators)
+│   │   │   │   │   │   ├── data/      # MarketDataFetcher.ts (uses market-data-v2)
+│   │   │   │   │   │   └── results/   # BacktestResults.ts
+│   │   │   │   │   ├── services/      # DataAvailabilityService (Story 4.0i)
+│   │   │   │   │   └── types/         # Backtesting type definitions
 │   │   │   │   └── risk-management/   # Existing risk management (PRESERVED)
 │   │   │   ├── components/            # Shared UI components
 │   │   │   │   ├── agents/            # NEW: AutoGen-specific components
@@ -36,6 +45,16 @@ gayed-signals-dashboard/
 │   │   │   │   ├── signals/           # Existing signal components
 │   │   │   │   └── ui/                # Existing shared UI components
 │   │   │   ├── lib/                   # Enhanced utilities and configurations
+│   │   │   │   ├── api/               # Railway backend client infrastructure (Story 4.0h/4.0i/4.0j)
+│   │   │   │   │   ├── railway-client.ts       # Base HTTP client with retry
+│   │   │   │   │   ├── signals-v2.ts           # Calculated signals service (Story 4.0h)
+│   │   │   │   │   ├── market-data-v2.ts       # Raw market data service (Story 4.0j)
+│   │   │   │   │   ├── fetch-signals.ts        # Unified fetch with fallback
+│   │   │   │   │   ├── performance-monitor.ts  # Performance tracking
+│   │   │   │   │   └── types.ts                # API type definitions
+│   │   │   │   ├── adapters/          # Data format transformers
+│   │   │   │   │   └── signals-adapter.ts      # V2 → Legacy transformer
+│   │   │   │   ├── feature-flags.ts   # Feature flag utilities
 │   │   │   │   ├── auth/              # Authentication utilities (UUID mapping)
 │   │   │   │   ├── database/          # Database connection and queries
 │   │   │   │   ├── websocket/         # WebSocket client management

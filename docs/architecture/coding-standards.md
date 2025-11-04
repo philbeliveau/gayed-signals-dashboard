@@ -1,10 +1,43 @@
 # Coding Standards
 
-## Data Pipeline Standards (NEW)
+## Data Pipeline Standards (Railway Backend Pattern)
 
-### Data Fetching Pattern
+### Data Fetching Pattern (Frontend)
+
+**CRITICAL:** Frontend code MUST use Railway backend wrappers, NOT UnifiedDataService directly.
+
 ```typescript
-// ✅ ALWAYS use UnifiedDataService for data fetching
+// ✅ FRONTEND: Use Railway backend via service wrappers
+import { fetchSignalsWithFallback } from '@/lib/api/fetch-signals';
+import { MarketDataV2Service } from '@/lib/api/market-data-v2';
+
+// For calculated signals (dashboard)
+const signals = await fetchSignalsWithFallback({
+  symbols: ['SPY', 'TLT'],
+  fast: false
+});
+
+// For raw market data (backtesting - Story 4.0i)
+const marketDataService = new MarketDataV2Service();
+const marketData = await marketDataService.getMarketData({
+  symbols: ['WOOD', 'GLD'],
+  startDate: '2024-01-01',
+  endDate: '2024-11-01'
+});
+
+// ❌ FRONTEND: NEVER import UnifiedDataService directly
+import { UnifiedDataService } from '@/domains/data-pipeline/services'; // WRONG - Backend only!
+
+// ❌ FRONTEND: NEVER fetch directly from external APIs
+const response = await fetch('https://api.tiingo.com/...'); // WRONG
+```
+
+### Data Fetching Pattern (Railway Backend Only)
+
+**ONLY Railway backend code** should import UnifiedDataService:
+
+```typescript
+// ✅ RAILWAY BACKEND: Use UnifiedDataService internally
 import { UnifiedDataService } from '@/domains/data-pipeline/services';
 
 const dataService = new UnifiedDataService();
@@ -13,14 +46,23 @@ const marketData = await dataService.fetchMarketData(symbols, {
   validateQuality: true,
   useCache: true
 });
-
-// ❌ NEVER fetch directly from external APIs
-const response = await fetch('https://api.tiingo.com/...'); // WRONG
 ```
 
 ### Data Validation Pattern
+
+**Railway backend responses include automatic quality validation:**
+
 ```typescript
-// ✅ Validate ALL data before use
+// ✅ Railway backend includes quality metrics automatically
+const response = await fetchSignalsWithFallback({ symbols: ['SPY'] });
+
+// Quality validation is built into Railway response
+if (response.metadata.quality?.averageScore < 0.8) {
+  console.warn('Low quality data detected', response.metadata.quality);
+  // Handle degraded data appropriately
+}
+
+// ✅ For custom validation (backend only)
 import { DataQualityValidator } from '@/domains/data-pipeline/validators';
 
 const validation = await DataQualityValidator.validate(data);
@@ -34,8 +76,25 @@ const signal = calculateSignal(rawData); // WRONG - no validation
 ```
 
 ### Provenance Tracking Pattern
+
+**Railway backend responses include automatic provenance tracking:**
+
 ```typescript
-// ✅ Include provenance in all data operations
+// ✅ Railway backend includes provenance automatically
+const response = await fetchSignalsWithFallback({ symbols: ['SPY'] });
+
+// Provenance is built into Railway response
+console.log('Data source:', response.metadata.dataSource);
+console.log('Fetched at:', response.metadata.calculatedAt);
+
+// Access per-signal provenance
+response.signals.forEach(signal => {
+  if (signal.provenance) {
+    console.log(`${signal.type} from:`, signal.provenance.sources);
+  }
+});
+
+// ✅ For custom provenance (backend only)
 interface DataWithProvenance<T> {
   data: T;
   provenance: {
@@ -51,24 +110,197 @@ return { signals }; // WRONG - missing provenance
 ```
 
 ### Error Handling for Data Operations
+
+**Railway backend provides automatic fallback:**
+
 ```typescript
-// ✅ Graceful degradation with explicit warnings
+// ✅ Railway backend with automatic local fallback
+import { fetchSignalsWithFallback } from '@/lib/api/fetch-signals';
+import { USE_RAILWAY_BACKEND, logMigrationMetric } from '@/lib/feature-flags';
+
 try {
-  const data = await dataService.fetch();
+  // Automatic Railway → Local API fallback
+  const data = await fetchSignalsWithFallback({ symbols: ['SPY'] });
+  return data;
 } catch (error) {
-  logger.error('Data fetch failed', error);
+  // Both Railway and local API failed
+  console.error('All data sources unavailable', error);
   return {
-    data: [],
     error: 'Data unavailable',
-    degraded: true
+    available: false,
+    reason: 'ALL_SOURCES_FAILED'
   };
 }
+
+// ✅ Manual Railway fallback pattern (for custom endpoints)
+if (USE_RAILWAY_BACKEND) {
+  try {
+    const data = await fetchFromRailway();
+    logMigrationMetric('railway', true);
+    return data;
+  } catch (error) {
+    console.warn('Railway failed, falling back to local API');
+    logMigrationMetric('railway', false);
+    // Fall through to local API
+  }
+}
+
+// Fallback: local API
+const data = await fetchFromLocalAPI();
+logMigrationMetric('local', true);
+return data;
 
 // ❌ NEVER generate synthetic fallback data
 catch (error) {
   return generateFakeData(); // WRONG - violates data integrity
 }
 ```
+
+## Railway Backend Integration Pattern (Stories 4.0h/4.0i)
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────┐
+│  Frontend Application (Vercel)          │
+│  ├─ Dashboard Signals ✅                │
+│  └─ Backtesting System (Story 4.0i) 📝 │
+└────────┬────────────────────────────────┘
+         │ HTTP/REST (Railway → Local fallback)
+         ↓
+┌────────────────────────────────────────┐
+│  Railway Backend (Python FastAPI)      │
+│  ├─ /api/v2/signals (signals)          │
+│  └─ /api/v2/market-data (OHLCV data)   │
+└────────┬───────────────────────────────┘
+         │ Internal method calls
+         ↓
+┌────────────────────────────────────────┐
+│  UnifiedDataService (TypeScript)       │
+│  ├─ Tiingo API calls                   │
+│  ├─ PostgreSQL persistence             │
+│  ├─ Redis caching                      │
+│  ├─ Circuit breakers                   │
+│  ├─ Quality validation                 │
+│  └─ Provenance tracking                │
+└─────────────────────────────────────────┘
+```
+
+### Key Principles
+
+1. **Single Source of Truth:** All data flows through Railway backend
+2. **No Direct Database Access:** Frontend calls Railway API only
+3. **Automatic Caching:** Redis cache managed by Railway backend
+4. **Quality Enforcement:** Minimum quality score 0.8
+5. **Provenance Tracking:** Every data point has source information
+6. **Graceful Degradation:** Railway → Local API → Error (NO synthetic data)
+
+### Frontend Pattern
+
+```typescript
+// ✅ CORRECT: Use Railway backend wrappers
+import { fetchSignalsWithFallback } from '@/lib/api/fetch-signals';
+import { MarketDataV2Service } from '@/lib/api/market-data-v2';
+
+// Dashboard signals (Story 4.0h - COMPLETE)
+const signals = await fetchSignalsWithFallback({
+  symbols: ['SPY', 'TLT', 'XLU', 'GLD', 'XLF'],
+  fast: false
+});
+
+// Backtesting market data (Story 4.0i - IN PROGRESS)
+const marketDataService = new MarketDataV2Service();
+const marketData = await marketDataService.getMarketData({
+  symbols: ['WOOD', 'GLD'],
+  startDate: '2024-01-01',
+  endDate: '2024-11-01'
+});
+
+// ❌ WRONG: Direct imports
+import { UnifiedDataService } from '@/domains/data-pipeline/services'; // Backend only!
+import { fetchMarketData } from '@/domains/market-data/services/yahoo-finance'; // Deprecated!
+```
+
+### Railway Response Structure
+
+```typescript
+// Signal Response (from /api/v2/signals)
+interface SignalV2Response {
+  success: boolean;
+  data: SignalV2[];
+  metadata: {
+    sources: {
+      primary: 'postgresql' | 'redis' | 'live';
+      failedSources: string[];
+    };
+    quality: {
+      averageScore: number; // 0-1 scale (minimum 0.8 enforced)
+      issues: string[];
+    };
+    timing: {
+      totalMs: number;
+      cached: boolean;
+    };
+  };
+}
+
+// Market Data Response (from /api/v2/market-data - Story 4.0i)
+interface MarketDataResponse {
+  success: boolean;
+  data: Array<{
+    symbol: string;
+    date: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+  }>;
+  metadata: {
+    source: 'tiingo' | 'postgresql' | 'redis';
+    quality: {
+      score: number; // 0-1 scale (minimum 0.8 enforced)
+      issues: string[];
+    };
+    timing: {
+      totalMs: number;
+      cached: boolean;
+    };
+    provenance: {
+      dataProvider: string;
+      fetchedAt: string;
+      dataPoints: number;
+    };
+  };
+}
+```
+
+### Feature Flag Support
+
+```typescript
+// Use feature flag for gradual rollout
+import { USE_RAILWAY_BACKEND, logMigrationMetric } from '@/lib/feature-flags';
+
+if (USE_RAILWAY_BACKEND) {
+  // Use Railway backend
+  const data = await fetchSignalsWithFallback({ symbols });
+  logMigrationMetric('railway', true);
+} else {
+  // Use local API
+  const data = await fetchFromLocalAPI();
+  logMigrationMetric('local', true);
+}
+```
+
+### Performance Targets
+
+| Metric | Target | Railway Backend |
+|--------|--------|-----------------|
+| Cached responses | <500ms | ✅ ~234ms (Redis) |
+| Fresh data | <2s | ✅ ~1.2s (PostgreSQL) |
+| Fallback to local | <3s | ✅ ~2.1s (Local API) |
+| Quality score | ≥0.8 | ✅ ~0.95 (enforced) |
+| Data freshness | <60s | ✅ ~30s (real-time) |
 
 ## TypeScript/JavaScript Standards
 

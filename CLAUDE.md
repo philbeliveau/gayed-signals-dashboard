@@ -56,13 +56,14 @@ const data = await fetchSignalsWithFallback({
 
 ### **📝 In Progress**
 
-#### **1. Backtesting Migration (Story 4.0i)**
-- 📝 **Migrate backtesting to Railway backend**
-- 📝 **Remove synthetic data generation**
-- 📝 **Integrate DataAvailabilityService**
-- 📝 **Update API routes** (`/api/backtest-lumber-gold`)
+#### **1. Simple Gayed Backtesting Platform (Story 4.0j)**
+- 📝 **Create `MarketDataV2Service`** (Railway wrapper for historical data)
+- 📝 **Build simple backtesting engine** (signal → position → track performance)
+- 📝 **Integrate existing signal calculators** (5 Gayed signals)
+- 📝 **Replace broken `/backtrader` system** (expects localhost:5000 Python backend)
+- ⚠️ **Backend Task 0 BLOCKED:** Requires Railway backend team access (Python FastAPI codebase)
 
-**See:** `docs/stories/4.0i.backtest-data-integration.md`
+**See:** `docs/stories/4.0j.simple-gayed-backtesting.md`
 
 ---
 
@@ -241,6 +242,8 @@ apps/web/src/
 ├── domains/
 │   ├── trading-signals/            # Signal calculation engines
 │   ├── backtesting/                # Backtesting system
+│   │   ├── engines/                # Complex backtest engines
+│   │   └── simple/                 # Simple Gayed backtesting (Story 4.0j)
 │   ├── market-data/                # DEPRECATED - use Railway
 │   └── ai-agents/                  # AutoGen agents
 └── app/
@@ -436,11 +439,12 @@ npm run test:coverage
 
 ## 📝 **NEXT STEPS**
 
-### **In Progress (Story 4.0i)**
-1. 📝 Migrate backtesting to Railway backend
-2. 📝 Remove synthetic data from backtesting orchestrator
-3. 📝 Create DataAvailabilityService
-4. 📝 Update `/api/backtest-lumber-gold/` routes
+### **In Progress (Story 4.0j)**
+1. 📝 Create `MarketDataV2Service` (Task 2A - Railway wrapper)
+2. 📝 Build simple backtesting engine in `domains/backtesting/simple/`
+3. 📝 Integrate 5 existing Gayed signal calculators
+4. 📝 Create `/backtest-simple` UI (replace broken `/backtrader`)
+5. ⚠️ **Backend Task 0:** Requires Railway backend team (Python FastAPI - separate codebase)
 
 ### **Upcoming**
 - 🔜 Railway backend health monitoring dashboard
