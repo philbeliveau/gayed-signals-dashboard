@@ -397,9 +397,31 @@ app.get('/api/v2/signals', async (req: Request, res: Response) => {
           });
         });
 
+        // DIAGNOSTIC LOGGING: Market data fetch results
+        logger.info('[Railway Backend] Market data fetch results:', {
+          requestedSymbols: symbols,
+          receivedSymbols: Object.keys(marketDataBySymbol),
+          dataPointCounts: Object.fromEntries(
+            Object.entries(marketDataBySymbol).map(([symbol, data]) => [symbol, data.length])
+          ),
+          missingSymbols: symbols.filter(s => !marketDataBySymbol[s] || marketDataBySymbol[s].length === 0),
+          dataSource: marketDataResult.source,
+          qualityScore: marketDataResult.quality?.score || 0,
+          cached: marketDataResult.cached
+        });
+
         // Calculate signals
         const signals = SignalOrchestrator.calculateAllSignals(marketDataBySymbol);
         const consensus = SignalOrchestrator.calculateConsensusSignal(signals);
+
+        // DIAGNOSTIC LOGGING: Signal calculation results
+        logger.info('[Railway Backend] Signal calculation results:', {
+          totalSignals: signals.length,
+          validSignals: signals.filter(s => s !== null).length,
+          nullSignals: signals.filter(s => s === null).length,
+          successfulTypes: signals.filter(s => s !== null).map(s => s?.type),
+          failedTypes: signals.map((s, i) => s === null ? symbols[i] : null).filter(Boolean)
+        });
 
         // Transform to V2 API format
         const validSignals = signals.filter((s): s is NonNullable<typeof s> => s !== null);
