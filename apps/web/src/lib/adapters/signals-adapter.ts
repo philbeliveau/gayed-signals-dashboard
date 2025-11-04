@@ -33,6 +33,30 @@ export class SignalsAdapter {
       };
     };
   } {
+    // Debug logging to identify the issue
+    console.log('[SignalsAdapter] Raw v2Response:', JSON.stringify(v2Response, null, 2));
+
+    // Defensive validation
+    if (!v2Response) {
+      console.error('[SignalsAdapter] v2Response is null or undefined');
+      throw new Error('Invalid response: v2Response is null or undefined');
+    }
+
+    if (!v2Response.data) {
+      console.error('[SignalsAdapter] v2Response.data is missing:', v2Response);
+      throw new Error('Invalid response: missing data field');
+    }
+
+    if (!v2Response.metadata) {
+      console.error('[SignalsAdapter] v2Response.metadata is missing:', v2Response);
+      throw new Error('Invalid response: missing metadata field');
+    }
+
+    // Additional defensive checks for nested properties
+    const dataSource = v2Response.metadata?.sources?.primary || 'railway_backend';
+    const cached = v2Response.metadata?.timing?.cached || false;
+    const quality = v2Response.metadata?.quality || { averageScore: 0, issues: ['Unknown quality'] };
+
     const signals = v2Response.data.map((v2Signal) =>
       this.transformSignal(v2Signal)
     );
@@ -43,9 +67,9 @@ export class SignalsAdapter {
       consensus,
       metadata: {
         calculatedAt: new Date().toISOString(),
-        dataSource: v2Response.metadata.sources.primary,
-        cached: v2Response.metadata.timing.cached,
-        quality: v2Response.metadata.quality,
+        dataSource,
+        cached,
+        quality,
       },
     };
   }

@@ -31,9 +31,13 @@ export class SignalsV2Service {
         endpoint
       );
 
+      // Debug logging to see what we actually get
+      console.log('[SignalsV2Service] Raw response from Railway:', JSON.stringify(response, null, 2));
+
       // Validate response structure
       this.validateResponse(response);
 
+      console.log('[SignalsV2Service] Response validated successfully');
       return response;
     } catch (error) {
       console.error('[SignalsV2Service] Failed to fetch signals:', error);

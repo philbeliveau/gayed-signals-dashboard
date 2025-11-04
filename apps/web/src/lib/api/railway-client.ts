@@ -87,7 +87,21 @@ export class RailwayClient {
         const data = await response.json();
         this.logResponse(url, data, attempt);
 
-        return data;
+        // Type assertion and validation
+        const typedResponse = data as RailwayResponse<T>;
+
+        // Ensure the response has the expected structure
+        if (!typedResponse || typeof typedResponse !== 'object') {
+          throw new Error('Invalid response structure from Railway backend');
+        }
+
+        console.log('[Railway Client] Returning typed response:', {
+          hasSuccess: 'success' in typedResponse,
+          hasData: 'data' in typedResponse,
+          hasMetadata: 'metadata' in typedResponse,
+        });
+
+        return typedResponse;
       } catch (error) {
         lastError = this.handleError(error, attempt);
 
