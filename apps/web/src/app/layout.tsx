@@ -26,8 +26,11 @@ export const metadata: Metadata = {
   keywords: "trading, market signals, risk management, market regime, financial analysis, investment research, gayed report",
   authors: [{ name: "The Gayed Report" }],
   icons: {
-    icon: '/logo.webp',
-    shortcut: '/logo.webp',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/logo.webp', type: 'image/webp' }
+    ],
+    shortcut: '/favicon.ico',
     apple: '/logo.webp',
   },
 };
