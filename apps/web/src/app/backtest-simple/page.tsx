@@ -296,7 +296,7 @@ export default function SimpleBacktestPage() {
 
             {/* Equity Curve Chart */}
             <ContentCard title="Equity Curve" subtitle="Portfolio value and signal indicator over time (zoom/pan enabled)">
-              <div className="h-96">
+              <div className="h-[600px]">
                 <Plot
                   data={result.equityCurve.data}
                   layout={result.equityCurve.layout}
