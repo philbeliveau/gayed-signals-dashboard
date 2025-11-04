@@ -437,7 +437,6 @@ export default function Dashboard() {
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
   const [showETFModal, setShowETFModal] = useState(false);
   const [loadingMode, setLoadingMode] = useState<'fast' | 'full' | null>(null);
-  const [isFullMode, setIsFullMode] = useState(true);
   // NEW: Agent debate state
   const [agentConversation, setAgentConversation] = useState<AgentMessage[]>([]);
   const [reasoning, setReasoning] = useState<string[]>([]);
@@ -928,24 +927,12 @@ export default function Dashboard() {
             <button
               onClick={() => {
                 setLoading(true);
-                fetchSignals(!isFullMode);
+                fetchSignals(false);
               }}
               className="w-full px-8 py-4 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-hover transition-all duration-300 ease-out font-semibold text-lg shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
             >
               <Activity className="w-6 h-6" />
               Load Market Dashboard
-            </button>
-
-            <button
-              onClick={() => {
-                setLoading(true);
-                setIsFullMode(false);
-                fetchSignals(true);
-              }}
-              className="w-full px-8 py-4 bg-theme-card-secondary border border-theme-border/50 rounded-xl text-theme-text hover:bg-theme-card-hover hover:border-theme-border transition-all duration-300 ease-out font-medium flex items-center justify-center gap-3"
-            >
-              <RefreshCw className="w-5 h-5" />
-              Load Fast Mode (Cached Data)
             </button>
           </div>
         </div>
@@ -973,29 +960,16 @@ export default function Dashboard() {
           <div className="text-theme-danger text-6xl mb-6">⚠</div>
           <div className="text-2xl font-bold text-theme-danger mb-4">Error Loading Signals</div>
           <div className="text-theme-text-muted mb-8 leading-relaxed">{error}</div>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button 
-              onClick={() => {
-                setLoading(true);
-                setError(null);
-                fetchSignals(!isFullMode);
-              }}
-              className="px-6 py-3 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-hover transition-all duration-200 font-medium shadow-md"
-            >
-              Try Again
-            </button>
-            <button 
-              onClick={() => {
-                setLoading(true);
-                setError(null);
-                setIsFullMode(false);
-                fetchSignals(true);
-              }}
-              className="px-6 py-3 bg-theme-card border border-theme-border rounded-xl text-theme-text hover:bg-theme-card-hover transition-all duration-200 font-medium"
-            >
-              Try Fast Mode
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              fetchSignals(false);
+            }}
+            className="px-6 py-3 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-hover transition-all duration-200 font-medium shadow-md"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );

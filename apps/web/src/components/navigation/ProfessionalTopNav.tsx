@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Bell } from 'lucide-react';
 import { useAuth, useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { useAuthMode } from '@/lib/device-detection';
 import ThemeToggle from '../ThemeToggle';
@@ -39,14 +38,6 @@ export default function ProfessionalTopNav({
 
           {/* Controls - Mobile optimized */}
           <div className="flex items-center space-x-2 md:space-x-4">
-
-            {/* Notifications - Hidden on mobile */}
-            <SignedIn>
-              <button className="modern-nav-button relative hidden md:block">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500"></span>
-              </button>
-            </SignedIn>
 
             {/* Theme Toggle - Desktop only (mobile has it in bottom nav) */}
             {showThemeToggle && (
