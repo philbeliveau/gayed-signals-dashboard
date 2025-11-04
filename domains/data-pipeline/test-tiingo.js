@@ -1,7 +1,26 @@
 const axios = require('axios');
+const path = require('path');
+const fs = require('fs');
 
-const API_KEY = '36181da7f5290c0544e9cc0b3b5f19249eb69a61';
+// Load .env file from apps/web/.env.local (git-ignored)
+const envPath = path.join(__dirname, '../../apps/web/.env.local');
+if (fs.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
+} else {
+  console.warn('⚠️ apps/web/.env.local not found. Please copy .env.example to .env.local');
+}
+
+// Read API key from environment variable
+const API_KEY = process.env.TIINGO_API_KEY;
 const symbols = ['SPY', 'XLU', 'WOOD', 'GLD', 'IEF', 'TLT', '^VIX'];
+
+// Validate API key is configured
+if (!API_KEY) {
+  console.error('❌ TIINGO_API_KEY environment variable is not set');
+  console.error('   Please ensure apps/web/.env.local contains TIINGO_API_KEY');
+  console.error('   Copy apps/web/.env.example to apps/web/.env.local and add your API key');
+  process.exit(1);
+}
 
 async function testTiingo(symbol) {
   try {

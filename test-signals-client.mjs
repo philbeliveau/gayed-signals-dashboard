@@ -1,14 +1,47 @@
 // Integration test for signals client
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Set environment variables for testing
-process.env.NEXT_PUBLIC_RAILWAY_BACKEND_URL = 'https://gayed-backend-production.up.railway.app';
-process.env.NEXT_PUBLIC_USE_RAILWAY_BACKEND = 'true';
-process.env.NEXT_PUBLIC_RAILWAY_API_KEY = 'gayed-signals-dev-key-2024';
+// Load .env file from apps/web/.env.local (git-ignored)
+const envPath = join(__dirname, 'apps/web/.env.local');
+try {
+  const envContent = readFileSync(envPath, 'utf-8');
+  envContent.split('\n').forEach(line => {
+    const match = line.match(/^([^=:#]+)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      const value = match[2].trim();
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  });
+} catch (error) {
+  console.warn('⚠️ Could not load apps/web/.env.local file');
+  console.warn('   Please copy apps/web/.env.example to apps/web/.env.local');
+}
+
+// Read environment variables
+const RAILWAY_BACKEND_URL = process.env.NEXT_PUBLIC_RAILWAY_BACKEND_URL || 'https://gayed-backend-production.up.railway.app';
+const USE_RAILWAY_BACKEND = process.env.NEXT_PUBLIC_USE_RAILWAY_BACKEND || 'true';
+const RAILWAY_API_KEY = process.env.NEXT_PUBLIC_RAILWAY_API_KEY || process.env.RAILWAY_API_KEY;
+
+// Validate required environment variables
+if (!RAILWAY_API_KEY) {
+  console.error('❌ NEXT_PUBLIC_RAILWAY_API_KEY environment variable is not set');
+  console.error('   Please ensure apps/web/.env.local contains NEXT_PUBLIC_RAILWAY_API_KEY or RAILWAY_API_KEY');
+  console.error('   Copy apps/web/.env.example to apps/web/.env.local and add your API key');
+  process.exit(1);
+}
+
+// Set for test environment
+process.env.NEXT_PUBLIC_RAILWAY_BACKEND_URL = RAILWAY_BACKEND_URL;
+process.env.NEXT_PUBLIC_USE_RAILWAY_BACKEND = USE_RAILWAY_BACKEND;
+process.env.NEXT_PUBLIC_RAILWAY_API_KEY = RAILWAY_API_KEY;
 
 console.log('=== ENVIRONMENT ===');
 console.log('Railway URL:', process.env.NEXT_PUBLIC_RAILWAY_BACKEND_URL);
@@ -20,7 +53,7 @@ console.log('\n=== TEST 1: Railway Backend Direct ===');
 try {
   const response = await fetch('https://gayed-backend-production.up.railway.app/api/v2/signals', {
     headers: {
-      'X-API-Key': 'gayed-signals-dev-key-2024'
+      'X-API-Key': RAILWAY_API_KEY
     }
   });
 
@@ -65,7 +98,7 @@ console.log('\n=== TEST 3: Authentication Header Test ===');
 try {
   const response = await fetch('https://gayed-backend-production.up.railway.app/api/v2/signals', {
     headers: {
-      'Authorization': `Bearer gayed-signals-dev-key-2024` // Wrong header
+      'Authorization': `Bearer ${RAILWAY_API_KEY}` // Wrong header format
     }
   });
 
@@ -82,7 +115,7 @@ try {
 try {
   const response = await fetch('https://gayed-backend-production.up.railway.app/api/v2/signals', {
     headers: {
-      'X-API-Key': 'gayed-signals-dev-key-2024' // Correct header
+      'X-API-Key': RAILWAY_API_KEY // Correct header
     }
   });
 
@@ -131,7 +164,7 @@ function transformRailwaySignal(railwaySignal) {
 
 try {
   const response = await fetch('https://gayed-backend-production.up.railway.app/api/v2/signals', {
-    headers: { 'X-API-Key': 'gayed-signals-dev-key-2024' }
+    headers: { 'X-API-Key': RAILWAY_API_KEY }
   });
 
   const data = await response.json();
@@ -163,7 +196,7 @@ console.log('\n=== TEST 5: Consensus Calculation Test ===');
 
 try {
   const response = await fetch('https://gayed-backend-production.up.railway.app/api/v2/signals', {
-    headers: { 'X-API-Key': 'gayed-signals-dev-key-2024' }
+    headers: { 'X-API-Key': RAILWAY_API_KEY }
   });
 
   const data = await response.json();
