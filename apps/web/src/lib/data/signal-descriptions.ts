@@ -31,7 +31,8 @@ export interface SignalDescription {
 
 /**
  * Research Papers Database
- * Papers uploaded to Vercel Blob: gayed-signals-dashboard-blob
+ * Papers uploaded to Vercel Blob (public access)
+ * Using direct blob URLs from Vercel Blob storage
  */
 export const RESEARCH_PAPERS: Record<string, ResearchPaper> = {
   'utilities-spy-rotation': {
@@ -42,7 +43,7 @@ export const RESEARCH_PAPERS: Record<string, ResearchPaper> = {
     ssrnId: '2417974',
     fileName: 'An Intermarket Approach to Beta Rotation.pdf',
     description: 'Examines the predictive power of utilities sector relative strength for equity market timing.',
-    blobUrl: 'https://gayed-signals-dashboard-blob.public.blob.vercel-storage.com/An%20Intermarket%20Approach%20to%20Beta%20Rotation.pdf'
+    blobUrl: 'https://jpqhkiarbfd4keae.public.blob.vercel-storage.com/An%20Intermarket%20Approach%20to%20Beta%20Rotation.pdf'
   },
   'lumber-gold-ratio': {
     id: 'lumber-gold-ratio',
@@ -52,7 +53,7 @@ export const RESEARCH_PAPERS: Record<string, ResearchPaper> = {
     ssrnId: '2431022',
     fileName: 'Lumber Worth Its Weight in Gold.pdf',
     description: 'Analyzes lumber/gold price ratio as a leading indicator of economic growth and risk appetite.',
-    blobUrl: 'https://gayed-signals-dashboard-blob.public.blob.vercel-storage.com/Lumber%20Worth%20Its%20Weight%20in%20Gold.pdf'
+    blobUrl: 'https://jpqhkiarbfd4keae.public.blob.vercel-storage.com/Lumber%20Worth%20Its%20Weight%20in%20Gold.pdf'
   },
   'treasury-yield-curve': {
     id: 'treasury-yield-curve',
@@ -62,7 +63,7 @@ export const RESEARCH_PAPERS: Record<string, ResearchPaper> = {
     ssrnId: '2604248',
     fileName: 'An Intermarket Approach to Tactical Risk Rotation.pdf',
     description: 'Studies yield curve dynamics as predictors of market volatility and regime changes.',
-    blobUrl: 'https://gayed-signals-dashboard-blob.public.blob.vercel-storage.com/An%20Intermarket%20Approach%20to%20Tactical%20Risk%20Rotation.pdf'
+    blobUrl: 'https://jpqhkiarbfd4keae.public.blob.vercel-storage.com/An%20Intermarket%20Approach%20to%20Tactical%20Risk%20Rotation.pdf'
   },
   'vix-defensive-positioning': {
     id: 'vix-defensive-positioning',
@@ -72,7 +73,7 @@ export const RESEARCH_PAPERS: Record<string, ResearchPaper> = {
     ssrnId: '2741701',
     fileName: 'Actively Using Passive Sectors to Generate Alpha Using the VIX.pdf',
     description: 'Explores volatility-based defensive positioning strategies during market stress.',
-    blobUrl: 'https://gayed-signals-dashboard-blob.public.blob.vercel-storage.com/Actively%20Using%20Passive%20Sectors%20to%20Generate%20Alpha%20Using%20the%20VIX.pdf'
+    blobUrl: 'https://jpqhkiarbfd4keae.public.blob.vercel-storage.com/Actively%20Using%20Passive%20Sectors%20to%20Generate%20Alpha%20Using%20the%20VIX.pdf'
   },
   'moving-average-signals': {
     id: 'moving-average-signals',
@@ -82,7 +83,7 @@ export const RESEARCH_PAPERS: Record<string, ResearchPaper> = {
     ssrnId: '3718824',
     fileName: 'Leverage for the Long Run.pdf',
     description: 'Evaluates moving average crossover strategies for tactical asset allocation.',
-    blobUrl: 'https://gayed-signals-dashboard-blob.public.blob.vercel-storage.com/Leverage%20for%20the%20Long%20Run.pdf'
+    blobUrl: 'https://jpqhkiarbfd4keae.public.blob.vercel-storage.com/Leverage%20for%20the%20Long%20Run.pdf'
   }
 };
 

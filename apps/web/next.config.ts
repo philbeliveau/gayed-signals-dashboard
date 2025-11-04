@@ -57,7 +57,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "frame-src 'self' https://gayed-signals-dashboard-blob.public.blob.vercel-storage.com;",
+            value: "frame-src 'self' https://jpqhkiarbfd4keae.public.blob.vercel-storage.com;",
           },
         ],
       },
