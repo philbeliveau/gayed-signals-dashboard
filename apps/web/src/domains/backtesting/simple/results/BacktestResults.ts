@@ -54,8 +54,6 @@ export function formatEquityCurve(
     type: 'scatter',
     mode: 'lines',
     line: { color: 'rgb(59, 130, 246)', width: 2 },
-    fill: 'tozeroy',
-    fillcolor: 'rgba(59, 130, 246, 0.1)',
     yaxis: 'y',
     hovertemplate: '<b>Portfolio Value</b><br>Date: %{x}<br>Value: $%{y:,.2f}<extra></extra>',
   });
@@ -88,27 +86,24 @@ export function formatEquityCurve(
     }
   }
 
-  // Calculate position shading shapes (Risk-On vs Risk-Off periods)
-  const shapes: any[] = [];
-
+  // Calculate position shading regions (Risk-On vs Risk-Off periods)
+  // Using filled scatter traces instead of shapes for legend interactivity
   if (trades && trades.length > 0 && config) {
     // Determine Risk-On and Risk-Off symbols from config
-    // Use custom symbols if provided, otherwise use defaults from SIGNAL_CONFIGS
     const signalConfig = SIGNAL_CONFIGS[config.signalType];
     const riskOnSymbol = config.riskOnSymbol || signalConfig.riskOnSymbol;
     const riskOffSymbol = config.riskOffSymbol || signalConfig.riskOffSymbol;
 
-    // Build position timeline from equity curve data (most reliable source)
-    // The equityCurve contains the actual position held each day
+    // Build position periods
+    const riskOnPeriods: Array<{ start: string; end: string }> = [];
+    const riskOffPeriods: Array<{ start: string; end: string }> = [];
+
     let currentPosition: string | null = null;
     let periodStart: string | null = null;
 
     for (let i = 0; i < equityCurve.length; i++) {
       const point = equityCurve[i];
       const positionSymbol = point.position;
-
-      // Determine if this is Risk-On or Risk-Off based on the symbol held
-      // Compare against config symbols (definitive source of truth)
       let positionType: string | null = null;
 
       if (positionSymbol && positionSymbol !== 'CASH') {
@@ -117,30 +112,18 @@ export function formatEquityCurve(
         } else if (positionSymbol === riskOffSymbol) {
           positionType = 'RISK_OFF';
         }
-        // If symbol doesn't match either config symbol, it remains null (no shading)
       }
 
-      // If position changed, close previous period and start new one
+      // If position changed, close previous period
       if (positionType !== currentPosition) {
-        // Close previous period
         if (currentPosition !== null && periodStart !== null) {
-          shapes.push({
-            type: 'rect',
-            xref: 'x',
-            yref: 'paper',
-            x0: periodStart,
-            x1: point.date,
-            y0: 0,
-            y1: 1,
-            fillcolor: currentPosition === 'RISK_ON'
-              ? 'rgba(34, 197, 94, 0.15)'  // Green for Risk-On
-              : 'rgba(239, 68, 68, 0.15)',  // Red for Risk-Off
-            line: { width: 0 },
-            layer: 'below',
-          });
+          const period = { start: periodStart, end: point.date };
+          if (currentPosition === 'RISK_ON') {
+            riskOnPeriods.push(period);
+          } else {
+            riskOffPeriods.push(period);
+          }
         }
-
-        // Start new period
         currentPosition = positionType;
         periodStart = point.date;
       }
@@ -148,52 +131,52 @@ export function formatEquityCurve(
 
     // Close final period
     if (currentPosition !== null && periodStart !== null) {
-      shapes.push({
-        type: 'rect',
-        xref: 'x',
-        yref: 'paper',
-        x0: periodStart,
-        x1: dates[dates.length - 1],
-        y0: 0,
-        y1: 1,
-        fillcolor: currentPosition === 'RISK_ON'
-          ? 'rgba(34, 197, 94, 0.15)'
-          : 'rgba(239, 68, 68, 0.15)',
+      const period = { start: periodStart, end: dates[dates.length - 1] };
+      if (currentPosition === 'RISK_ON') {
+        riskOnPeriods.push(period);
+      } else {
+        riskOffPeriods.push(period);
+      }
+    }
+
+    // Create filled scatter traces for each period (allows legend toggle)
+    // Risk-On periods (green)
+    for (const period of riskOnPeriods) {
+      const minValue = Math.min(...portfolioValues);
+      const maxValue = Math.max(...portfolioValues);
+      plotlyData.push({
+        x: [period.start, period.end, period.end, period.start, period.start],
+        y: [minValue, minValue, maxValue, maxValue, minValue],
+        fill: 'toself',
+        fillcolor: 'rgba(34, 197, 94, 0.15)',
         line: { width: 0 },
-        layer: 'below',
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Risk-On Period',
+        legendgroup: 'risk-on',
+        showlegend: riskOnPeriods.indexOf(period) === 0, // Only show in legend once
+        hoverinfo: 'skip',
       });
     }
 
-    // Add position indicator traces for legend only (invisible points)
-    plotlyData.push({
-      x: [dates[0]],
-      y: [null],
-      name: 'Risk-On Period',
-      type: 'scatter',
-      mode: 'markers',
-      marker: {
-        color: 'rgba(34, 197, 94, 0.3)',
-        size: 15,
-        symbol: 'square',
-      },
-      showlegend: true,
-      hoverinfo: 'skip',
-    });
-
-    plotlyData.push({
-      x: [dates[0]],
-      y: [null],
-      name: 'Risk-Off Period',
-      type: 'scatter',
-      mode: 'markers',
-      marker: {
-        color: 'rgba(239, 68, 68, 0.3)',
-        size: 15,
-        symbol: 'square',
-      },
-      showlegend: true,
-      hoverinfo: 'skip',
-    });
+    // Risk-Off periods (red)
+    for (const period of riskOffPeriods) {
+      const minValue = Math.min(...portfolioValues);
+      const maxValue = Math.max(...portfolioValues);
+      plotlyData.push({
+        x: [period.start, period.end, period.end, period.start, period.start],
+        y: [minValue, minValue, maxValue, maxValue, minValue],
+        fill: 'toself',
+        fillcolor: 'rgba(239, 68, 68, 0.15)',
+        line: { width: 0 },
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Risk-Off Period',
+        legendgroup: 'risk-off',
+        showlegend: riskOffPeriods.indexOf(period) === 0, // Only show in legend once
+        hoverinfo: 'skip',
+      });
+    }
   }
 
   // Layout configuration with dual y-axes
@@ -232,7 +215,6 @@ export function formatEquityCurve(
     dragmode: 'zoom',
     plot_bgcolor: 'rgba(0, 0, 0, 0)',
     paper_bgcolor: 'rgba(0, 0, 0, 0)',
-    shapes: shapes.length > 0 ? shapes : undefined,
   };
 
   return {
