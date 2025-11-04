@@ -100,7 +100,11 @@ export class UnifiedDataService {
     for (const source of sources) {
       await this.prisma.dataSourceHealth.upsert({
         where: { name: source.name },
-        update: {},
+        update: {
+          priority: source.priority,
+          healthScore: source.healthScore,
+          endpoint: source.endpoint,
+        },
         create: source,
       });
     }
@@ -337,9 +341,10 @@ export class UnifiedDataService {
     }
 
     // Sort by priority and health score
+    // Lower priority number = higher importance, so divide health by priority
     sources.sort((a, b) => {
-      const scoreA = a.priority * Number(a.healthScore);
-      const scoreB = b.priority * Number(b.healthScore);
+      const scoreA = Number(a.healthScore) / a.priority;
+      const scoreB = Number(b.healthScore) / b.priority;
       return scoreB - scoreA;
     });
 

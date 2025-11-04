@@ -22,7 +22,7 @@ export class SignalOrchestrator {
       'GLD',     // Gold ETF
       'IEF',     // 10-year Treasury ETF
       'TLT',     // 30-year Treasury ETF
-      'VIXY'     // VIX Short-Term Futures ETF (proxy for volatility)
+      '^VIX'     // VIX Volatility Index (matches frontend expectations)
     ];
   }
 
@@ -263,12 +263,12 @@ export class SignalOrchestrator {
     marketData: Record<string, MarketData[]>
   ): Signal | null {
     try {
-      const vixData = marketData['VIXY'];
+      const vixData = marketData['^VIX'];
 
       if (!vixData || vixData.length === 0) {
-        console.warn('VIX Defensive signal failed: Missing VIXY data', {
+        console.warn('VIX Defensive signal failed: Missing ^VIX data', {
           availableSymbols: Object.keys(marketData),
-          vixyDataPoints: vixData?.length || 0
+          vixDataPoints: vixData?.length || 0
         });
         return null;
       }
