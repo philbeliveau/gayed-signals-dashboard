@@ -25,14 +25,6 @@ export const metadata: Metadata = {
   description: "Advanced market regime analysis dashboard based on Michael Gayed's research signals. Professional trading tools for risk-on/risk-off market assessment.",
   keywords: "trading, market signals, risk management, market regime, financial analysis, investment research, gayed report",
   authors: [{ name: "The Gayed Report" }],
-  icons: {
-    icon: [
-      { url: '/favicon.ico' },
-      { url: '/logo.webp', type: 'image/webp' }
-    ],
-    shortcut: '/favicon.ico',
-    apple: '/logo.webp',
-  },
 };
 
 export const viewport = {
