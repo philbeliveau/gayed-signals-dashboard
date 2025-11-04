@@ -155,11 +155,13 @@ function validateSymbols(symbolsParam: string): { valid: boolean; error?: string
 
 /**
  * Market data endpoint
- * GET /api/v2/market-data?symbols=SPY,XLU&useCache=true
+ * GET /api/v2/market-data?symbols=SPY,XLU&useCache=true&startDate=2023-01-01&endDate=2023-12-31
+ *
+ * Supports historical data fetching via date range parameters
  */
 app.get('/api/v2/market-data', async (req: Request, res: Response) => {
   try {
-    const { symbols, useCache, fallbackEnabled } = req.query;
+    const { symbols, useCache, fallbackEnabled, startDate, endDate, limit } = req.query;
 
     if (!symbols || typeof symbols !== 'string') {
       return res.status(400).json({
@@ -180,10 +182,30 @@ app.get('/api/v2/market-data', async (req: Request, res: Response) => {
 
     const symbolArray = validation.symbols!;
 
-    const result = await dataService.fetchMarketData(symbolArray, {
+    // Build fetch options with date range support
+    const fetchOptions: any = {
       useCache: useCache !== 'false',
       fallbackEnabled: fallbackEnabled !== 'false',
+    };
+
+    // Add date range for historical data (Story 4.0j)
+    if (startDate && typeof startDate === 'string') {
+      fetchOptions.startDate = new Date(startDate);
+    }
+    if (endDate && typeof endDate === 'string') {
+      fetchOptions.endDate = new Date(endDate);
+    }
+    if (limit && typeof limit === 'string') {
+      fetchOptions.limit = parseInt(limit, 10);
+    }
+
+    logger.info('Market data request', {
+      symbols: symbolArray,
+      dateRange: startDate && endDate ? `${startDate} to ${endDate}` : 'latest',
+      limit: limit || 'none'
     });
+
+    const result = await dataService.fetchMarketData(symbolArray, fetchOptions);
 
     res.json({
       success: true,

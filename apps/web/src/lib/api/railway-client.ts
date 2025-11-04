@@ -76,11 +76,21 @@ export class RailwayClient {
 
         clearTimeout(timeoutId);
 
+        // Enhanced error logging for debugging (Story 4.0j - DEV-001)
         if (!response.ok) {
+          const errorBody = await response.text();
+          console.error('[Railway Client] API Error:', {
+            status: response.status,
+            statusText: response.statusText,
+            url,
+            hasApiKey: !!this.apiKey,
+            errorBody: errorBody.substring(0, 500) // Limit error body size
+          });
+
           throw new RailwayAPIError(
             `Railway API error: ${response.status} ${response.statusText}`,
             response.status,
-            await response.text()
+            errorBody
           );
         }
 

@@ -37,8 +37,8 @@ export const authenticatedRoutes: NavigationRoute[] = [
     requiresAuth: true
   },
   {
-    path: '/backtrader',
-    displayName: 'Backtesting',
+    path: '/backtest-simple',
+    displayName: 'Simple Backtesting',
     icon: 'trending-up',
     section: 'ANALYSIS',
     requiresAuth: true

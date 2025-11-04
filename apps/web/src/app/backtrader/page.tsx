@@ -424,9 +424,32 @@ export default function BacktraderPage() {
   return (
     <div className="min-h-screen bg-theme-bg text-theme-text">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Deprecation Notice */}
+        <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-1">
+                Deprecated: This backtesting system is no longer maintained
+              </h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-2">
+                This page requires a Python backend that is not currently available.
+                Please use the new <Link href="/backtest-simple" className="underline font-medium hover:text-yellow-900 dark:hover:text-yellow-100">Simple Backtesting</Link> platform instead,
+                which uses real market data from our Railway backend.
+              </p>
+              <Link
+                href="/backtest-simple"
+                className="inline-flex items-center px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-md transition-colors"
+              >
+                Go to Simple Backtesting →
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-theme-text">Backtrader Analysis</h1>
+          <h1 className="text-2xl font-bold text-theme-text">Backtrader Analysis (Legacy)</h1>
         </div>
         {/* Navigation Tabs */}
         <div className="mb-6 sm:mb-8">

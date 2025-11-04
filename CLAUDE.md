@@ -1,5 +1,7 @@
 # Gayed Signals Dashboard - Platform Status & Configuration
 
+The backend is here: /Users/philippebeliveau/Desktop/Notebook/gayed-signals-dashboard/domains/data-pipeline
+
 **Branch:** `fix/data-pipeline-restructuring`
 **Status:** ✅ Railway Backend Integration Complete | 📝 Backtesting Migration In Progress
 **Last Updated:** November 1, 2025

@@ -516,20 +516,36 @@ export class UnifiedDataService {
           }
         });
 
-        // If historical data requested, return all points; otherwise return latest
-        const pointsToProcess = options.startDate || options.limit
-          ? dataPoints
-          : [dataPoints[0]];
+        // Determine which data points to process based on request type
+        // Story 4.0j fix: Historical data should return full range, not just latest point
+        let pointsToProcess: any[];
 
-        // Apply limit if specified
-        const limitedPoints = options.limit
-          ? pointsToProcess.slice(0, options.limit)
-          : pointsToProcess;
+        if (options.startDate || options.endDate) {
+          // Historical data request - return all points in date range
+          pointsToProcess = dataPoints;
+          this.logger.info(`[Tiingo] ${symbol} historical mode: processing all ${dataPoints.length} points`);
+        } else if (options.limit) {
+          // Limit specified without date range - return latest N points
+          pointsToProcess = dataPoints.slice(0, options.limit);
+          this.logger.info(`[Tiingo] ${symbol} limit mode: processing latest ${options.limit} points`);
+        } else {
+          // No date range, no limit - return only latest point (default behavior)
+          pointsToProcess = [dataPoints[0]];
+          this.logger.info(`[Tiingo] ${symbol} latest mode: processing 1 point`);
+        }
 
-        this.logger.info(`[Tiingo] ${symbol} processing ${limitedPoints.length} points (limit: ${options.limit || 'none'})`);
+        // Apply additional limit if specified AND in historical mode
+        // This allows limiting very large historical ranges (e.g., "last 5 years but max 1000 points")
+        let finalPoints = pointsToProcess;
+        if (options.limit && (options.startDate || options.endDate) && pointsToProcess.length > options.limit) {
+          finalPoints = pointsToProcess.slice(0, options.limit);
+          this.logger.info(`[Tiingo] ${symbol} applying limit: ${finalPoints.length}/${pointsToProcess.length} points`);
+        }
+
+        this.logger.info(`[Tiingo] ${symbol} final count: ${finalPoints.length} points`);
 
         // Convert all data points to MarketData format
-        for (const point of limitedPoints) {
+        for (const point of finalPoints) {
           marketData.push({
             symbol,
             date: new Date(point.date),
