@@ -55,6 +55,10 @@ const nextConfig: NextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains',
           },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-src 'self' https://gayed-signals-dashboard-blob.public.blob.vercel-storage.com;",
+          },
         ],
       },
       // CORS headers for API routes

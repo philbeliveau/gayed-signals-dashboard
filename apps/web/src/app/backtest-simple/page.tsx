@@ -204,7 +204,7 @@ export default function SimpleBacktestPage() {
     <>
       {/* Page Header */}
       <PageHeader
-        title="Strategy Backtesting"
+        title="Backtesting"
         subtitle="Validate signal performance with historical market data"
       />
 
