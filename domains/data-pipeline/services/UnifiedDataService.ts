@@ -83,18 +83,8 @@ export class UnifiedDataService {
         priority: 1,
         healthScore: 1.0,
       },
-      {
-        name: 'YAHOO_FINANCE',
-        endpoint: 'https://query1.finance.yahoo.com/v8/finance/chart',
-        priority: 2,
-        healthScore: 0.9,
-      },
-      {
-        name: 'ALPHA_VANTAGE',
-        endpoint: 'https://www.alphavantage.co/query',
-        priority: 3,
-        healthScore: 0.8,
-      },
+      // Yahoo Finance disabled - API compatibility issues
+      // Alpha Vantage removed - unreliable and rate limited
     ];
 
     for (const source of sources) {
@@ -450,43 +440,16 @@ export class UnifiedDataService {
 
   /**
    * Fetch data from Yahoo Finance using yahoo-finance2
+   * DISABLED due to API compatibility issues
    */
   private async fetchFromYahoo(
     symbols: string[],
     options: FetchOptions
   ): Promise<MarketData[]> {
-    const marketData: MarketData[] = [];
-
-    for (const symbol of symbols) {
-      try {
-        const quote = await (yahooFinance as any).quoteCombine(symbol);
-
-        if (!quote) {
-          this.logger.warn(`No data from Yahoo Finance for ${symbol}`);
-          continue;
-        }
-
-        marketData.push({
-          symbol,
-          date: quote.regularMarketTime
-            ? new Date(quote.regularMarketTime * 1000)
-            : new Date(),
-          close: quote.regularMarketPrice ?? 0,
-          open: quote.regularMarketOpen ?? 0,
-          high: quote.regularMarketDayHigh ?? 0,
-          low: quote.regularMarketDayLow ?? 0,
-          volume: quote.regularMarketVolume ?? 0,
-          source: 'YAHOO_FINANCE',
-        });
-      } catch (error: any) {
-        this.logger.error(`Yahoo Finance error for ${symbol}`, {
-          error: error.message,
-        });
-        throw error; // Let circuit breaker handle it
-      }
-    }
-
-    return marketData;
+    // Yahoo Finance has API compatibility issues with TypeScript
+    // Disabled for now - rely on Tiingo as primary source
+    this.logger.warn('Yahoo Finance called but is disabled due to API issues');
+    throw new Error('Yahoo Finance is temporarily disabled');
   }
 
   /**
@@ -599,57 +562,17 @@ export class UnifiedDataService {
   }
 
   /**
-   * Fetch data from Alpha Vantage
+   * Fetch data from Alpha Vantage (DEPRECATED - not reliable)
+   * Keeping as empty fallback only
    */
   private async fetchFromAlphaVantage(
     symbols: string[],
     options: FetchOptions
   ): Promise<MarketData[]> {
-    const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
-    if (!apiKey) {
-      throw new Error('ALPHA_VANTAGE_API_KEY not configured');
-    }
-
-    const marketData: MarketData[] = [];
-
-    for (const symbol of symbols) {
-      try {
-        const response = await axios.get(
-          'https://www.alphavantage.co/query',
-          {
-            params: {
-              function: 'GLOBAL_QUOTE',
-              symbol: symbol,
-              apikey: apiKey,
-            },
-          }
-        );
-
-        const quote = response.data['Global Quote'];
-        if (!quote || !quote['05. price']) {
-          this.logger.warn(`No data from Alpha Vantage for ${symbol}`);
-          continue;
-        }
-
-        marketData.push({
-          symbol,
-          date: new Date(quote['07. latest trading day']),
-          close: parseFloat(quote['05. price']),
-          open: parseFloat(quote['02. open']),
-          high: parseFloat(quote['03. high']),
-          low: parseFloat(quote['04. low']),
-          volume: parseInt(quote['06. volume']),
-          source: 'ALPHA_VANTAGE',
-        });
-      } catch (error: any) {
-        this.logger.error(`Alpha Vantage error for ${symbol}`, {
-          error: error.message,
-        });
-        throw error;
-      }
-    }
-
-    return marketData;
+    // Alpha Vantage is unreliable and rate limited
+    // Return empty array to force fallback to other sources
+    this.logger.warn('Alpha Vantage called but is deprecated, returning empty data');
+    return [];
   }
 
   /**
@@ -681,10 +604,16 @@ export class UnifiedDataService {
     if (data.length === 0) return;
 
     try {
-      await this.prisma.$transaction(async (tx: any) => {
-        // Store market data
-        for (const item of data) {
-          await tx.marketData.upsert({
+      // Process in batches to avoid transaction timeout
+      const BATCH_SIZE = 100;
+
+      for (let i = 0; i < data.length; i += BATCH_SIZE) {
+        const batch = data.slice(i, i + BATCH_SIZE);
+
+        await this.prisma.$transaction(async (tx: any) => {
+          // Store market data batch
+          for (const item of batch) {
+            await tx.marketData.upsert({
             where: {
               unique_market_data: {
                 symbol: item.symbol,
@@ -714,24 +643,34 @@ export class UnifiedDataService {
           });
         }
 
-        // Store provenance
-        await tx.dataProvenance.create({
-          data: {
-            sourceSystem: source.name,
-            sourceEndpoint: source.endpoint,
-            requestTimestamp: new Date(),
-            responseTimestamp: new Date(),
-            responseStatus: 200,
-            recordsReceived: data.length,
-            recordsValid: data.length,
-            recordsInvalid: 0,
-            transformationApplied: 'raw',
-            status: 'completed',
-          },
+          // Store provenance for this batch (only on first batch)
+          if (i === 0) {
+            await tx.dataProvenance.create({
+              data: {
+                sourceSystem: source.name,
+                sourceEndpoint: source.endpoint,
+                requestTimestamp: new Date(),
+                responseTimestamp: new Date(),
+                responseStatus: 200,
+                recordsReceived: data.length,
+                recordsValid: data.length,
+                recordsInvalid: 0,
+                transformationApplied: 'raw',
+                status: 'completed',
+              },
+            });
+          }
+        }, {
+          maxWait: 10000, // Wait up to 10s for transaction slot
+          timeout: 30000  // Transaction timeout 30s
         });
-      });
+      }
 
-      this.logger.info('Data stored with provenance', { fetchId });
+      this.logger.info('Data stored with provenance', {
+        fetchId,
+        totalRecords: data.length,
+        batches: Math.ceil(data.length / BATCH_SIZE)
+      });
     } catch (error: any) {
       this.logger.error('Failed to store data', { error: error.message });
       throw error;

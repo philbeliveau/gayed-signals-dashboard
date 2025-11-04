@@ -9,7 +9,7 @@
   "installCommand": "npm ci",
   "framework": "nextjs",
   "functions": {
-    "src/app/api/**/*.ts": {
+    "apps/web/src/app/api/**/*.ts": {
       "maxDuration": 30
     }
   },
@@ -57,5 +57,15 @@
       ]
     }
   ],
-  "redirects": []
+  "redirects": [],
+  "rewrites": [
+    {
+      "source": "/logo.webp",
+      "destination": "/apps/web/public/logo.webp"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/apps/web/public/favicon.ico"
+    }
+  ]
 }
