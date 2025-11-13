@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Home, TrendingUp, Info, Sparkles, BarChart3 } from 'lucide-react';
-import EnhancedInteractiveHousingChart from '../../components/charts/EnhancedInteractiveHousingChart';
-import EnhancedInteractiveLaborChart from '../../components/charts/EnhancedInteractiveLaborChart';
+import { Users, Home } from 'lucide-react';
+// CRITICAL: Use shared components following source tree standards
+import EnhancedInteractiveHousingChart from '../../shared/components/charts/EnhancedInteractiveHousingChart';
+import EnhancedInteractiveLaborChart from '../../shared/components/charts/EnhancedInteractiveLaborChart';
 
 type ChartType = 'housing' | 'labor';
 
@@ -59,7 +60,8 @@ export default function InteractiveChartsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-theme-text">Interactive Charts</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-theme-text">Economic Data Analysis</h1>
+          <p className="text-theme-text-muted mt-2">Housing and Labor Market Indicators</p>
         </div>
         {/* Chart Type Selection */}
         <div className="mb-6">
@@ -104,10 +106,7 @@ export default function InteractiveChartsPage() {
                 height={chartHeight}
                 selectedPeriod={selectedPeriod}
                 onPeriodChange={setSelectedPeriod}
-                alerts={[
-                  { id: 1, severity: 'medium', message: 'Initial claims trending upward' },
-                  { id: 2, severity: 'low', message: 'Labor participation stable' }
-                ]}
+                // Alerts are fetched from API - no hardcoded alerts per coding standards
               />
             </div>
           )}

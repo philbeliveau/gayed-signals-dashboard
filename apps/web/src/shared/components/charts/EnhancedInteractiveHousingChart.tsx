@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Home, Calendar, TrendingUp, TrendingDown, Filter, Download, Share2 } from 'lucide-react';
 import InteractiveEconomicChart from './InteractiveEconomicChart';
-import { useInteractiveChartData } from '../../hooks/useInteractiveChartData';
-import { formatDate } from '../../utils/dateFormatting';
+// CRITICAL: Use TypeScript path aliases for cleaner imports
+import { useInteractiveChartData } from '@/hooks/useInteractiveChartData';
+import { formatDate } from '@/shared/utils/dateFormatting';
 
 interface EnhancedInteractiveHousingChartProps {
   data?: any[];

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import type { SeriesConfig, DataPoint } from '../components/charts/InteractiveEconomicChart';
+// CRITICAL: Use shared components per source tree standards
+import type { SeriesConfig, DataPoint } from '../shared/components/charts/InteractiveEconomicChart';
 
 // FRED Series definitions with metadata
 const HOUSING_SERIES_CONFIG: Omit<SeriesConfig, 'visible' | 'focused'>[] = [
@@ -311,53 +312,8 @@ export function useInteractiveChartData({
     }));
   }, [allSeriesConfig]);
 
-  // Mock data generator for development/testing - moved outside to prevent re-creation
-  const generateMockData = useCallback((days: number = 365): DataPoint[] => {
-    const data: DataPoint[] = [];
-    const baseDate = new Date();
-    baseDate.setHours(0, 0, 0, 0); // Normalize to prevent time-based re-renders
-    const startDate = new Date(baseDate);
-    startDate.setDate(startDate.getDate() - days);
-
-    for (let i = 0; i < days; i++) {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      
-      const point: DataPoint = {
-        date: date.toISOString().split('T')[0],
-      };
-
-      // Generate deterministic mock data to prevent random re-renders
-      const seed = i * 12345; // Fixed seed for consistent data
-      const random = (Math.sin(seed) + 1) / 2; // Deterministic "random" value
-
-      // Generate mock housing data
-      point.caseSillerIndex = 280 + Math.sin(i / 30) * 20 + (random - 0.5) * 10;
-      point.housingStarts = 1200 + Math.sin(i / 45) * 200 + (random - 0.5) * 100;
-      point.monthsSupply = 4.5 + Math.sin(i / 60) * 1.5 + (random - 0.5) * 0.5;
-      point.newHomeSales = 600 + Math.sin(i / 35) * 100 + (random - 0.5) * 50;
-      point.existingHomeSales = 5.2 + Math.sin(i / 40) * 0.8 + (random - 0.5) * 0.3;
-      point.housingPermits = 1300 + Math.sin(i / 50) * 150 + (random - 0.5) * 75;
-      point.mortgageRates = 6.5 + Math.sin(i / 90) * 1.0 + (random - 0.5) * 0.3;
-      point.housePriceIndex = 320 + Math.sin(i / 120) * 30 + (random - 0.5) * 15;
-
-      // Generate mock labor data
-      point.unemploymentRate = 3.8 + Math.sin(i / 180) * 1.2 + (random - 0.5) * 0.3;
-      point.nonfarmPayrolls = 155000 + Math.sin(i / 60) * 5000 + (random - 0.5) * 2000;
-      point.initialClaims = 220000 + Math.sin(i / 14) * 50000 + (random - 0.5) * 20000;
-      point.continuedClaims = 1700000 + Math.sin(i / 21) * 300000 + (random - 0.5) * 100000;
-      point.claims4Week = 225000 + Math.sin(i / 28) * 40000 + (random - 0.5) * 15000;
-      point.laborParticipation = 63.2 + Math.sin(i / 365) * 1.0 + (random - 0.5) * 0.2;
-      point.employmentPopulation = 60.1 + Math.sin(i / 365) * 1.5 + (random - 0.5) * 0.3;
-      point.unemployed = 6200 + Math.sin(i / 180) * 800 + (random - 0.5) * 300;
-      point.jobOpenings = 10500 + Math.sin(i / 90) * 1500 + (random - 0.5) * 500;
-      point.quitsRate = 2.3 + Math.sin(i / 120) * 0.5 + (random - 0.5) * 0.2;
-
-      data.push(point);
-    }
-
-    return data;
-  }, []); // Empty dependency array - function is now deterministic
+  // REMOVED: Mock data generator - real data only per coding standards
+  // All data must come from Railway backend or local API (which proxies to Railway)
 
   // Data downsampling function to handle large datasets for chart performance
   const downsampleData = useCallback((data: DataPoint[], maxPoints: number = 500): DataPoint[] => {
@@ -391,7 +347,7 @@ export function useInteractiveChartData({
     return sampledData;
   }, []);
 
-  // Fetch real data from API with stable dependencies
+  // Fetch real data from Railway backend with fallback (NO MOCK DATA)
   const fetchData = useCallback(async (periodOverride?: string) => {
     const period = periodOverride || initialPeriod;
     console.log(`🔄 Fetching REAL data for category: ${category}, period: ${period}`);
@@ -404,47 +360,26 @@ export function useInteractiveChartData({
     }));
 
     try {
-      // Call REAL API endpoints based on category
-      let apiData;
-      if (category === 'housing') {
-        console.log('🏠 Calling real HOUSING API with FRED data...');
-        const housingResponse = await fetch(`/api/housing?period=${period}&fast=false`);
-        if (!housingResponse.ok) {
-          throw new Error(`Housing API failed: ${housingResponse.status}`);
-        }
-        apiData = await housingResponse.json();
-        console.log('✅ Received real housing data:', apiData.timeSeries?.length, 'points');
-      } else if (category === 'labor') {
-        console.log('👥 Calling real LABOR API with FRED data...');
-        const laborResponse = await fetch(`/api/labor?period=${period}&fast=false`);
-        if (!laborResponse.ok) {
-          throw new Error(`Labor API failed: ${laborResponse.status}`);
-        }
-        apiData = await laborResponse.json();
-        console.log('✅ Received real labor data:', apiData.timeSeries?.length, 'points');
-      } else {
-        // Fallback for other categories
-        console.log('📊 Using mock data for category:', category);
-        const mockData = generateMockData(365);
-        apiData = { timeSeries: mockData };
-      }
+      // CRITICAL: Use Railway backend wrapper following coding standards
+      const { fetchEconomicDataWithFallback } = await import('../lib/api/fetch-economic-data');
+      
+      const response = await fetchEconomicDataWithFallback({
+        category: category as 'labor' | 'housing',
+        period,
+        fast: false,
+        region: category === 'housing' ? 'national' : undefined,
+      });
       
       // Extract the time series data
-      const realData = apiData.timeSeries || apiData.laborData || apiData.housingData || [];
+      const realData = response.data.timeSeries || 
+                      response.data.laborData || 
+                      response.data.housingData || [];
       
       if (!realData || !Array.isArray(realData) || realData.length === 0) {
-        console.warn('⚠️ No real data received, using fallback mock data');
-        const mockData = generateMockData(365);
-        setState(prev => ({
-          ...prev,
-          data: mockData,
-          loading: false,
-          lastUpdated: new Date()
-        }));
-        return;
+        throw new Error(`No data received from ${response.data.metadata.dataSource}`);
       }
       
-      console.log(`✅ Successfully loaded ${realData.length} REAL data points for ${category}`);
+      console.log(`✅ Successfully loaded ${realData.length} REAL data points for ${category} from ${response.data.metadata.dataSource}`);
       
       // Apply downsampling for large datasets to improve chart performance
       const processedData = downsampleData(realData);
@@ -456,18 +391,17 @@ export function useInteractiveChartData({
         lastUpdated: new Date()
       }));
     } catch (error) {
-      console.error('❌ Error fetching real data, falling back to mock:', error);
-      // Fallback to mock data if API fails
-      const mockData = generateMockData(365);
+      console.error('❌ Error fetching real data:', error);
+      // CRITICAL: NO MOCK DATA FALLBACK - show error to user
       setState(prev => ({
         ...prev,
-        data: mockData,
+        data: [],
         loading: false,
         lastUpdated: new Date(),
-        error: `API Error: ${error instanceof Error ? error.message : 'Unknown error'} - Using mock data fallback`
+        error: `Failed to fetch ${category} data: ${error instanceof Error ? error.message : 'Unknown error'}. Real data only - please check your connection and try again.`
       }));
     }
-  }, [category, generateMockData, initialPeriod, downsampleData]);
+  }, [category, initialPeriod, downsampleData]);
 
   // Helper function to calculate period from date range - now supports extended periods
   const calculatePeriodFromDates = (startDate: string, endDate: string): string => {
@@ -614,8 +548,7 @@ export function useInteractiveChartData({
     filterByFrequency,
     filterByCategory,
 
-    // Utils
-    generateMockData
+    // Utils removed - no mock data generation
   };
 }
 

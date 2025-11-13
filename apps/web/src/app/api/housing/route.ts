@@ -1,5 +1,15 @@
+/**
+ * Housing Market Data API Route
+ * CRITICAL: Follows Railway backend pattern - proxies to Railway backend
+ * Story: 4.0h - Frontend Railway Backend Integration
+ * 
+ * This route proxies requests to Railway backend /api/v1/economic/housing-market
+ * Following coding standards: Frontend MUST use Railway backend wrappers
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { FREDAPIClient, createFREDClient } from '../../../domains/market-data/services/fred-api-client';
+import { auth } from '@clerk/nextjs/server';
+import { isRailwayBackendAvailable, getRailwayBackendURL } from '../../../lib/feature-flags';
 
 // Simple logger for this API
 const logger = {
@@ -8,67 +18,62 @@ const logger = {
   error: (message: string, error?: any) => console.error(`❌ Housing API: ${message}`, error)
 };
 
-// Cache for housing data
-const housingCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-function cleanupCache() {
-  const now = Date.now();
-  for (const [key, entry] of housingCache.entries()) {
-    if (now > entry.timestamp + entry.ttl) {
-      housingCache.delete(key);
-    }
-  }
-}
-
-function getCachedData(key: string): any | null {
-  const entry = housingCache.get(key);
-  if (!entry) return null;
-  
-  const now = Date.now();
-  if (now > entry.timestamp + entry.ttl) {
-    housingCache.delete(key);
-    return null;
-  }
-  
-  return entry.data;
-}
-
-function setCachedData(key: string, data: any, ttl: number = CACHE_TTL) {
-  housingCache.set(key, {
-    data,
-    timestamp: Date.now(),
-    ttl
-  });
-}
-
 export async function GET(request: NextRequest) {
   try {
-    cleanupCache();
-    
+    // CRITICAL: Auth-First Pattern - check authentication BEFORE parsing request
+    let userId: string | null = null;
+    try {
+      const authResult = await auth();
+      userId = authResult.userId;
+    } catch (authError) {
+      // Optional auth for economic data endpoints
+      logger.info('Optional auth - proceeding without user authentication');
+    }
+
+    // Parse query parameters AFTER auth check
     const url = new URL(request.url);
     const period = url.searchParams.get('period') || '12m';
     const fast = url.searchParams.get('fast') === 'true';
+    const region = url.searchParams.get('region') || 'national';
     
-    const cacheKey = `housing_${period}_${fast}`;
+    logger.info(`🏠 Proxying housing data request to Railway backend: period=${period}, fast=${fast}, region=${region}`);
     
-    // Check cache first
-    const cachedData = getCachedData(cacheKey);
-    if (cachedData) {
-      logger.info(`🚀 Returning cached housing data for period: ${period}`);
-      return NextResponse.json({
-        ...cachedData,
-        cached: true,
-        cacheTime: new Date().toISOString()
-      });
+    // CRITICAL: Proxy to Railway backend if available
+    if (isRailwayBackendAvailable()) {
+      const railwayURL = getRailwayBackendURL();
+      const railwayEndpoint = `${railwayURL}/api/v1/economic/housing-market?period=${period}&fast=${fast}&region=${region}`;
+      
+      try {
+        const railwayResponse = await fetch(railwayEndpoint, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(process.env.NEXT_PUBLIC_RAILWAY_API_KEY && {
+              'X-API-Key': process.env.NEXT_PUBLIC_RAILWAY_API_KEY
+            }),
+          },
+        });
+
+        if (!railwayResponse.ok) {
+          throw new Error(`Railway backend error: ${railwayResponse.status}`);
+        }
+
+        const railwayData = await railwayResponse.json();
+        logger.info(`✅ Successfully proxied housing data from Railway backend`);
+        
+        return NextResponse.json(railwayData);
+      } catch (railwayError) {
+        logger.warn(`Railway backend failed, falling back to local FRED client: ${railwayError}`);
+        // Fall through to local FRED client
+      }
     }
     
-    logger.info(`🏠 Fetching housing data for period: ${period}, fast: ${fast}`);
+    // Fallback: Use local FRED client (for development/testing)
+    // CRITICAL: This should only be used when Railway backend is unavailable
+    logger.warn('⚠️ Using local FRED client - Railway backend not available');
     
-    // Initialize FRED client
+    const { FREDAPIClient, createFREDClient } = await import('../../../domains/market-data/services/fred-api-client');
     const fredClient = createFREDClient();
     
-    // Housing series IDs for FRED API
     const housingSeriesIds = [
       'CSUSHPINSA',    // Case-Shiller Index
       'HOUST',         // Housing Starts
@@ -80,12 +85,11 @@ export async function GET(request: NextRequest) {
       'USSTHPI'        // All-Transactions House Price Index
     ];
     
-    // Calculate date range based on period
     const endDate = new Date();
     const startDate = new Date();
     
     if (period === 'max' || period === 'all') {
-      startDate.setFullYear(1987, 0, 1); // Case-Shiller starts in 1987
+      startDate.setFullYear(1987, 0, 1);
     } else if (period.endsWith('y')) {
       const years = parseInt(period) || 1;
       startDate.setFullYear(endDate.getFullYear() - years);
@@ -93,10 +97,9 @@ export async function GET(request: NextRequest) {
       const months = parseInt(period) || 12;
       startDate.setMonth(endDate.getMonth() - months);
     } else {
-      startDate.setMonth(endDate.getMonth() - 12); // Default to 12 months
+      startDate.setMonth(endDate.getMonth() - 12);
     }
     
-    // Fetch data from FRED
     const seriesToFetch = fast ? housingSeriesIds.slice(0, 4) : housingSeriesIds;
     const housingData = await fredClient.getBatchSeriesData(seriesToFetch, {
       startDate: startDate.toISOString().split('T')[0],
@@ -113,10 +116,9 @@ export async function GET(request: NextRequest) {
       }, { status: 404 });
     }
     
-    // Transform data to time series format
     const transformedData = transformHousingData(housingData);
     
-    const responseData = {
+    return NextResponse.json({
       timeSeries: transformedData,
       metadata: {
         timestamp: new Date().toISOString(),
@@ -130,14 +132,7 @@ export async function GET(request: NextRequest) {
           end: endDate.toISOString().split('T')[0]
         }
       }
-    };
-    
-    // Cache the result
-    setCachedData(cacheKey, responseData);
-    
-    logger.info(`✅ Successfully fetched ${transformedData.length} housing data points`);
-    
-    return NextResponse.json(responseData);
+    });
     
   } catch (error) {
     logger.error('❌ Error fetching housing data:', error);
